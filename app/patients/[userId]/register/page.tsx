@@ -18,8 +18,6 @@ const RegisterUser = async ({ params }: { params: Promise<{ userId: string }> })
 
   const patient = await getPatient(userId)
   if (patient) redirect(`/patients/${userId}/dashboard`)
-  console.log('patient result:', patient) // ← check terminal output
-  if (!patient) redirect(`/patients/${userId}/register`)
 
   return (
     <div className="flex h-screen max-h-screen overflow-y-hidden personal-bg-gradient-2">

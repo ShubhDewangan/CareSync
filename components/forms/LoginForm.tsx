@@ -8,16 +8,20 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import z from 'zod'
 import { Form } from '../ui/form'
-import SubmitButton from '../SubmitButton'
-import { useRouter } from 'next/navigation'
 import { showToast } from '../ui/toaster'
 import { loginUser } from '@/lib/actions/auth.actions'
+import { Button } from '../ui/button'
+import { redirect } from 'next/navigation'
 
 type FormValues = z.infer<typeof LoginFormValidation>
 
 const LoginForm = () => {
     const [isLoading, setLoading] = useState(false)
-    const router = useRouter()
+      const signinKey = localStorage.getItem('signinKey')
+
+    if (signinKey) {
+    redirect(`/patients/${signinKey}/dashboard`)
+  }
 
     const form = useForm<FormValues>({
         resolver: zodResolver(LoginFormValidation),
@@ -42,11 +46,8 @@ const LoginForm = () => {
             console.log(result);
             
 
-            if (result?.success) {
-              console.log('redirecting to:', result.userId)
-                localStorage.setItem('signinKey', result.userId as string)
-                await new Promise(resolve => setTimeout(resolve, 100))
-                router.push(`/patients/${result.userId}/dashboard`)
+            if (result?.success && result.userId) {
+                window.location.assign(`/patients/${result.userId}/dashboard`)
             } else {
                 showToast('error', result?.message ?? 'Login failed', 'top-right')
             }
@@ -64,7 +65,7 @@ const LoginForm = () => {
   return (
       <div className="w-full font-label">
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 flex flex-col justify-center items-center text-gray-950 w-full m-5">
+          <div className="space-y-4 flex flex-col justify-center items-center text-gray-950 w-full m-5">
               <section className="flex flex-col items-center justify-center mb-8 text-(--secondary) w-full">
                   <h1 className="header text-gray-700 font-heading1 font-thin">Login</h1>
               </section>
@@ -105,13 +106,17 @@ const LoginForm = () => {
             />
   
             <div className="flex gap-3 pt-2 w-full items-center justify-center ">
-              {/* <Button type="button" className="w-2/5" variant="outline" onClick={() => form.reset()}>
-                Reset
-              </Button> */}
-              <SubmitButton isLoading={isLoading} className="w-full h-10 text-white bg-gray-900">Login</SubmitButton>
+              <Button
+                type="button"
+                disabled={isLoading}
+                className="w-full h-10 text-white bg-gray-900"
+                onClick={() => void form.handleSubmit(onSubmit)()}
+              >
+                {isLoading ? 'Logging in...' : 'Login'}
+              </Button>
             </div>
   
-          </form>
+          </div>
         </Form>
       </div>
     )

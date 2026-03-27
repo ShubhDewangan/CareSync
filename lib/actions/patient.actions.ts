@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use server'
 
-import { ID, Query } from "node-appwrite"
+import { Account, Client, ID, Query } from "node-appwrite"
+import { cookies } from "next/headers"
 import { DATABASE_ID, databases, ENDPOINT, PATIENT_COLLECTION_ID, PROJECT_ID, storage, users } from "../appwrite.config"
 import { InputFile } from 'node-appwrite/file'
 import { BUCKET_ID } from '../appwrite.config'
@@ -15,10 +16,21 @@ export const createUser = async (user: CreateUserParams) => {
             user.password,
             user.name
         )
-        if (newUser) {
-            console.log('User created: ', newUser);
-            
-        }
+
+        const client = new Client()
+            .setEndpoint(process.env.NEXT_PUBLIC_ENDPOINT!)
+            .setProject(process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID!)
+
+        const account = new Account(client)
+        const session = await account.createEmailPasswordSession(user.email, user.password!)
+
+        const cookieStore = await cookies()
+        cookieStore.set("appwrite-session", session.secret, {
+            path: "/",
+            httpOnly: true,
+            sameSite: "strict",
+            secure: process.env.NODE_ENV === "production",
+        })
 
         return {
             $id: newUser.$id,

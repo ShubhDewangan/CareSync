@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
@@ -14,7 +14,7 @@ import { Form } from "@/components/ui/form"
 import userImage from '@/public/assets/icons/user.svg'
 import emailImage from '@/public/assets/icons/email.svg'
 import { UserFormValidation } from "@/lib/validation"
-import { useRouter } from "next/navigation"
+import { redirect, useRouter } from "next/navigation"
 import { createUser } from "@/lib/actions/patient.actions"
 import { showToast } from "../ui/toaster"
 
@@ -33,6 +33,7 @@ export enum FormFieldType {
 type FormValues = z.infer<typeof UserFormValidation>
   
 // let userDataToRegisterDirectory = {}
+const signinKey = localStorage.getItem('signinKey')
 
 export function PatientForm() {
     const router = useRouter()
@@ -50,13 +51,12 @@ export function PatientForm() {
     },
   })
 
-  useEffect(() => {
-    const userId = localStorage.getItem('signinKey')
-    if (userId) {
-      router.push(`/patients/${userId}/dashboard`)
-    }
-  },[router])
+
+    if (signinKey) {
+    redirect(`/patients/${signinKey}/dashboard`)
+  }
   
+
   async function onSubmit({name, email, phone, password}: z.infer<typeof UserFormValidation>) {
     
     setLoading(true)
@@ -72,9 +72,6 @@ export function PatientForm() {
       console.log(user || 'kuch nhi aya');
       
       if (user) {
-    // new user created
-    
-          localStorage.setItem('signinKey', user.$id)
           router.push(`/patients/${user.$id}/register`)
       } else if (user === false) {
           // user already exists (409)

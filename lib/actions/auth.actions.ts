@@ -5,6 +5,7 @@ import { Account, Client } from "node-appwrite"
 import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
 import { createSessionClient } from "../appwrite.session"
+import { getPatient } from "./patient.actions"
 
 const SESSION_COOKIE = "appwrite-session"
 
@@ -27,7 +28,16 @@ export const loginUser = async ({ email, password }: { email: string, password: 
         const cookieStore = await cookies()
         cookieStore.set(SESSION_COOKIE, session.secret, getSessionCookieOptions())
 
-        return { success: true, userId: session.userId }
+        const patient = await getPatient(session.userId)
+        const nextPath = patient
+            ? `/patients/${session.userId}/dashboard`
+            : `/patients/${session.userId}/register`
+
+        return {
+            success: true,
+            userId: session.userId,
+            nextPath,
+        }
     } catch (error: any) {
         console.log("loginUser ERROR:", error)
 
@@ -60,7 +70,9 @@ export const getLoggedInUser = async () => {
     try {
         const { account } = await createSessionClient()
         return await account.get()
-    } catch {
+    } catch (error) {
+        console.log(error);
+        
         return null
     }
 }

@@ -99,7 +99,11 @@ export const RegisterForm = ({ user, patient }: {
           const patient = await registerPatient(patientData as RegisterUserParams)
           // console.log('6. patient:', patient)
 
-          if (patient) router.push(`/patients/${user.$id}/dashboard`)
+          if (patient) {
+            router.push(`/patients/${user.$id}/dashboard`)
+          } else {
+            throw new Error('Patient registration failed')
+          }
       } catch (error) {
           console.log('ERROR:', error)
       } finally {
@@ -291,9 +295,9 @@ export const RegisterForm = ({ user, patient }: {
             fieldType={FormFieldType.SELECT}
             control={form.control}
             name="primaryDoctor"
-            label="Primary Physician"
+            label="Primary Doctor"
             // iconSrc={phoneImage}
-            placeholder="Select a Physician"
+            placeholder="Select a Doctor"
           >
             {Doctors.map((doctor) => (
               <SelectItem key={doctor.name} value={doctor.name} className="w-full">
@@ -356,7 +360,7 @@ export const RegisterForm = ({ user, patient }: {
           <CustomFormField
             fieldType={FormFieldType.TEXTAREA}
             control={form.control}
-            name="medicalHistory"
+            name="pastMedicalHistory"
             label="Past Medical History"
             placeholder="e.g. Fracture, etc."
           />

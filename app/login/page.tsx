@@ -5,8 +5,18 @@ import { Button } from "@/components/ui/button";
 import LoginForm from '@/components/forms/LoginForm';
 import Link from 'next/link';
 import PasskeyModal from '@/components/ui/PasskeyModal';
+import { getLoggedInUser } from '@/lib/actions/auth.actions';
+import { getPatient } from '@/lib/actions/patient.actions';
+import { redirect } from 'next/navigation';
 
 export default async function Home() {
+  const loggedInUser = await getLoggedInUser()
+
+  if (loggedInUser) {
+    const patient = await getPatient(loggedInUser.$id)
+    redirect(patient ? `/patients/${loggedInUser.$id}/dashboard` : `/patients/${loggedInUser.$id}/register`)
+  }
+
   return (
     <div className="flex h-screen max-h-screen overflow-hidden personal-bg-gradient-1 justify-between">
       

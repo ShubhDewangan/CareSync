@@ -5,11 +5,22 @@ import { Button } from "@/components/ui/button";
 import {PatientForm} from '@/components/forms/PatientForm';
 import Link from 'next/link';
 import PasskeyModal from '@/components/ui/PasskeyModal';
+import { getLoggedInUser } from '@/lib/actions/auth.actions';
+import { getPatient } from '@/lib/actions/patient.actions';
+import { redirect } from 'next/navigation';
 
 export default async function Home({ searchParams }: SearchParamProps) {
   const resolvedSearchParams = await searchParams
 
   const isAdmin = resolvedSearchParams.admin === 'true'
+  const loggedInUser = await getLoggedInUser()
+
+  
+
+  if (loggedInUser) {
+    const patient = await getPatient(loggedInUser.$id)
+    redirect(patient ? `/patients/${loggedInUser.$id}/dashboard` : `/patients/${loggedInUser.$id}/register`)
+  }
 
   return (
     <div className="flex h-screen max-h-screen overflow-hidden personal-bg-gradient-1 justify-between">

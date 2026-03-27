@@ -1,18 +1,14 @@
 'use client'
 
-import { useRouter } from "next/navigation"
+import { logoutUserAndRedirect } from "@/lib/actions/auth.actions"
 
 const SignOutButton = () => {
-    const router = useRouter()
-
-    const handleSignOut = () => {
-        localStorage.removeItem('signinKey')
-        router.push('/')
-    }
   return (
-    <button onClick={handleSignOut} className="dash-signout text-2xl">
+    <form action={logoutUserAndRedirect}>
+      <button type="submit" className="dash-signout text-2xl">
         → Sign Out
-    </button>
+      </button>
+    </form>
   )
 }
 

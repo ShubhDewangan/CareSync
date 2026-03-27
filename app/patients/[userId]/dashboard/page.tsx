@@ -62,7 +62,6 @@ const PatientDashboard = async ({
     } catch (error) {
         console.log(error)
     }
-    console.log('patient result:', patient) // ← check terminal output
 
   if (!patient) redirect(`/patients/${userId}/register`)
 
