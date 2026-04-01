@@ -5,6 +5,7 @@ export interface Patient extends Models.Document {
   name: string;
   email: string;
   phone: string;
+  profilePic: string;
   birthDate: Date | undefined;
   gender: Gender;
   address: string;
@@ -25,6 +26,28 @@ export interface Patient extends Models.Document {
   privacyConsent: boolean;
   disclosureConsent: boolean;
   treatmentConsent: boolean;
+  registrationComplete?: boolean;
+}
+
+export interface Doctor {
+  image: string
+    name: string
+    specialization: string
+    experience: string
+    qualification: string
+    hospital: string
+    address: string
+    phone: string
+    email: string
+    availableDays: string[]
+    consultationHours: string
+    consultationFee: number
+    rating: number
+    totalPatients: number
+    about: string
+    languages: string[]
+    gender: string
+    appointmentSpan: string
 }
 
 export interface Appointment extends Models.Document {

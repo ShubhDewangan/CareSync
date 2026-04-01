@@ -6,7 +6,7 @@ import { getUser } from "@/lib/actions/patient.actions";
 import { recentAppointments } from "@/lib/actions/appointment.actions";
 import { formatDateTime } from "@/lib/utils";
 import { Doctors } from "@/constants";
-import { Appointment, Patient } from "@/types/appwrite";
+import { Appointment } from "@/types/appwrite";
 import SignOutButton from "@/components/ui/signOutButton";
 import { redirect } from "next/navigation";
 import EditProfileModal from "@/components/ui/EditDetailsModal";

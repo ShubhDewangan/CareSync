@@ -1,4 +1,3 @@
-/* eslint-disable no-unused-vars */
 
 declare type SearchParamProps = {
   params: Promise<{ [key: string]: string }>
@@ -6,6 +5,7 @@ declare type SearchParamProps = {
 }
 declare type Gender = "male" | "female" | "other" | "prefer not to say";
 declare type Status = "pending" | "scheduled" | "cancelled";
+declare type Week = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 
 declare interface CreateUserParams {
   name: string;
@@ -56,3 +56,26 @@ declare type UpdateAppointmentParams = {
   appointment: Appointment;
   type: string;
 };
+
+declare interface CreateDoctorParams {
+  name: string;
+  email: string;
+  password: string;
+  phone: string;
+}
+
+declare interface RegisterDoctorParams extends CreateDoctorParams {
+  specialization: string;
+  clinicName: string;
+  clinicAddress: string;
+  workingHours: string;
+  qualification: string;
+  registrationNumber: number;
+  profilePhoto: FormData | undefined;
+  experience: string;
+  bioText: string;
+  fee: number;
+  Availability: unknown;
+  appointmentDuration: unknown;
+  maxAppointments: number;
+}

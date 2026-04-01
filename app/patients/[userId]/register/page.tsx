@@ -1,11 +1,7 @@
 import logo from '@/public/logo.png'
 import Image from 'next/image'
-import Link from 'next/link'
-import HealthCarePhoto2 from '@/public/ryunosuke-kikuno-nuZZPHPGGSs-unsplash.jpg'
 import { RegisterForm } from '@/components/forms/RegisterForm'
 import { getPatient, getUser } from '@/lib/actions/patient.actions'
-import { Patient } from '@/types/appwrite'
-import { Fullscreen } from 'lucide-react'
 import { redirect } from 'next/navigation'
 
 const RegisterUser = async ({ params }: { params: Promise<{ userId: string }> }) => {

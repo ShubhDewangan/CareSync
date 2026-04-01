@@ -4,7 +4,7 @@
 import * as React from "react";
 import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ControllerRenderProps, Resolver, useForm } from "react-hook-form";
+import { Resolver, useForm } from "react-hook-form";
 import * as z from "zod";
 import CustomFormField from "../CustomFormField";
 // import { Button } from "@/components/ui/button"
@@ -13,13 +13,12 @@ import SubmitButton from "@/components/SubmitButton";
 import { Form, FormControl } from "@/components/ui/form";
 
 import userImage from "@/public/assets/icons/user.svg";
-import emailImage from "@/public/assets/icons/email.svg";
 import calendarImage from "@/public/assets/icons/calendar.svg";
 import mapImage from "@/public/assets/icons/map.svg";
 import { PatientFormValidation } from "@/lib/validation";
 import { useRouter } from "next/navigation";
-import { createUser, getPatient, registerPatient } from "@/lib/actions/patient.actions";
-import { FormFieldType } from "./PatientForm";
+import { registerPatient } from "@/lib/actions/patient.actions";
+import { FormFieldType } from "./SignUpForm";
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 import { Doctors, GenderOptions, IdentificationTypes, PatientFormDefaultValues } from "@/constants";
 import { Label } from "../ui/label";

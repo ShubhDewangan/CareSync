@@ -4,10 +4,8 @@ import { Appointment } from "@/types/appwrite";
 // import { InputFile } from "node-appwrite/file";
 import { APPOINTMENT_COLLECTION_ID, DATABASE_ID, databases } from "../appwrite.config";
 import { ID, Query } from "node-appwrite";
-import { parseStringify } from "../utils";
 import { revalidatePath } from "next/cache";
-// import { parseStringify } from "../utils";
-
+import { parseStringify } from "../utils";
 export const createAppointment = async (appointment: CreateAppointmentParams) => {
     try {
         const newAppointment = await databases.createDocument(
@@ -19,7 +17,7 @@ export const createAppointment = async (appointment: CreateAppointmentParams) =>
 
         console.log('patient value being saved:', appointment.patient)
         
-        return JSON.parse(JSON.stringify(Object.assign({}, newAppointment)));
+        return parseStringify(newAppointment);
     } catch (error) {
         console.log(error)
     }
@@ -32,7 +30,7 @@ export const getAppointment = async (appointmentId: string) => {
             APPOINTMENT_COLLECTION_ID!,
             appointmentId
         )
-        return JSON.parse(JSON.stringify(Object.assign({}, appointment)))
+        return parseStringify(appointment);
     } catch (error) {
         console.log(error)
     }
@@ -75,7 +73,7 @@ export const recentAppointments = async () => {
                 if (plainDoc.patient) {
                     plainDoc.patient = Object.assign({}, plainDoc.patient)
                 }
-                return JSON.parse(JSON.stringify(plainDoc))
+                return parseStringify(plainDoc)
             })
         }
         // console.log('first doc patient:', appointments.documents[0]?.patient)
@@ -107,7 +105,7 @@ export const updateAppointment = async ({appointmentId, appointment}: UpdateAppo
         //SMS notification
 
         revalidatePath('/admin')
-        return JSON.parse(JSON.stringify(Object.assign({}, updatedAppointment)))
+        return parseStringify(updatedAppointment);
         
     } catch (error) {
         console.log(error);
