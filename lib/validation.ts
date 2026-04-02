@@ -1,12 +1,12 @@
 import * as z from "zod"
 
+// ─── Auth ───────────────────────────────────────────────────────────────────
 
-export const UserFormValidation = z.object({
-//   username: z
-//     .string()
-//     .min(3, "Username must be at least 3 characters.")
-//     .max(20, "Username must be at most 20 characters.")
-//     .regex(/^[a-zA-Z0-9_]+$/, "Username can only contain letters, numbers, and underscores."),
+export const RegisterFormValidation = z.object({
+  name: z
+    .string()
+    .min(2, "Name must be at least 2 characters.")
+    .max(50, "Name must be at most 50 characters."),
   email: z
     .string()
     .min(1, "Email is required.")
@@ -16,40 +16,25 @@ export const UserFormValidation = z.object({
     .min(10, "Phone number must be at least 10 digits.")
     .max(15, "Phone number must be at most 15 digits.")
     .regex(/^[0-9+\-\s()]+$/, "Please enter a valid phone number."),
-  name: z
-    .string()
-    .min(2, "Name must be at least 2 characters.")
-    .max(50, "Name must be at most 50 characters."),
-
-  password: z
-    .string()
-    .min(8, "Password must be at least 8 characters.")
-    .regex(/[A-Z]/, "Password must contain at least one uppercase letter.")
-    .regex(/[0-9]/, "Password must contain at least one number.")
-    .regex(/[^a-zA-Z0-9]/, "Password must contain at least one special character."),
-  confirmPassword: z
-    .string()
-    .min(1, "Please confirm your password wisely."),
-//   lastName: z
-//     .string()
-//     .min(2, "Last name must be at least 2 characters.")
-//     .max(50, "Last name must be at most 50 characters."),
-//   password: z
-//     .string()
-//     .min(8, "Password must be at least 8 characters.")
-//     .regex(/[A-Z]/, "Password must contain at least one uppercase letter.")
-//     .regex(/[0-9]/, "Password must contain at least one number.")
-//     .regex(/[^a-zA-Z0-9]/, "Password must contain at least one special character."),
-//   confirmPassword: z
-//     .string()
-//     .min(1, "Please confirm your password."),
-// }).refine((data) => data.password === data.confirmPassword, {
-//   message: "Passwords do not match.",
-//   path: ["confirmPassword"],
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords do not match.",
-  path: ["confirmPassword"],
 })
+
+// Step 1: User enters email → OTP is sent
+export const OtpRequestValidation = z.object({
+  email: z
+    .string()
+    .min(1, "Email is required.")
+    .email("Please enter a valid email address."),
+})
+
+// Step 2: User enters the OTP they received
+export const OtpVerifyValidation = z.object({
+  otp: z
+    .string()
+    .length(6, "OTP must be exactly 6 digits.")
+    .regex(/^\d{6}$/, "OTP must contain only numbers."),
+})
+
+// ─── Patient ─────────────────────────────────────────────────────────────────
 
 export const PatientFormValidation = z.object({
   email: z
@@ -82,8 +67,8 @@ export const PatientFormValidation = z.object({
   emergencyContactNumber: z
     .string()
     .refine(
-      (emergencyContactNumber) => /^\+\d{10,15}$/.test(emergencyContactNumber),
-      "Invalid phone number"
+      (val) => /^\+\d{10,15}$/.test(val),
+      "Invalid phone number — must include country code (e.g. +91...)"
     ),
   primaryDoctor: z.string().min(2, "Select at least one doctor"),
   insuranceProvider: z
@@ -118,7 +103,9 @@ export const PatientFormValidation = z.object({
     .refine((value) => value === true, {
       message: "You must consent to privacy in order to proceed",
     }),
-});
+})
+
+// ─── Appointments ────────────────────────────────────────────────────────────
 
 export const CreateAppointmentSchema = z.object({
   primaryDoctor: z.string().min(2, "Select at least one doctor"),
@@ -129,7 +116,7 @@ export const CreateAppointmentSchema = z.object({
     .max(500, "Reason must be at most 500 characters"),
   note: z.string().optional(),
   cancellationReason: z.string().optional(),
-});
+})
 
 export const ScheduleAppointmentSchema = z.object({
   primaryDoctor: z.string().min(2, "Select at least one doctor"),
@@ -137,7 +124,7 @@ export const ScheduleAppointmentSchema = z.object({
   reason: z.string().optional(),
   note: z.string().optional(),
   cancellationReason: z.string().optional(),
-});
+})
 
 export const CancelAppointmentSchema = z.object({
   primaryDoctor: z.string().min(2, "Select at least one doctor"),
@@ -148,21 +135,22 @@ export const CancelAppointmentSchema = z.object({
     .string()
     .min(2, "Reason must be at least 2 characters")
     .max(500, "Reason must be at most 500 characters"),
-});
+})
 
 export function getAppointmentSchema(type: string) {
   switch (type) {
     case "create":
-      return CreateAppointmentSchema;
+      return CreateAppointmentSchema
     case "cancel":
-      return CancelAppointmentSchema;
+      return CancelAppointmentSchema
     default:
-      return ScheduleAppointmentSchema;
+      return ScheduleAppointmentSchema
   }
 }
 
-// validation.ts
-export const LoginFormValidation = z.object({
-    email: z.string().email("Invalid email address"),
-    password: z.string().min(8, "Password must be at least 8 characters"),
-})
+// ─── Types ───────────────────────────────────────────────────────────────────
+
+export type RegisterFormValues  = z.infer<typeof RegisterFormValidation>
+export type OtpRequestValues    = z.infer<typeof OtpRequestValidation>
+export type OtpVerifyValues     = z.infer<typeof OtpVerifyValidation>
+export type PatientFormValues   = z.infer<typeof PatientFormValidation>

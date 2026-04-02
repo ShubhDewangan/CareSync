@@ -22,6 +22,7 @@ import { Patient } from '@/types/appwrite';
 // ✅ Import the SERVER ACTION — NOT the browser SDK
 import { getLoggedInUser } from '@/lib/actions/auth.actions';
 import { useSearchParams } from 'next/navigation'
+import { cookies } from 'next/headers';
 
 const categories = [
   { tag: 'Neurologist', image: neuroImg },
@@ -36,18 +37,54 @@ const categories = [
 function Home() {
   const [openSignIn, setOpenSignIn] = useState(false)
   const [openLogin, setOpenLogin] = useState(false)
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<any>(() => {
+    // Instant restore from localStorage (avoids flash of logged-out state)
+    if (typeof window !== 'undefined') {
+      try {
+        const cached = cookies.get('caresync_user')
+        return cached ? JSON.parse(cached) : null
+      } catch { return null }
+    }
+    return null
+  })
 
+  const searchParams = useSearchParams()
 
-// inside Home component, add this:
-const searchParams = useSearchParams()
-
-useEffect(() => {
-  if (searchParams.get('login') === 'true') {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setOpenLogin(true)
+  // Helper: set user + persist to localStorage
+  function loginUser(userData: any) {
+    setUser(userData)
+    
   }
-}, [searchParams])// ✅ re-runs when URL params change
+
+  // Helper: clear user + localStorage
+  function clearUser() {
+    setUser(null)
+    localStorage.removeItem('caresync_user')
+  }
+
+  // ✅ Validate session via server action on mount
+  useEffect(() => {
+    async function validateSession() {
+      try {
+        const serverUser = await getLoggedInUser()
+        if (serverUser) {
+          loginUser(serverUser) // refresh cached data
+        } else {
+          clearUser() // session expired — clear everything
+        }
+      } catch {
+        clearUser()
+      }
+    }
+    validateSession()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  useEffect(() => {
+    if (searchParams.get('login') === 'true') {
+      setOpenLogin(true)
+    }
+  }, [searchParams])
 
   return (
     <div className="flex h-screen max-h-screen bg-[#EFECE3]">
@@ -100,7 +137,7 @@ useEffect(() => {
               onClose={() => setOpenSignIn(false)}
               // ✅ Update user state after signup so Sidebar reflects it immediately
               onSuccess={(userData: any) => {
-                setUser(userData)
+                loginUser(userData)
                 setOpenSignIn(false)
               }}
             />
@@ -124,7 +161,7 @@ useEffect(() => {
               onClose={() => setOpenLogin(false)}
               // ✅ Update user state after login so Sidebar reflects it immediately
               onSuccess={(userData: any) => {
-                setUser(userData)
+                loginUser(userData)
                 setOpenLogin(false)
               }}
             />

@@ -2,7 +2,6 @@ import Image from 'next/image'
 import logo from '@/public/logo.png'
 import HealthcarePhoto from '@/public/fotos-8hQ1SyLwqPA-unsplash.jpg'
 import { Button } from "@/components/ui/button";
-import {PatientForm} from '@/components/forms/SignUpForm';
 import Link from 'next/link';
 import AppointmentForm from '@/components/forms/AppointmentForm';
 import { getPatient } from '@/lib/actions/patient.actions';

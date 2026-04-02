@@ -2,351 +2,456 @@
 "use client"
 
 import * as React from "react"
-import { useState } from 'react'
+import { useState, useRef, useEffect } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
-import CustomFormField from "../CustomFormField"
-import SubmitButton from "@/components/SubmitButton"
-import { Form } from "@/components/ui/form"
-import emailImage from '@/public/assets/icons/email.svg'
-import { LoginFormValidation } from "@/lib/validation"
 import { useRouter } from "next/navigation"
 import { showToast } from "../ui/toaster"
-import { loginUser, resendVerificationEmail, sendPasswordReset } from "@/lib/actions/auth.actions"
+import { OtpRequestValidation, OtpVerifyValidation } from "@/lib/validation"
+import { sendOtp, verifyOtp } from "@/lib/actions/auth.actions"
 
-export enum FormFieldType {
-  INPUT = 'input',
-  TEXTAREA = 'textarea',
-  PHONE_INPUT = 'phoneInput',
-  CHECKBOX = 'checkbox',
-  DATEPICKER = 'datePicker',
-  SELECT = 'select',
-  SKELETON = 'skeleton',
-  PASSWORD = 'password'
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+type OtpMethod = "email" | "phone"
+type Step = "input" | "otp"
+
+// ─── OTP Input Box Component ─────────────────────────────────────────────────
+
+function OtpBoxes({
+  value,
+  onChange,
+  disabled,
+}: {
+  value: string
+  onChange: (val: string) => void
+  disabled?: boolean
+}) {
+  const inputs = useRef<(HTMLInputElement | null)[]>([])
+  const digits = Array.from({ length: 6 }, (_, i) => value[i] || "")
+
+  function handleKey(i: number, e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === "Backspace") {
+      if (digits[i]) {
+        const next = digits.map((d, idx) => (idx === i ? "" : d)).join("")
+        onChange(next)
+      } else if (i > 0) {
+        inputs.current[i - 1]?.focus()
+        const next = digits.map((d, idx) => (idx === i - 1 ? "" : d)).join("")
+        onChange(next)
+      }
+    }
+  }
+
+  function handleChange(i: number, e: React.ChangeEvent<HTMLInputElement>) {
+    const raw = e.target.value.replace(/\D/g, "")
+    if (!raw) return
+    // Handle paste of full OTP
+    if (raw.length > 1) {
+      const pasted = raw.slice(0, 6)
+      onChange(pasted)
+      inputs.current[Math.min(pasted.length, 5)]?.focus()
+      return
+    }
+    const next = digits.map((d, idx) => (idx === i ? raw[0] : d)).join("")
+    onChange(next)
+    if (i < 5) inputs.current[i + 1]?.focus()
+  }
+
+  return (
+    <div className="flex gap-2 justify-center">
+      {digits.map((digit, i) => (
+        <input
+          key={i}
+          ref={(el) => { inputs.current[i] = el }}
+          type="text"
+          inputMode="numeric"
+          maxLength={1}
+          value={digit}
+          disabled={disabled}
+          onChange={(e) => handleChange(i, e)}
+          onKeyDown={(e) => handleKey(i, e)}
+          onFocus={(e) => e.target.select()}
+          className={`
+            w-11 h-13 text-center text-lg font-bold rounded-xl border-2 outline-none
+            transition-all duration-200 bg-white
+            ${digit
+              ? "border-[#203C67] text-[#203C67] shadow-sm"
+              : "border-gray-200 text-gray-400"
+            }
+            focus:border-[#203C67] focus:shadow-[0_0_0_3px_rgba(32,60,103,0.08)]
+            disabled:opacity-50 disabled:cursor-not-allowed
+          `}
+        />
+      ))}
+    </div>
+  )
 }
 
-type FormValues = z.infer<typeof LoginFormValidation>
+// ─── Main LoginForm ───────────────────────────────────────────────────────────
 
-// Three views inside the same modal
-type View = 'login' | 'forgot' | 'forgot-sent'
-
-export default function LoginForm({ setUser, setOpenSignIn, onClose, onSuccess }: {
+export default function LoginForm({
+  setUser,
+  setOpenSignIn,
+  onClose,
+  onSuccess,
+}: {
   setOpenSignIn: any
   onClose: () => void
   setUser: any
   onSuccess?: (user: any) => void
 }) {
   const router = useRouter()
+
+  const [method, setMethod] = useState<OtpMethod>("email")
+  const [step, setStep] = useState<Step>("input")
   const [isLoading, setLoading] = useState(false)
-  const [view, setView] = useState<View>('login')
-  const [forgotEmail, setForgotEmail] = useState('')
-  const [forgotEmailError, setForgotEmailError] = useState('')
-  const [isSendingReset, setIsSendingReset] = useState(false)
-  const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null)
-  const [resending, setResending] = useState(false)
 
-  const form = useForm<FormValues>({
-    resolver: zodResolver(LoginFormValidation),
-    mode: 'all',
-    defaultValues: { email: "", password: '' },
-  })
+  // Contact value (email or phone)
+  const [contact, setContact] = useState("")
+  const [contactError, setContactError] = useState("")
 
-  // ─── LOGIN SUBMIT ────────────────────────────────────────────────
-  async function onSubmit({ email, password }: FormValues) {
+  // OTP
+  const [otp, setOtp] = useState("")
+  const [otpError, setOtpError] = useState("")
+  const [userId, setUserId] = useState("")
+
+  // Resend timer
+  const [resendTimer, setResendTimer] = useState(0)
+  const timerRef = useRef<NodeJS.Timeout | null>(null)
+
+  useEffect(() => {
+    if (resendTimer > 0) {
+      timerRef.current = setTimeout(() => setResendTimer((t) => t - 1), 1000)
+    }
+    return () => { if (timerRef.current) clearTimeout(timerRef.current) }
+  }, [resendTimer])
+
+  // ─── Validate contact ───────────────────────────────────────────
+  function validateContact(): boolean {
+    setContactError("")
+    if (!contact.trim()) {
+      setContactError(method === "email" ? "Email is required." : "Phone number is required.")
+      return false
+    }
+    if (method === "email") {
+      const emailSchema = z.string().email()
+      if (!emailSchema.safeParse(contact).success) {
+        setContactError("Please enter a valid email address.")
+        return false
+      }
+    } else {
+      if (!/^\+?[0-9]{10,15}$/.test(contact.replace(/[\s\-()]/g, ""))) {
+        setContactError("Please enter a valid phone number (10–15 digits).")
+        return false
+      }
+    }
+    return true
+  }
+
+  // ─── Send OTP ───────────────────────────────────────────────────
+  async function handleSendOtp() {
+    if (!validateContact()) return
     setLoading(true)
-    setUnverifiedEmail(null)
 
     try {
-      const loginRes = await loginUser({ email, password })
+      const res = await sendOtp({ contact, method })
 
-      if (loginRes === "unverified") {
-        setUnverifiedEmail(email)
-        showToast('info', 'Please verify your email before logging in.', 'top-right')
-
-      } else if (loginRes && typeof loginRes === 'object') {
-        if (onSuccess) {
-          onSuccess(loginRes)
-        } else {
-          setUser(loginRes)
-          onClose()
-        }
-        router.refresh()
-
-      } else if (loginRes === false) {
-        showToast('error', 'Invalid email or password.', 'top-right')
-
+      if (res?.userId) {
+        setUserId(res.userId)
+        setStep("otp")
+        setResendTimer(30)
+        showToast("success", `OTP sent to your ${method}!`, "top-right")
       } else {
-        showToast('error', 'Something went wrong. Please try again.', 'top-right')
+        setContactError("Could not send OTP. Please try again.")
       }
-
-    } catch (error) {
-      console.log(error)
-      showToast('error', 'Something went wrong. Please try again.', 'top-right')
+    } catch {
+      setContactError("Could not send OTP. Please try again.")
     }
 
     setLoading(false)
   }
 
-  // ─── RESEND VERIFICATION ─────────────────────────────────────────
-  async function handleResendVerification() {
-    if (!unverifiedEmail) return
-    setResending(true)
+  // ─── Verify OTP ─────────────────────────────────────────────────
+  async function handleVerifyOtp() {
+    setOtpError("")
 
-    try {
-      const password = form.getValues('password')
-      const res = await resendVerificationEmail(unverifiedEmail, password)
-
-      if (res.success) {
-        showToast('success', 'Verification email sent! Check your inbox.', 'top-right')
-        setUnverifiedEmail(null)
-      } else {
-        showToast('error', 'Could not resend. Try again later.', 'top-right')
-      }
-    } catch {
-      showToast('error', 'Could not resend. Try again later.', 'top-right')
-    }
-
-    setResending(false)
-  }
-
-  // ─── SEND PASSWORD RESET ─────────────────────────────────────────
-  async function handleSendReset() {
-    setForgotEmailError('')
-
-    if (!forgotEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(forgotEmail)) {
-      setForgotEmailError('Please enter a valid email address.')
+    if (otp.length < 6) {
+      setOtpError("Please enter the complete 6-digit OTP.")
       return
     }
 
-    setIsSendingReset(true)
+    setLoading(true)
 
     try {
-      const res = await sendPasswordReset(forgotEmail)
+      const res = await verifyOtp({ userId, otp })
 
-      if (res.success) {
-        // Move to the "check your email" confirmation step
-        setView('forgot-sent')
+      if (res && typeof res === "object" && !("error" in res)) {
+        if (onSuccess) {
+          onSuccess(res)
+        } else {
+          setUser(res)
+          onClose()
+        }
+        router.refresh()
       } else {
-        setForgotEmailError('Could not send reset email. Please try again.')
+        setOtpError("Invalid or expired OTP. Please try again.")
+        setOtp("")
       }
     } catch {
-      setForgotEmailError('Could not send reset email. Please try again.')
+      setOtpError("Something went wrong. Please try again.")
     }
 
-    setIsSendingReset(false)
+    setLoading(false)
   }
 
-  // ─── VIEWS ───────────────────────────────────────────────────────
+  // ─── Resend OTP ─────────────────────────────────────────────────
+  async function handleResend() {
+    if (resendTimer > 0) return
+    setOtp("")
+    setOtpError("")
+    setLoading(true)
 
-  // VIEW: forgot-sent — confirmation screen
-  if (view === 'forgot-sent') {
-    return (
-      <div className="w-full flex flex-col items-center text-center gap-5 py-6">
-        <div className="w-16 h-16 bg-blue-50 border-2 border-[#8FABD4] rounded-full flex items-center justify-center">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#203C67" strokeWidth="2">
-            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-            <polyline points="22,6 12,13 2,6"/>
-          </svg>
-        </div>
+    try {
+      const res = await sendOtp({ contact, method })
+      if (res?.userId) {
+        setUserId(res.userId)
+        setResendTimer(30)
+        showToast("success", "New OTP sent!", "top-right")
+      }
+    } catch {
+      showToast("error", "Could not resend OTP.", "top-right")
+    }
 
-        <div>
-          <h2 className="text-xl font-semibold text-[#203C67] mb-1">Check your inbox</h2>
-          <p className="text-sm text-gray-500 max-w-xs">
-            We sent a password reset link to{' '}
-            <span className="font-semibold text-[#203C67]">{forgotEmail}</span>.
-            Click the link in the email to set a new password.
-          </p>
-        </div>
-
-        {/* ⚠️ Dev-only notice since default Appwrite mailer only works for project owner */}
-        <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-lg py-2.5 px-3 text-left w-full">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#B45309" strokeWidth="2" className="mt-0.5 flex-shrink-0">
-            <circle cx="12" cy="12" r="10"/>
-            <line x1="12" y1="8" x2="12" y2="12"/>
-            <line x1="12" y1="16" x2="12.01" y2="16"/>
-          </svg>
-          <span className="text-xs text-amber-800">
-            <strong>Dev note:</strong> Appwrite&apos;s default mailer only delivers to the project owner&apos;s email.
-            To send to any address, configure SMTP in Appwrite Console → Settings → SMTP.
-          </span>
-        </div>
-
-        <div className="flex flex-col gap-2 w-full mt-2">
-          <button
-            onClick={() => { setView('forgot'); setForgotEmail('') }}
-            className="text-sm text-[#203C67] font-semibold underline underline-offset-2 cursor-pointer"
-          >
-            Try a different email
-          </button>
-          <button
-            onClick={() => setView('login')}
-            className="text-sm text-gray-500 underline underline-offset-2 cursor-pointer"
-          >
-            Back to login
-          </button>
-        </div>
-      </div>
-    )
+    setLoading(false)
   }
 
-  // VIEW: forgot — email input step
-  if (view === 'forgot') {
-    return (
-      <div className="w-full flex flex-col gap-5">
-        {/* Back button */}
-        <button
-          onClick={() => setView('login')}
-          className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 cursor-pointer w-fit"
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <polyline points="15 18 9 12 15 6"/>
-          </svg>
-          Back to login
-        </button>
-
-        <div>
-          <h2 className="text-xl font-semibold text-[#203C67] mb-1">Reset your password</h2>
-          <p className="text-sm text-gray-500">
-            Enter the email address linked to your account and we&apos;ll send a reset link.
-          </p>
-        </div>
-
-        <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-semibold text-gray-700">Email Address</label>
-          <input
-            type="email"
-            value={forgotEmail}
-            onChange={(e) => {
-              setForgotEmail(e.target.value)
-              setForgotEmailError('')
-            }}
-            onKeyDown={(e) => e.key === 'Enter' && handleSendReset()}
-            placeholder="johndoe@example.com"
-            className={`h-10 border rounded-lg px-3 text-sm outline-none transition-colors bg-white
-              ${forgotEmailError
-                ? 'border-red-400 focus:border-red-500'
-                : 'border-gray-200 focus:border-[#8FABD4]'
-              }`}
-          />
-          {forgotEmailError && (
-            <span className="text-xs text-red-500">{forgotEmailError}</span>
-          )}
-        </div>
-
-        <button
-          onClick={handleSendReset}
-          disabled={isSendingReset}
-          className="w-full h-11 bg-[#203C67] text-white rounded-lg text-sm font-semibold
-            disabled:opacity-60 cursor-pointer hover:bg-[#162d50] transition-colors"
-        >
-          {isSendingReset ? (
-            <span className="flex items-center justify-center gap-2">
-              <svg className="animate-spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
-              </svg>
-              Sending...
-            </span>
-          ) : (
-            'Send Reset Link'
-          )}
-        </button>
-      </div>
-    )
+  // ─── Switch method ───────────────────────────────────────────────
+  function switchMethod(m: OtpMethod) {
+    setMethod(m)
+    setContact("")
+    setContactError("")
+    setStep("input")
+    setOtp("")
+    setOtpError("")
   }
 
-  // VIEW: login — main login form
+  // ─── Mask contact for display ────────────────────────────────────
+  function maskContact() {
+    if (method === "email") {
+      const [user, domain] = contact.split("@")
+      return `${user.slice(0, 2)}***@${domain}`
+    }
+    return contact.slice(0, -4).replace(/./g, "*") + contact.slice(-4)
+  }
+
+  // ─── RENDER ──────────────────────────────────────────────────────
   return (
     <div className="w-full">
-      <span className="absolute bg-[#8FABD4] px-3 py-1 rounded-full text-sm">Patient</span>
-      <div className="flex items-center gap-14 mb-18">
-        <div className="w-full flex flex-col justify-center items-center">
-          <h2 className="text-gray-900 font-heading1 text-[23px]">Welcome Back</h2>
-          <p className="text-[#6B7280] mt-[2px] text-sm">Log in to access your health dashboard</p>
-        </div>
+
+      {/* Header */}
+      <div className="flex flex-col items-center mb-6">
+        <span className="absolute top-4 left-4 bg-[#EEF3FA] text-[#203C67] px-3 py-1 rounded-full text-xs font-semibold">
+          Patient
+        </span>
+        <h2 className="text-gray-900 font-semibold text-[22px] tracking-tight">Welcome Back</h2>
+        <p className="text-[#6B7280] text-sm mt-1">Log in to access your health dashboard</p>
       </div>
 
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-5 mt-10">
-          <CustomFormField
-            fieldType={FormFieldType.INPUT}
-            control={form.control}
-            name='email'
-            label='Email Address'
-            iconSrc={emailImage}
-            iconAlt="Email Icon"
-            placeholder='johndoe@example.com'
-          />
+      {/* Method Toggle */}
+      <div className="flex bg-[#F3F6FB] rounded-xl p-1 mb-6">
+        {(["email", "phone"] as OtpMethod[]).map((m) => (
+          <button
+            key={m}
+            type="button"
+            onClick={() => switchMethod(m)}
+            className={`
+              flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-semibold
+              transition-all duration-200 cursor-pointer
+              ${method === m
+                ? "bg-white text-[#203C67] shadow-sm"
+                : "text-gray-400 hover:text-gray-600"
+              }
+            `}
+          >
+            {m === "email" ? (
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                <polyline points="22,6 12,13 2,6"/>
+              </svg>
+            ) : (
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
+                <line x1="12" y1="18" x2="12.01" y2="18"/>
+              </svg>
+            )}
+            {m === "email" ? "Email OTP" : "Phone OTP"}
+          </button>
+        ))}
+      </div>
 
-          <div className="relative">
-            <CustomFormField
-              fieldType={FormFieldType.PASSWORD}
-              control={form.control}
-              name="password"
-              label="Password"
-              placeholder="Enter your password"
-            />
-            {/* ✅ Now triggers the inline forgot view instead of a static message */}
-            <button
-              type="button"
-              onClick={() => {
-                // Pre-fill forgot email from whatever they typed in the login form
-                const currentEmail = form.getValues('email')
-                if (currentEmail) setForgotEmail(currentEmail)
-                setView('forgot')
-              }}
-              className="absolute top-0 right-0 text-[#8FABD4] text-xs font-semibold underline underline-offset-2 cursor-pointer"
-            >
-              Forgot password?
-            </button>
-          </div>
+      {/* ── STEP: INPUT ─────────────────────────────────────────── */}
+      {step === "input" && (
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-1.5">
+            <label className="text-sm font-semibold text-gray-700">
+              {method === "email" ? "Email Address" : "Phone Number"}
+            </label>
 
-          {/* Unverified email banner */}
-          {unverifiedEmail && (
-            <div className="flex flex-col gap-2 bg-amber-50 border border-amber-200 rounded-lg py-3 px-4">
-              <div className="flex items-start gap-2">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#B45309" strokeWidth="2" className="mt-0.5 flex-shrink-0">
-                  <circle cx="12" cy="12" r="10"/>
-                  <line x1="12" y1="8" x2="12" y2="12"/>
-                  <line x1="12" y1="16" x2="12.01" y2="16"/>
-                </svg>
-                <p className="text-xs text-amber-800">
-                  <strong>{unverifiedEmail}</strong> is not verified yet.
-                  Check your inbox or click below to resend.
-                </p>
-              </div>
+            <div className="flex gap-2">
+              <input
+                type={method === "email" ? "email" : "tel"}
+                value={contact}
+                onChange={(e) => { setContact(e.target.value); setContactError("") }}
+                onKeyDown={(e) => e.key === "Enter" && handleSendOtp()}
+                placeholder={method === "email" ? "johndoe@example.com" : "+91 98765 43210"}
+                className={`
+                  flex-1 h-11 border-2 rounded-xl px-3 text-sm outline-none transition-all
+                  bg-white placeholder:text-gray-300
+                  ${contactError
+                    ? "border-red-300 focus:border-red-400"
+                    : "border-gray-200 focus:border-[#203C67] focus:shadow-[0_0_0_3px_rgba(32,60,103,0.08)]"
+                  }
+                `}
+              />
+
+              {/* GET OTP Button */}
               <button
                 type="button"
-                onClick={handleResendVerification}
-                disabled={resending}
-                className="self-start text-xs font-semibold text-[#203C67] underline underline-offset-2 disabled:opacity-50 cursor-pointer"
+                onClick={handleSendOtp}
+                disabled={isLoading || !contact.trim()}
+                className="
+                  px-4 h-11 bg-[#203C67] text-white text-sm font-semibold rounded-xl
+                  disabled:opacity-50 hover:bg-[#162d50] transition-colors cursor-pointer
+                  whitespace-nowrap flex items-center gap-2
+                "
               >
-                {resending ? 'Sending...' : 'Resend verification email →'}
+                {isLoading ? (
+                  <svg className="animate-spin" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+                  </svg>
+                ) : (
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <line x1="22" y1="2" x2="11" y2="13"/>
+                    <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                  </svg>
+                )}
+                Get OTP
               </button>
             </div>
-          )}
 
-          <SubmitButton
-            isLoading={isLoading}
-            className="w-full bg-[#203C67] text-white py-4 border-none rounded-lg cursor-pointer mt-4"
+            {contactError && (
+              <span className="text-xs text-red-500 flex items-center gap-1">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+                {contactError}
+              </span>
+            )}
+          </div>
+
+          <p className="text-xs text-gray-400 text-center">
+            We'll send a 6-digit code to verify your identity. No password needed.
+          </p>
+        </div>
+      )}
+
+      {/* ── STEP: OTP ───────────────────────────────────────────── */}
+      {step === "otp" && (
+        <div className="flex flex-col gap-5">
+
+          {/* Back + info */}
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => { setStep("input"); setOtp(""); setOtpError("") }}
+              className="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <polyline points="15 18 9 12 15 6"/>
+              </svg>
+            </button>
+            <p className="text-sm text-gray-500">
+              Code sent to{" "}
+              <span className="font-semibold text-[#203C67]">{maskContact()}</span>
+            </p>
+          </div>
+
+          {/* OTP Boxes */}
+          <div className="flex flex-col gap-3">
+            <OtpBoxes value={otp} onChange={setOtp} disabled={isLoading} />
+
+            {otpError && (
+              <p className="text-xs text-red-500 text-center flex items-center justify-center gap-1">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+                {otpError}
+              </p>
+            )}
+          </div>
+
+          {/* Verify Button */}
+          <button
+            type="button"
+            onClick={handleVerifyOtp}
+            disabled={isLoading || otp.length < 6}
+            className="
+              w-full h-11 bg-[#203C67] text-white rounded-xl text-sm font-semibold
+              disabled:opacity-50 hover:bg-[#162d50] transition-colors cursor-pointer
+              flex items-center justify-center gap-2
+            "
           >
-            Log In
-          </SubmitButton>
-        </form>
-      </Form>
+            {isLoading ? (
+              <>
+                <svg className="animate-spin" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+                </svg>
+                Verifying...
+              </>
+            ) : (
+              <>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                Verify & Log In
+              </>
+            )}
+          </button>
 
-      <div className="flex w-full justify-center items-center gap-3 my-4">
+          {/* Resend */}
+          <p className="text-xs text-center text-gray-400">
+            Didn't receive it?{" "}
+            {resendTimer > 0 ? (
+              <span className="text-[#203C67] font-semibold">Resend in {resendTimer}s</span>
+            ) : (
+              <button
+                type="button"
+                onClick={handleResend}
+                disabled={isLoading}
+                className="text-[#203C67] font-semibold underline underline-offset-2 cursor-pointer disabled:opacity-50"
+              >
+                Resend OTP
+              </button>
+            )}
+          </p>
+        </div>
+      )}
+
+      {/* Divider */}
+      <div className="flex items-center gap-3 my-5">
         <div className="flex-1 h-px bg-[#E5E7EB]" />
-        <span className="text-sm text-[#9CA3AF]">or</span>
+        <span className="text-xs text-[#9CA3AF]">or</span>
         <div className="flex-1 h-px bg-[#E5E7EB]" />
       </div>
 
+      {/* Sign up link */}
       <p className="text-center text-sm text-[#6B7280]">
-        Don&apos;t have an account?{' '}
+        Don&apos;t have an account?{" "}
         <button
           type="button"
           onClick={() => { setOpenSignIn(true); onClose() }}
-          className="text-[#203C67] font-semibold underline underline-offset-2"
+          className="text-[#203C67] font-semibold underline underline-offset-2 cursor-pointer"
         >
           Sign up for free
         </button>

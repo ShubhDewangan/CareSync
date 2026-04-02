@@ -14,7 +14,6 @@ import {
   BUCKET_ID
 } from "../appwrite.config"
 import { InputFile } from 'node-appwrite/file'
-import { sendEmail, verificationEmailHtml } from "../resend"
 import { parseStringify } from "../utils"
 
 // ============================
@@ -25,69 +24,6 @@ function getAdminClient() {
     .setEndpoint(process.env.NEXT_PUBLIC_ENDPOINT!)
     .setProject(process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID!)
     .setKey(process.env.API_KEY!)
-}
-
-// ============================
-// 🔐 CREATE USER + SEND VERIFICATION
-// ============================
-export const createUser = async (user: CreateUserParams) => {
-  try {
-    // Step 1: Create user via Admin SDK
-    const newUser = await users.create(
-      ID.unique(),
-      user.email,
-      user.phone,
-      user.password,
-      user.name
-    )
-
-    // Step 2: Generate a verification token via Admin SDK
-    // Admin SDK can create tokens on behalf of any user — no session needed
-    const adminClient = getAdminClient()
-    const adminUsers = new Users(adminClient)
-
-    // createToken generates a secret that works as a verification secret
-    // expire: 3600 = 1 hour
-    const token = await adminUsers.createToken(newUser.$id, 6, 3600)
-
-    // Step 3: Build verify URL using the token secret
-    const verifyUrl = `${process.env.NEXT_PUBLIC_APP_URL}/verify?userId=${newUser.$id}&secret=${token.secret}`
-
-    // Step 4: Send via Resend — completely bypasses Appwrite mail
-    await sendEmail({
-      to: user.email,
-      subject: "Verify your email — HealthApp",
-      html: verificationEmailHtml(verifyUrl, user.name),
-    })
-
-    // Step 5: Automatically Log In User so they don't get stuck without a session
-    const client = new Client()
-      .setEndpoint(process.env.NEXT_PUBLIC_ENDPOINT!)
-      .setProject(process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID!)
-
-    const account = new Account(client)
-    const session = await account.createEmailPasswordSession(user.email, user.password!)
-
-    const cookieStore = await cookies()
-    cookieStore.set("appwrite-session", session.secret, {
-      path: "/",
-      httpOnly: true,
-      sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
-    })
-
-    return {
-      $id: newUser.$id,
-      name: newUser.name,
-      email: newUser.email,
-      phone: newUser.phone,
-    }
-
-  } catch (error: any) {
-    console.log('createUser error:', error?.code, error?.message)
-    if (error?.code === 409) return false
-    return null
-  }
 }
 
 // ============================
@@ -109,9 +45,47 @@ export async function createSessionClient() {
 }
 
 // ============================
+// 👤 CREATE USER
+// ============================
+// No password — Appwrite creates the account via Admin SDK.
+// OTP is sent separately by sendOtp() in auth.actions.ts.
+// No auto-login here — verifyOtp() in auth.actions.ts handles session creation.
+
+export const createUser = async (user: {
+  name: string
+  email: string
+  phone: string
+}) => {
+  try {
+    const adminUsers = new Users(getAdminClient())
+
+    // Create user without password — Appwrite supports passwordless accounts
+    const newUser = await adminUsers.create(
+      ID.unique(),
+      user.email,
+      user.phone,
+      undefined,   // no password
+      user.name
+    )
+
+    return {
+      $id: newUser.$id,
+      name: newUser.name,
+      email: newUser.email,
+      phone: newUser.phone,
+    }
+
+  } catch (error: any) {
+    console.log('createUser error:', error?.code, error?.message)
+    if (error?.code === 409) return false   // user already exists
+    return null
+  }
+}
+
+// ============================
 // 👤 GET CURRENT USER
 // ============================
-export const getUser = async () => {
+export const getUser = async (userId: string) => {
   try {
     const { account } = await createSessionClient()
     return await account.get()
@@ -146,7 +120,9 @@ export const registerPatient = async ({
       ID.unique(),
       {
         identificationDocumentationId: file?.$id || null,
-        identificationDocumentUrl: `${ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${file?.$id}/view?project=${PROJECT_ID}`,
+        identificationDocumentUrl: file
+          ? `${ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${file.$id}/view?project=${PROJECT_ID}`
+          : null,
         ...patient
       }
     )
