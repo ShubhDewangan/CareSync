@@ -179,7 +179,7 @@ const AppointmentForm = ({
                   >
                     <div className="flex cursor-pointer items-center gap-5 ml-2">
                       <Image
-                        src={doctor.image}
+                        src={doctor.profilePic}
                         width={32}
                         height={32}
                         alt={doctor.name}

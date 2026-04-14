@@ -1,15 +1,35 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Doctor } from '@/types/appwrite'
 import Image from 'next/image'
 import { Button } from './button'
+import { useState } from 'react'
+import BookAppointmentModal from './BookAppointmentModal'
+import { AuthUser, FullUser } from '@/context/UserContext'
+import { showToast } from './toaster'
 
-const DoctorCard = ({doctor, key}: {doctor: Doctor, key: number | string}) => {
+const DoctorCard = ({doctor, userId, patientId, authUser, fullUser}: {doctor: Doctor, userId: string, patientId: string, authUser: any, fullUser: any}) => {
+
+    const [isOpen, setIsOpen] = useState(false)
+    const [showtoast, setShowToast] = useState(false)
+
+    if (showtoast) {
+        if (!authUser) showToast('info','Please sign in to book Appointments! already have an account then log in','top-right')
+        else if (authUser && !fullUser) showToast('info','Please log in to book Appointments!','top-right') 
+    }
+
+    if (isOpen) {
+        return (
+            <BookAppointmentModal DateToday={new Date().toLocaleDateString()} doctor={doctor} isOpen={isOpen} setIsOpen={setIsOpen} userId={userId} patientId={patientId} authUser={authUser} fullUser={fullUser} />
+        )
+    }
+
   return (
-    <div key={key} className='bg-[#EFECE3] w-[32%] rounded-2xl'>
+    <div key={doctor.name} className='bg-[#EFECE3] w-[32%] rounded-2xl'>
         <header className='w-full flex gap-5 justify-between items-center border-[1px] border-gray-950 p-5 rounded-t-2xl'>
             <div className='w-full flex gap-5'>
                 <div className='border-[2px] border-gray-950 rounded-full w-fit'>
                     <Image
-                        src={doctor.image}
+                        src={doctor.profilePic || '/assets/images/user_default.webp'}
                         alt='profile pic'
                         height={1000}
                         width={1000}
@@ -70,7 +90,8 @@ const DoctorCard = ({doctor, key}: {doctor: Doctor, key: number | string}) => {
             </div>
         </div>
             <footer className='p-5 flex justify-center items-center gap-5 border-[1px] border-[#203C67] rounded-b-2xl'>
-                <Button variant='default' className='bg-[#203C67] border-[1px] border-gray-950 hover:bg-[#203c67ce] text-white px-4 py-3'>
+                {
+                    fullUser ? <Button onClick={() => setIsOpen(true)} variant='default' className='bg-[#203C67] border-[1px] border-gray-950 hover:bg-[#203c67ce] text-white px-4 py-3'>
                     Book Appointment
                     <Image
                         src='/assets/icons/arrow-top-right-white.svg'
@@ -78,7 +99,16 @@ const DoctorCard = ({doctor, key}: {doctor: Doctor, key: number | string}) => {
                         height={15}
                         width={15}
                     />    
+                </Button> : <Button onClick={() => setShowToast(true)} variant='default' className='bg-[#203C67] border-[1px] border-gray-950 hover:bg-[#203c67ce] text-white px-4 py-3>Book Appointment'>
+                    Book Appointment
+                    <Image
+                        src='/assets/icons/arrow-top-right-white.svg'
+                        alt="go to Doctor's Profile"
+                        height={15}
+                        width={15}
+                    />  
                 </Button>
+                }
                 <Button variant='ghost' className='border-[1px] border-[#203C67] hover:bg-[#203c671c] px-4 py-3'>
                     View Full Profile
                     <Image

@@ -60,6 +60,9 @@
     --cream:      #EFECE3;
     --steel:      #CEDBE3;
     --danger:     #A50000;
+
+    /* --spacing: 7; */
+    /* --cell-size: 3rem; */
   }
 
   * {
@@ -71,6 +74,11 @@
   html {
     @apply font-sans;
   }
+}
+
+html::selection {
+  background: #8FABD4;
+  color: black;
 }
 
 /* ─── Custom Fonts ─────────────────────────────────── */
@@ -85,7 +93,7 @@
   font-weight: 400;
 }
 @font-face {
-  font-family: 'IBM Plex Mono';
+  font-family: 'IBM Plex Mono italic';
   src: url('/assets/fonts/IBMPlexMono-italic.ttf') format('truetype');
   font-weight: 400;
   font-style: italic;
@@ -144,7 +152,7 @@
 
   /* ── Form ── */
   .radio-group {
-    @apply flex h-full text-nowrap flex-1 items-center gap-2 rounded-md border border-dashed p-3;
+    @apply flex h-full text-nowrap flex-1 items-center gap-2 bg-[#EFECE3] rounded-md border border-dashed p-3;
     border-color: var(--blue-light);
   }
   .checkbox-label {
@@ -154,7 +162,7 @@
 
   /* ── File Upload ── */
   .file-upload {
-    @apply text-12-regular flex cursor-pointer flex-col items-center justify-center gap-3 rounded-md border border-dashed p-5;
+    @apply text-12-regular flex cursor-pointer flex-col bg-[#EFECE3] items-center justify-center gap-3 rounded-md border border-dashed p-5;
     border-color: var(--blue-light);
   }
   .file-upload_label {
@@ -214,12 +222,12 @@
   }
   .shad-input-label {
     @apply text-14-medium !important;
-    color: var(--foreground) !important;
+    color: black !important;
   }
   .shad-input {
     @apply h-[45px] min-w-[200px] flex-1 focus-visible:ring-0 focus-visible:ring-offset-0 !important;
     color: #393636 !important;
-    background: transparent;
+    background: #EFECE3;
   }
   .shad-input::placeholder { color: #706e6e !important; }
 
@@ -228,15 +236,15 @@
     border-color: var(--blue-light) !important;
   }
   .shad-textArea {
-    @apply focus-visible:ring-0 focus-visible:ring-offset-0 !important;
+    @apply focus-visible:ring-0  bg-[#EFECE3] focus-visible:ring-offset-0 !important;
     border-color: var(--blue-light) !important;
   }
   .shad-select-trigger {
-    @apply h-12 border-0 focus:ring-0 focus:ring-offset-0 !important;
+    @apply h-12 border-0 focus:ring-0 bg-[#EFECE3] focus:ring-offset-0 !important;
     color: var(--foreground) !important;
   }
   .shad-select-content {
-    background: var(--blue-dark) !important;
+    background: #EFECE3 !important;
     border-color: var(--blue-light) !important;
     color: var(--cream) !important;
   }
@@ -276,11 +284,11 @@
   /* ── Phone Input ── */
   .input-phone {
     @apply h-[46px] flex-1 rounded-md px-3 text-sm min-w-[235px] !important;
-    background: transparent  }
+    background: #EFECE3  }
 
   /* ── Date Picker ── */
   .date-picker {
-    @apply overflow-hidden border-transparent w-[150px] h-11 text-14-medium rounded-md px-3 outline-none !important;
+    @apply overflow-hidden border-transparent bg-[#EFECE3] w-[150px] h-11 text-14-medium rounded-md px-3 outline-none !important;
   }
 
   /* ── Stat Backgrounds ── */
@@ -541,3 +549,11 @@
   height: 1px;
 }
 
+.reg-form h3 {
+  color: black;
+}
+
+.admin-tag {
+  background: radial-gradient(ellipse, #5F455F , #9991A3);
+  border-radius: 30px;
+}

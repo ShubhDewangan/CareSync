@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Control } from "react-hook-form";
-import { FormFieldType } from "./forms/SignUpForm";
+import { FormFieldType } from "../app/(root)/signin/SignUpForm";
 import Image from "next/image";
 
 import "react-phone-number-input/style.css";
@@ -40,6 +40,7 @@ interface CustomProps {
   renderSkeleton?: (field: unknown) => React.ReactNode;
   Required?: string
   value?: any
+  units?: string
 }
 
 const RenderField = ({ field, props }: { field: any; props: CustomProps }) => {
@@ -51,7 +52,8 @@ const RenderField = ({ field, props }: { field: any; props: CustomProps }) => {
     showTimeSelect,
     renderSkeleton,
     Required,
-    disabled
+    disabled,
+    units
   } = props;
 
   const [showPassword, setShowPassword] = useState(false)
@@ -59,7 +61,7 @@ const RenderField = ({ field, props }: { field: any; props: CustomProps }) => {
   switch (props.fieldType) {
     case FormFieldType.INPUT:
       return (
-        <div className="flex rounded-md border border-dark-500 bg-[#f4f0f0]">
+        <div className="flex rounded-md border border-dark-500 bg-[#EFECE3] items-center">
           {iconSrc && (
             <Image
               src={iconSrc}
@@ -87,12 +89,14 @@ const RenderField = ({ field, props }: { field: any; props: CustomProps }) => {
               disabled={disabled}
             />
           </FormControl>
-          
+          {units && (
+            <p className="px-3 font-label font-medium">{units}</p>
+          )}
         </div>
       );
 
     case FormFieldType.PHONE_INPUT:
-      return (<div className="flex w-full rounded-md border border-dark-500">
+      return (<div className="flex w-full rounded-md border border-dark-500 bg-[#EFECE3]">
             <Image
               src='/assets/icons/phone.svg'
               alt="phone"
@@ -117,7 +121,7 @@ const RenderField = ({ field, props }: { field: any; props: CustomProps }) => {
 
     case FormFieldType.DATEPICKER:
       return (
-        <div className="flex w-full rounded-md border border-dark-500">
+        <div className="flex w-full rounded-md border border-dark-500 bg-[#EFECE3]">
           {iconSrc && (
             <Image
               src={iconSrc}
@@ -147,7 +151,7 @@ const RenderField = ({ field, props }: { field: any; props: CustomProps }) => {
 
     case FormFieldType.SELECT:
       return (
-        <div className="flex rounded-md border bg-[#f4f0f0]">
+        <div className="flex rounded-md border bg-[#EFECE3]">
         {iconSrc && (
             <Image
               src={iconSrc}
@@ -204,7 +208,7 @@ const RenderField = ({ field, props }: { field: any; props: CustomProps }) => {
 
     case FormFieldType.PASSWORD:
       return (
-        <div className="flex rounded-md border border-dark-500">
+        <div className="flex rounded-md border border-dark-500 bg-[#EFECE3]">
           <Input
             type={showPassword ? 'text' : 'password'}
             placeholder={props.placeholder}
@@ -242,7 +246,7 @@ const CustomFormField = (props: CustomProps) => {
           render={({ field }) => (
             <FormItem className="w-full bg-transparent">
               {fieldType !== FormFieldType.CHECKBOX && label && (
-                <FormLabel className="text-md">{label}</FormLabel>
+                <FormLabel className="text-md text-black">{label}</FormLabel>
               )}
 
               <RenderField field={field} props={props} />

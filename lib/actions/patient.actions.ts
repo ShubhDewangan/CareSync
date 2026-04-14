@@ -1,3 +1,5 @@
+// lib/actions/patient.actions.ts
+// Added: getDoctor function
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use server'
 
@@ -10,101 +12,94 @@ import {
   PATIENT_COLLECTION_ID,
   PROJECT_ID,
   storage,
-  users,
   BUCKET_ID
 } from "../appwrite.config"
 import { InputFile } from 'node-appwrite/file'
 import { parseStringify } from "../utils"
 
-// ============================
-// 🔧 ADMIN CLIENT HELPER
-// ============================
-function getAdminClient() {
-  return new Client()
-    .setEndpoint(process.env.NEXT_PUBLIC_ENDPOINT!)
-    .setProject(process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID!)
-    .setKey(process.env.API_KEY!)
-}
+const DOCTOR_COLLECTION_ID = process.env.DOCTOR_COLLECTION_ID!
 
-// ============================
-// 🔐 CREATE SESSION CLIENT
-// ============================
-export async function createSessionClient() {
-  const client = new Client()
-    .setEndpoint(process.env.NEXT_PUBLIC_ENDPOINT!)
-    .setProject(process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID!)
-
-  const cookieStore = await cookies()
-  const session = cookieStore.get("appwrite-session")
-
-  if (!session?.value) throw new Error("No session found")
-
-  client.setSession(session.value)
-
-  return { account: new Account(client) }
-}
 
 // ============================
 // 👤 CREATE USER
 // ============================
-// No password — Appwrite creates the account via Admin SDK.
-// OTP is sent separately by sendOtp() in auth.actions.ts.
-// No auto-login here — verifyOtp() in auth.actions.ts handles session creation.
+// Stores userType in Appwrite prefs so we can read it later in JWT
 
-export const createUser = async (user: {
-  name: string
-  email: string
-  phone: string
-}) => {
+// ============================
+// 👤 GET PATIENT
+// ============================
+
+export const getPatient = async (userId: string) => {
   try {
-    const adminUsers = new Users(getAdminClient())
-
-    // Create user without password — Appwrite supports passwordless accounts
-    const newUser = await adminUsers.create(
-      ID.unique(),
-      user.email,
-      user.phone,
-      undefined,   // no password
-      user.name
+    const patients = await databases.listDocuments(
+      DATABASE_ID!,
+      PATIENT_COLLECTION_ID!,
+      [Query.equal('userId', userId)]
     )
 
+    const p = patients.documents[0]
+    if (!p) return null
+
+    console.log(p.profilePic)
+    console.log(p.identificationDocumentUrl)
+
     return {
-      $id: newUser.$id,
-      name: newUser.name,
-      email: newUser.email,
-      phone: newUser.phone,
+      $id: p.$id,
+      userId: p.userId,
+      name: p.name,
+      email: p.email,
+      phone: p.phone,
+      profilePic: p.profilePic,
+      primaryDoctor: p?.primaryDoctor,
+      birthDate: p?.birthDate,
+      gender: p?.gender,
+      address: p?.address,
+      occupation: p?.occupation,
+      insuranceProvider: p?.insuranceProvider,
+      insurancePolicyNumber: p?.insurancePolicyNumber,
+      emergencyContactName: p?.emergencyContactName,
+      emergencyContactNumber: p?.emergencyContactNumber,
+      bloodGroup: p?.bloodGroup,
+      height: p?.height,
+      weight: p?.weight,
+      privacyConsent: p?.privacyConsent,
+      treatmentConsent: p?.treatmentConsent,
+      disclosureConsent: p?.disclosureConsent,
+      pastMedicalHistory: p?.pastMedicalHistory,
+      familyMedicalHistory: p?.familyMedicalHistory,
+      identificationType: p?.identificationType,
+      identificationDocumentationId: p?.identificationDocumentationId,
+      identificationDocument: p?.identificationDocument,
+      allergies: p?.allergies,
+      currentMedication: p?.currentMedication,
+      registrationComplete: true,
     }
-
-  } catch (error: any) {
-    console.log('createUser error:', error?.code, error?.message)
-    if (error?.code === 409) return false   // user already exists
-    return null
-  }
-}
-
-// ============================
-// 👤 GET CURRENT USER
-// ============================
-export const getUser = async (userId: string) => {
-  try {
-    const { account } = await createSessionClient()
-    return await account.get()
   } catch (error) {
-    console.log("getUser error:", error)
+    console.log("getPatient error:", error)
     return null
   }
 }
+
+// ============================
+// 🩺 GET DOCTOR
+// ============================
+
+
 
 // ============================
 // 🏥 REGISTER PATIENT
 // ============================
+
 export const registerPatient = async ({
   identificationDocument,
+  profilePic,        // ← add this
   ...patient
 }: RegisterUserParams) => {
   try {
     let file
+    let profilePicFile
 
+    // ── Identification document ──────────────────────────
     if (identificationDocument) {
       const blobFile = identificationDocument.get('blobFile') as Blob
       const fileName = identificationDocument.get('fileName') as string
@@ -112,6 +107,15 @@ export const registerPatient = async ({
       const buffer = Buffer.from(arrayBuffer)
       const inputFile = InputFile.fromBuffer(buffer, fileName)
       file = await storage.createFile(BUCKET_ID!, ID.unique(), inputFile)
+    }
+
+    // ── Profile picture ──────────────────────────────────
+    if (profilePic && profilePic.length > 0) {
+      const pic = profilePic[0]
+      const arrayBuffer = await pic.arrayBuffer()
+      const buffer = Buffer.from(arrayBuffer)
+      const inputFile = InputFile.fromBuffer(buffer, pic.name)
+      profilePicFile = await storage.createFile(BUCKET_ID!, ID.unique(), inputFile)
     }
 
     const newPatient = await databases.createDocument(
@@ -122,6 +126,10 @@ export const registerPatient = async ({
         identificationDocumentationId: file?.$id || null,
         identificationDocumentUrl: file
           ? `${ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${file.$id}/view?project=${PROJECT_ID}`
+          : null,
+        // ── Profile pic URL ────────────────────────────
+        profilePic: profilePicFile
+          ? `${ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${profilePicFile.$id}/view?project=${PROJECT_ID}`
           : null,
         ...patient
       }
@@ -135,60 +143,16 @@ export const registerPatient = async ({
 }
 
 // ============================
-// 👤 GET PATIENT
-// ============================
-export const getPatient = async (userId: string) => {
-  try {
-    const patients = await databases.listDocuments(
-      DATABASE_ID!,
-      PATIENT_COLLECTION_ID!,
-      [Query.equal('userId', userId)]
-    )
-
-    const p = patients.documents[0]
-    if (!p) return null
-
-    return {
-      $id: p.$id,
-      userId: p.userId,
-      name: p.name,
-      email: p.email,
-      phone: p.phone,
-      primaryDoctor: p.primaryDoctor,
-      birthDate: p.birthDate,
-      gender: p.gender,
-      address: p.address,
-      occupation: p?.occupation,
-      insuranceProvider: p?.insuranceProvider,
-      insurancePolicyNumber: p?.insurancePolicyNumber,
-      emergencyContactName: p?.emergencyContactName,
-      emergencyContactNumber: p?.emergencyContactNumber,
-      privacyConsent: p?.privacyConsent,
-      treatmentConsent: p?.treatmentConsent,
-      disclosureConsent: p?.disclosureConsent,
-      pastMedicalHistory: p?.pastMedicalHistory,
-      familyMedicalHistory: p?.familyMedicalHistory,
-      identificationType: p?.identificationType,
-      identificationDocumentationId: p?.identificationDocumentationId,
-      identificationDocument: p?.identificationDocument,
-      allergies: p?.allergies,
-      currentMedication: p?.currentMedication
-    }
-  } catch (error) {
-    console.log(error)
-    return null
-  }
-}
-
-// ============================
 // ✏️ UPDATE PATIENT
 // ============================
+
 export const updatePatient = async (
-  patientId: string,
-  { identificationDocument, ...patient }: RegisterUserParams
+  patientId: string,     // ← add this
+  { identificationDocument, profilePic, ...patient }: RegisterUserParams
 ) => {
   try {
-    let file
+    let file;
+    let profilePicFile;
 
     if (identificationDocument) {
       const blobFile = identificationDocument.get('blobFile') as Blob
@@ -199,19 +163,34 @@ export const updatePatient = async (
       file = await storage.createFile(BUCKET_ID!, ID.unique(), inputFile)
     }
 
+    if (profilePic && profilePic.length > 0) {
+      const pic = profilePic[0]
+      const arrayBuffer = await pic.arrayBuffer()
+      const buffer = Buffer.from(arrayBuffer)
+      const inputFile = InputFile.fromBuffer(buffer, pic.name)
+      profilePicFile = await storage.createFile(BUCKET_ID!, ID.unique(), inputFile)
+    }
+
+    const data: any = {
+      ...patient,
+    };
+
+    if (file) {
+      data.identificationDocumentationId = file.$id;
+      data.identificationDocumentUrl = `${ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${file.$id}/view?project=${PROJECT_ID}`;
+    }
+
+    if (profilePicFile) {
+      data.profilePic = `${ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${profilePicFile.$id}/view?project=${PROJECT_ID}`;
+    }
+
     const updatedPatient = await databases.updateDocument(
       DATABASE_ID!,
       PATIENT_COLLECTION_ID!,
       patientId,
-      {
-        ...(file && {
-          identificationDocumentationId: file.$id,
-          identificationDocumentUrl: `${ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${file.$id}/view?project=${PROJECT_ID}`,
-        }),
-        ...patient
-      }
-    )
-
+      data
+    );
+    
     return parseStringify(updatedPatient)
   } catch (error) {
     console.log(error)

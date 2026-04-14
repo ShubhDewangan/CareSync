@@ -1,5 +1,17 @@
 import type { NextConfig } from "next";
 
-const nextConfig: NextConfig = {};
+const nextConfig: NextConfig = {
+    images: {
+      remotePatterns: [
+        {
+          protocol: 'https',
+          hostname: 'fra.cloud.appwrite.io',
+        },
+      ],
+    },
+    experimental: {
+      useCache: true,
+    },
+};
 
 export default nextConfig;

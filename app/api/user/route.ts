@@ -1,12 +1,36 @@
+// app/api/user/route.ts
 import { NextResponse } from "next/server"
-import { getUser } from "@/lib/actions/patient.actions"
+import { cookies } from "next/headers"
+import { verifyJwt, COOKIE_NAME } from "@/lib/jwt"
+
+// GET /api/user
+// Reads JWT cookie → returns { $id, name, userType }
+// Zero Appwrite calls — used by homepage for instant auto-login
 
 export async function GET() {
-  console.log("API HIT 🔥") // 👈 ADD THIS
+  try {
+    const cookieStore = await cookies()
+    const token = cookieStore.get(COOKIE_NAME)?.value
 
-  const user = await getUser()
+    if (!token) return NextResponse.json(null)
 
-  console.log("USER FROM API:", user)
+    const payload = await verifyJwt(token)
 
-  return NextResponse.json(user)
+    if (!payload) {
+      const res = NextResponse.json(null)
+      res.cookies.delete(COOKIE_NAME)
+      return res
+    }
+
+    return NextResponse.json({
+      $id: payload.userId,
+      name: payload.name,
+      email: payload.email,
+      userType: payload.userType,
+      phone: payload.phone
+    })
+
+  } catch {
+    return NextResponse.json(null)
+  }
 }

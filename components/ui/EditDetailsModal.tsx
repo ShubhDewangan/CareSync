@@ -6,7 +6,7 @@ import CustomFormField from '../CustomFormField'
 import { Form, FormControl } from './form'
 import Image from 'next/image'
 import SubmitButton from '../SubmitButton'
-import { FormFieldType } from '../forms/SignUpForm'
+import { FormFieldType } from '../../app/(root)/signin/SignUpForm'
 import { SelectItem } from './select'
 import { Doctors, GenderOptions } from '@/constants'
 import { RadioGroup, RadioGroupItem } from './radio-group'
@@ -21,6 +21,7 @@ import { Resolver, useForm } from "react-hook-form";
 import mapImage from "@/public/assets/icons/map.svg";
 import { IdentificationTypes, PatientFormDefaultValues } from "@/constants";
 import FileUploader from "../ui/FileUploader";
+import AvatarUploader from './AvatarUploader'
 
 interface Props {
     userId: string
@@ -35,6 +36,10 @@ interface Props {
         name: string
         phone: string
         email: string
+        profilePic: string
+        height: string
+        weight: string
+        bloodGroup: string
         primaryDoctor: string
         allergies: string
         identificationType: string
@@ -79,7 +84,7 @@ const ReadOnlyField = ({ label, value, icon }: { label: string; value: string; i
     </div>
 )
 
-const EditProfileModal = ({ userId, patientId, user, patient }: Props) => {
+const EditProfileModal = ({ patientId, user, patient }: Props) => {
     const [isOpen, setIsOpen] = useState(false)
     const [isLoading, setLoading] = useState(false)
     const router = useRouter()
@@ -91,12 +96,16 @@ const EditProfileModal = ({ userId, patientId, user, patient }: Props) => {
             name: patient?.name ?? user.name ?? "",
             email: patient?.email ?? user.email ?? "",
             phone: patient?.phone ?? user.phone ?? "",
+            profilePic: [],
             birthDate: patient?.birthDate ? new Date(patient.birthDate) : new Date(),
             gender: (patient?.gender as any) ?? "male",
             address: patient?.address ?? "",
             occupation: patient?.occupation ?? "",
             emergencyContactName: patient?.emergencyContactName ?? "",
             emergencyContactNumber: patient?.emergencyContactNumber ?? "",
+            bloodGroup: patient?.bloodGroup ?? '',
+            height: patient?.height ?? '',
+            weight: patient?.weight ?? '',
             primaryDoctor: patient?.primaryDoctor ?? "",
             insuranceProvider: patient?.insuranceProvider ?? "",
             insurancePolicyNumber: patient?.insurancePolicyNumber ?? "",
@@ -149,13 +158,16 @@ const EditProfileModal = ({ userId, patientId, user, patient }: Props) => {
             {/* Trigger Button */}
             <button
                 onClick={() => setIsOpen(true)}
-                className="group flex items-center gap-2 border border-gray-300 hover:border-green-500 hover:text-green-600 transition-all duration-200 h-9 px-4 rounded-full text-sm text-gray-600 font-medium"
+                className="group items-center justify-center gap-1 border border-gray-300 hover:border-green-500 hover:text-green-600 transition-all duration-200 h-8 px-4 rounded-full text-[11px] text-gray-600 font-medium text-nowrap mt-1 inline-flex bg-[#e1d7bc]"
             >
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                </svg>
-                Edit Details
+                <Image
+                    src='/assets/icons/edit-profile.svg'
+                    alt='edit profile'
+                    height={24}
+                    width={24}
+                    className='h-4'
+                />
+                <span>Edit Details</span>
             </button>
 
             <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -165,10 +177,12 @@ const EditProfileModal = ({ userId, patientId, user, patient }: Props) => {
                     <DialogHeader className="px-6 pt-6 pb-4 border-b border-gray-100 sticky top-0 bg-white z-10 rounded-t-2xl">
                         <div className="flex items-center gap-3">
                             <div className="h-9 w-9 rounded-full bg-green-50 flex items-center justify-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                                    <circle cx="12" cy="7" r="4" />
-                                </svg>
+                                <Image
+                                    src='/assets/icons/edit-profile.svg'
+                                    alt='edit button'
+                                    height={24}
+                                    width={24}
+                                />
                             </div>
                             <div>
                                 <DialogTitle className="text-gray-900 font-semibold text-lg leading-tight">Edit Profile</DialogTitle>
@@ -186,15 +200,37 @@ const EditProfileModal = ({ userId, patientId, user, patient }: Props) => {
                                 <SectionHeader title="Personal Information" />
 
                                 {/* Read-only fields */}
-                                <CustomFormField
-                                    fieldType={FormFieldType.INPUT}
-                                    control={form.control}
-                                    name="name"
-                                    label="Full Name"
-                                    iconSrc='/assets/icons/user.svg'
-                                    iconAlt="user"
-                                    placeholder="John Doe"
-                                />
+                                
+                                <div className="flex flex-col xl:flex-row gap-4 mt-2">
+                                    <div className="flex-shrink-0">
+                                        <CustomFormField
+                                        fieldType={FormFieldType.SKELETON}
+                                        control={form.control}
+                                        name="profilePic"
+                                        label="Profile Picture"
+                                        renderSkeleton={(field: any) => (
+                                            <FormControl>
+                                            <AvatarUploader
+                                                files={field.value}
+                                                onChange={field.onChange}
+                                                defaultSrc="/assets/images/user_default.webp"
+                                            />
+                                            </FormControl>
+                                        )}
+                                        />
+                                    </div>
+                                    
+                                    <CustomFormField
+                                        fieldType={FormFieldType.INPUT}
+                                        control={form.control}
+                                        name="name"
+                                        label="Full Name"
+                                        iconSrc='/assets/icons/user.svg'
+                                        iconAlt="user"
+                                        placeholder="John Doe"
+                                    />
+                                    
+                                </div>
 
                                 <div className="flex flex-col xl:flex-row gap-4">
                                     <ReadOnlyField label="Email" value={user.email} icon="/assets/icons/email.svg" />
@@ -275,6 +311,30 @@ const EditProfileModal = ({ userId, patientId, user, patient }: Props) => {
                                     />
                                 </div>
 
+                                <SectionHeader title='Vitals' />
+
+                                <div className="flex gap-10">
+                                <CustomFormField
+                                fieldType={FormFieldType.SELECT}
+                                control={form.control}
+                                name="bloodGroup"
+                                label="Blood Group"
+                                placeholder="your blood group"
+                                >
+                                {['A+','A-','B+','B-','O+','O-','AB+','AB-'].map((bloodGroup) => (
+                                    <SelectItem key={bloodGroup} value={bloodGroup} className="w-[33%]">
+                                    <div className="flex cursor-pointer items-center gap-5 ml-2">
+                                        <p className="text-black">{bloodGroup}</p>
+                                    </div>
+                                    </SelectItem>
+                                ))}
+                                </CustomFormField>
+                
+                                <CustomFormField fieldType={FormFieldType.INPUT} control={form.control} name="weight" label="Weight" units="Kg" placeholder="your Weight?" />
+                
+                                <CustomFormField fieldType={FormFieldType.INPUT} control={form.control} name='height' label='Height' units="cm" placeholder="your height?"/>
+                                </div>
+
                                 {/* ── Medical Info ── */}
                                 <SectionHeader title="Medical Information" />
 
@@ -288,7 +348,7 @@ const EditProfileModal = ({ userId, patientId, user, patient }: Props) => {
                                     {Doctors.map((doctor) => (
                                         <SelectItem key={doctor.name} value={doctor.name} className="w-full">
                                             <div className="flex cursor-pointer items-center gap-3 ml-2">
-                                                <Image src={doctor.image} width={28} height={28} alt={doctor.name} className="rounded-full border border-dark-500" />
+                                                <Image src={doctor.profilePic} width={28} height={28} alt={doctor.name} className="rounded-full border border-dark-500" />
                                                 <p>{doctor.name}</p>
                                             </div>
                                         </SelectItem>

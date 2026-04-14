@@ -4,7 +4,6 @@ import { ColumnDef } from "@tanstack/react-table";
 
 import { MoreHorizontal } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
 import StatusBadge from "../StatusBadge";
 import { formatDateTime } from "@/lib/utils";
 
@@ -23,14 +22,22 @@ export const columns: ColumnDef<Appointment>[] = [
         cell: ({row}) => <p className="text-14-medium">{row.index + 1}</p>    
     },{
         accessorKey: 'patient',
-        header: 'patient',
+        header: 'Patient',
         cell: ({row}) =>  <p className="text-14-medium">{row.original.patient?.name ?? 'N/A'}</p>
+    },{
+        accessorKey: 'email',
+        header: 'Email',
+        cell: ({row}) => <p className="text-14-medium">{row.original.patient?.email ?? 'N/A'}</p>
+    },{
+        accessorKey: 'phone',
+        header: 'Phone',
+        cell: ({row}) => <p className="text-14-medium">{row.original.patient?.phone ?? 'N/A'}</p>
     },{
         accessorKey: 'status',
         header: 'Status',
         cell: ({row}) => (
             <div className="min-w-[115px]">
-                <StatusBadge status={row.original.status} />
+                <StatusBadge status={row.original.status || "pending"} />
             </div>
         )
     },
@@ -52,10 +59,10 @@ export const columns: ColumnDef<Appointment>[] = [
 
       return (
         <div className="flex items-center gap-3">
-            {doctor?.image && doctor.name ? 
+            {doctor?.profilePic && doctor.name ? 
                 <>
                 <Image
-                src={doctor?.image}
+                src={doctor?.profilePic}
                 alt={doctor.name}
                 width={100}
                 height={100}

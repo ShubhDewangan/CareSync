@@ -4,12 +4,16 @@ export const PatientFormDefaultValues = {
   name: "",
   email: "",
   phone: "",
-  birthDate: new Date(Date.now()),
+  profilePic: '',
+  birthDate: new Date(' '),
   gender: "male" as Gender,
   address: "",
   occupation: "",
   emergencyContactName: "",
   emergencyContactNumber: "",
+  bloodGroup: '',
+  height: '',
+  weight: '',
   primaryDoctor: "",
   insuranceProvider: "",
   insurancePolicyNumber: "",
@@ -24,6 +28,33 @@ export const PatientFormDefaultValues = {
   disclosureConsent: false,
   privacyConsent: false,
 };
+
+// Add this to constants/index.ts alongside PatientFormDefaultValues
+
+export const DoctorFormDefaultValues = {
+  name: "",
+  email: "",
+  phone: "",
+  profilePic: [],
+  gender: "male" as Gender,
+  birthDate: new Date(),
+  specialization: "",
+  qualification: "",
+  experience: "",
+  hospital: "",
+  address: "",
+  availableDays: [] as string[],
+  consultationHours: "",
+  consultationFee: "0",
+  appointmentSpan: "",
+  about: "",
+  languages: [] as string[],
+  rating: 0,
+  totalPatients: 0,
+  identificationType: "Birth Certificate",
+  identificationNumber: "",
+  identificationDocument: [],
+}
 
 export const IdentificationTypes = [
   "Birth Certificate",
@@ -41,7 +72,10 @@ export const IdentificationTypes = [
 
 export const Doctors = [
   {
-    image: "/assets/images/dr-green.png",
+    $id: '789',
+    userId: '213',
+        userType: 'doctor',
+        profilePic: "/assets/images/dr-green.png",
     name: "John Green",
     specialization: "General Medicine",
     experience: "12 yrs",
@@ -59,9 +93,14 @@ export const Doctors = [
     languages: ["English", "Hindi"],
     gender: "male",
     appointmentSpan: '30 mins',
+    birthDate: ' '
   },
   {
-    image: "/assets/images/dr-cameron.png",
+    $id: '788',
+
+    userId: '223',
+        userType: 'doctor',
+        profilePic: "/assets/images/dr-cameron.png",
     name: "Leila Cameron",
     specialization: "Cardiology",
     experience: "9 yrs",
@@ -78,9 +117,15 @@ export const Doctors = [
     about: "Dr. Leila Cameron is a highly regarded cardiologist specializing in interventional cardiology and heart failure management. She has published numerous research papers and is a fellow of the Indian College of Cardiology.",
     languages: ["English", "Hindi", "Urdu"],
     gender: "female",appointmentSpan: '30 mins',
+    birthDate: ' '
+
   },
   {
-    image: "/assets/images/dr-livingston.png",
+    $id: '787',
+
+    userId: '233',
+        userType: 'doctor',
+        profilePic: "/assets/images/dr-livingston.png",
     name: "David Livingston",
     specialization: "Neurology",
     experience: "15 yrs",
@@ -96,10 +141,15 @@ export const Doctors = [
     totalPatients: 1380,
     about: "Dr. David Livingston is a leading neurologist with expertise in stroke management, epilepsy, and movement disorders. He is known for his meticulous diagnostic skills and dedication to neurological research.",
     languages: ["English", "Hindi", "Bengali"],
+    birthDate: ' ',
     gender: "male",appointmentSpan: 'Not Given',
   },
   {
-    image: "/assets/images/dr-peter.png",
+    $id: '786',
+
+    userId: '243',
+        userType: 'doctor',
+        profilePic: "/assets/images/dr-peter.png",
     name: "Evan Peter",
     specialization: "Dentistry",
     experience: "7 yrs",
@@ -115,10 +165,15 @@ export const Doctors = [
     totalPatients: 760,
     about: "Dr. Evan Peter is a skilled dentist specializing in orthodontics and cosmetic dentistry. He is passionate about creating confident smiles and uses the latest technology for pain-free treatments.",
     languages: ["English", "Marathi", "Hindi"],
+    birthDate: ' ',
     gender: "male",appointmentSpan: '1 hour',
   },
   {
-    image: "/assets/images/dr-powell.png",
+    $id: '785',
+
+    userId: '253',
+        userType: 'doctor',
+        profilePic: "/assets/images/dr-powell.png",
     name: "Jane Powell",
     specialization: "Pediatrics",
     experience: "11 yrs",
@@ -134,10 +189,15 @@ export const Doctors = [
     totalPatients: 1560,
     about: "Dr. Jane Powell is a compassionate pediatrician with over 11 yrs of experience caring for children from newborns to adolescents. She is especially known for her gentle approach with young patients.",
     languages: ["English", "Hindi", "Telugu"],
+    birthDate: ' ',
     gender: "female",appointmentSpan: '30 mins',
   },
   {
-    image: "/assets/images/dr-remirez.png",
+    $id: '784',
+
+    userId: '263',
+        userType: 'doctor',
+        profilePic: "/assets/images/dr-remirez.png",
     name: "Alex Ramirez",
     specialization: "Orthopedics",
     experience: "15 yrs",
@@ -153,10 +213,15 @@ export const Doctors = [
     totalPatients: 2100,
     about: "Dr. Alex Ramirez is a highly experienced orthopedic surgeon specializing in joint replacement and sports injuries. He has performed over 3000 successful surgeries and is a trusted name in musculoskeletal care.",
     languages: ["English", "Hindi", "Gujarati"],
+    birthDate: ' ',
     gender: "male",appointmentSpan: '45 mins',
   },
   {
-    image: "/assets/images/dr-lee.png",
+    $id: '783',
+
+    userId: '273',
+        userType: 'doctor',
+        profilePic: "/assets/images/dr-lee.png",
     name: "Jasmine Lee",
     specialization: "Dermatology",
     experience: "8 yrs",
@@ -172,10 +237,15 @@ export const Doctors = [
     totalPatients: 890,
     about: "Dr. Jasmine Lee is a dermatologist with expertise in medical and cosmetic dermatology. She specializes in acne management, skin rejuvenation, and hair loss treatment using evidence-based approaches.",
     languages: ["English", "Tamil", "Hindi"],
+    birthDate: ' ',
     gender: "female",appointmentSpan: '30 mins',
   },
   {
-    image: "/assets/images/dr-cruz.png",
+    $id: '782',
+
+    userId: '283',
+    userType: 'doctor',
+    profilePic: "/assets/images/dr-cruz.png",
     name: "Alyana Cruz",
     specialization: "Gynecology & Obstetrics",
     experience: "10 yrs",
@@ -192,10 +262,15 @@ export const Doctors = [
     about: "Dr. Alyana Cruz is a dedicated gynecologist and obstetrician with 10 yrs of experience in women's health. She specializes in high-risk pregnancies, laparoscopic surgeries, and reproductive health.",
     languages: ["English", "Hindi", "Rajasthani"],
     gender: "female",
+    birthDate: ' ',
     appointmentSpan: '30 mins',
   },
   {
-    image: "/assets/images/dr-sharma.png",
+    $id: '781',
+
+    userId: '293',
+    userType: 'doctor',
+    profilePic: "/assets/images/dr-sharma.png",
     name: "Hardik Sharma",
     specialization: "Psychiatry",
     experience: "6 yrs",
@@ -211,6 +286,7 @@ export const Doctors = [
     totalPatients: 540,
     about: "Dr. Hardik Sharma is a compassionate psychiatrist focused on mental health, anxiety disorders, depression, and behavioral therapy. He creates a safe, non-judgmental space for all his patients.",
     languages: ["English", "Hindi"],
+    birthDate: ' ',
     gender: "male",
     appointmentSpan: '20 mins',}
 ];

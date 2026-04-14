@@ -1,23 +1,24 @@
 
 declare type SearchParamProps = {
   params: Promise<{ [key: string]: string }>
-  searchParams: Promise<{ [key: string]: string | undefined }>
+  searchParams: Promise<{ [key: string]: string[] | undefined }>
 }
 declare type Gender = "male" | "female" | "other" | "prefer not to say";
-declare type Status = "pending" | "scheduled" | "cancelled";
+declare type Status = "pending" | "scheduled" | "cancelled" | 'Appointment Expired' | 'Completed';
 declare type Week = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 
 declare interface CreateUserParams {
   name: string;
   email: string;
   phone: string;
-  password?: string
 }
 declare interface User extends CreateUserParams {
   $id: string;
+  userType: 'patient' | 'doctor'
 }
 
 declare interface RegisterUserParams extends CreateUserParams {
+  profilePic: File[] | undefined
   userId: string;
   birthDate: Date | unknown;
   gender: Gender;
@@ -25,6 +26,9 @@ declare interface RegisterUserParams extends CreateUserParams {
   occupation: string;
   emergencyContactName: string;
   emergencyContactNumber: string;
+  bloodGroup: string
+  weight: string
+  height: string
   primaryDoctor: string;
   insuranceProvider: string;
   insurancePolicyNumber: string;
@@ -60,22 +64,56 @@ declare type UpdateAppointmentParams = {
 declare interface CreateDoctorParams {
   name: string;
   email: string;
-  password: string;
   phone: string;
 }
 
-declare interface RegisterDoctorParams extends CreateDoctorParams {
-  specialization: string;
-  clinicName: string;
-  clinicAddress: string;
-  workingHours: string;
-  qualification: string;
-  registrationNumber: number;
-  profilePhoto: FormData | undefined;
-  experience: string;
-  bioText: string;
-  fee: number;
-  Availability: unknown;
-  appointmentDuration: unknown;
-  maxAppointments: number;
+// Add this to types/index.d.ts — replace existing RegisterDoctorParams
+
+declare interface RegisterDoctorParams {
+  // from auth — links to Appwrite user
+  userId: string
+
+  // from signup — already collected
+  name: string
+  email: string
+  phone: string
+
+  // personal
+  profilePic: File[] | undefined
+  gender: Gender
+  birthDate: Date
+
+  // professional
+  specialization: string
+  qualification: string
+  experience: string
+  hospital: string
+  address: string
+
+  // availability
+  availableDays: string[]
+  consultationHours: string
+  consultationFee: string
+  appointmentSpan: string
+
+  // about
+  about: string
+  languages: string[]
+
+  // rating + patients — auto-set to 0 on registration
+  rating: number
+  totalPatients: number
+
+    identificationType: string | undefined;
+  // identificationNumber: string | undefined;
+  identificationDocument: File[] | undefined;
+
+  privacyConsent: boolean
+  updationConsent: boolean
+  disclosureConsent: boolean
+
+  proceduresPerformed?: number
+  patientSatisfaction?: number
+  yearsInPractice?: number
+  nextAvailable?: string
 }

@@ -1,3 +1,4 @@
+
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
@@ -35,7 +36,7 @@ export default function RootLayout({
   return (
     <html suppressHydrationWarning lang="en" className={cn("font-sans", fontSans.variable)}>
       <body
-        className={ cn('min-h-screen bg-light-300 font-sans antialiased overflow-hidden', fontSans.variable) }
+        className={ cn('min-h-screen bg-light-300 font-sans antialiased overflow-x-hidden overflow-y-auto remove-scrollbar', fontSans.variable) }
       >
         <ThemeProvider
           attribute='class'
@@ -50,3 +51,4 @@ export default function RootLayout({
     </html>
   );
 }
+

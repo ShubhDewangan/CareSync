@@ -3,9 +3,13 @@
 import { logoutUserAndRedirect } from "@/lib/actions/auth.actions"
 import Image from 'next/image'
 
-const SignOutButton = () => {
+const SignOutButton = ({onLogout}: {onLogout: () => void}) => {
   return (
-    <form action={logoutUserAndRedirect}>
+    <form onClick={(e) => {
+      e.preventDefault()
+      logoutUserAndRedirect()
+      onLogout()
+    }}>
       <button type="submit"className='flex items-center justify-center text-[#d23737]'>
           <Image
             src='/assets/icons/exit.svg'
