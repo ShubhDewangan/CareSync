@@ -205,7 +205,7 @@ const lastVisit = appointments
 
           {/* Footer */}
           <div className="w-full p-3 rounded-b-xl flex flex-col items-center justify-center gap-3">
-            <SignOutButton onLogout={onLogout} />
+            {/* <SignOutButton onLogout={onLogout} /> */}
             <p className="text-red-800 text-[15px]">
               <Link href="/help">Help?</Link> | <Link href="/help/how-to-use">How to Use!</Link>
             </p>

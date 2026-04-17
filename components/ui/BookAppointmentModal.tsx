@@ -2,7 +2,7 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import Image from 'next/image'
-import { useEffect, useState } from 'react'
+import { JSX, useEffect, useState } from 'react'
 import * as React from "react"
 import { addDays, format } from "date-fns"
 
@@ -47,23 +47,25 @@ const BookAppointmentModal = ({
   variant,
   DateToday,
   doctor,
-  isOpen,
-  setIsOpen,
+  // isOpen,
+  // setIsOpen,
   userId,
   patientId,
   authUser,
   fullUser,
+  falseButton
 }: {
   text?: string
   variant?: string
   DateToday: string
   doctor: Doctor
-  isOpen: boolean
-  setIsOpen?: any
+  // isOpen: boolean
+  // setIsOpen?: any
   userId: string
   patientId?: string
-  authUser: AuthUser
+  authUser?: AuthUser
   fullUser: FullUser
+  falseButton?: boolean
 }) => {
   const [date, setDate] = React.useState<Date | undefined>(new Date())
   const [currentMonth, setCurrentMonth] = React.useState<Date>(
@@ -74,6 +76,7 @@ const BookAppointmentModal = ({
   const [note, setNote] = useState("")
   const [step, setStep] = useState<1 | 2 | 3>(1)
   const [isLoading, setIsLoading] = useState(false)
+  const [isOpen, setIsOpen] = useState(false)
 
   const path = usePathname()
 
@@ -154,15 +157,19 @@ const BookAppointmentModal = ({
   }
 
   const handleBookingButton = () => {
-    if (!authUser) {
-      showToast('info','Please sign up to book an Appointment!','top-right')
-    } else if (!fullUser) {
-      showToast('info','Please log in to book an Appointment!','top-right')
-    } else if (fullUser) {
-      setStep(1)
-      setIsOpen(true)
-    }
+   if (!fullUser) {
+    showToast('info', 'Please log in to book an Appointment!', 'top-right')
+  } else {
+    setIsOpen(true)
+    setStep(1)
   }
+
+  if (falseButton) {
+    showToast('info', 'You cannot book an Appointment for yourself!')
+    setIsOpen(false)
+  }
+  // only open modal if user is logged i
+} 
 
   function handleClose() {
     setIsOpen(false)

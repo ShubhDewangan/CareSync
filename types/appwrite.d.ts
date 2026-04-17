@@ -40,7 +40,7 @@ export interface Doctor {
   phone: string;
   profilePic?: string;           // Appwrite file ID
   birthDate: string;             // ISO date string
-  gender: "male" | "female" | "other";
+  gender: Gender
   address: string;
   specialization: string;
   qualification: string;
@@ -54,11 +54,11 @@ export interface Doctor {
   languages: string[];
   rating: number;
   totalPatients: number;
-  identificationType: string;
+  identificationType?: string;
   identificationDocument?: string;
-  updationConsent: boolean;
-  privacyConsent: boolean;
-  disclosureConsent: boolean;
+  updationConsent?: boolean;
+  privacyConsent?: boolean;
+  disclosureConsent?: boolean;
   // extras you may add to Appwrite collection:
   proceduresPerformed?: number;
   patientSatisfaction?: number;

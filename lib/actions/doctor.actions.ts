@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use server'
 
 import { Client, Account, ID, Query, Users } from "node-appwrite"
@@ -69,6 +70,45 @@ export const registerDoctor = async ({
         console.log(error);
         return null
     }
+}
+
+export const getDoctorByName = async (name: string) => {
+  try {
+    // First check constant doctors list
+    const { Doctors } = await import('@/constants')
+    const staticDoc = Doctors.find(
+      (d: any) => d.name.toLowerCase() === name.toLowerCase()
+    )
+    if (staticDoc) return parseStringify(staticDoc)
+
+    // Fallback: query Appwrite DB
+    const result = await databases.listDocuments(
+      DATABASE_ID!,
+      DOCTOR_COLLECTION_ID,
+      [Query.equal('name', name)]
+    )
+    if (result.documents.length > 0) {
+      return parseStringify(result.documents[0])
+    }
+    return null
+  } catch (error) {
+    console.log('getDoctorByName error:', error)
+    return null
+  }
+}
+
+export const getAllDoctors = async () => {
+  try {
+    const result = await databases.listDocuments(
+      DATABASE_ID!,
+      DOCTOR_COLLECTION_ID,
+      [Query.limit(50)]
+    )
+    return parseStringify(result.documents)
+  } catch (error) {
+    console.log('getAllDoctors error:', error)
+    return []
+  }
 }
 
 export const getDoctor = async (userId: string) => {

@@ -40,8 +40,8 @@ export const getPatient = async (userId: string) => {
     const p = patients.documents[0]
     if (!p) return null
 
-    console.log(p.profilePic)
-    console.log(p.identificationDocumentUrl)
+    // console.log(p.profilePic)
+    // console.log(p.identificationDocumentUrl)
 
     return {
       $id: p.$id,

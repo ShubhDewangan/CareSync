@@ -557,3 +557,26 @@ html::selection {
   background: radial-gradient(ellipse, #5F455F , #9991A3);
   border-radius: 30px;
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   Doctor Profile Page  — /doctor/[name]
+   ═══════════════════════════════════════════════════════════════════ */
+
+.drp-page {
+  min-height: 100vh;
+  background: #EFECE3;
+  color: var(--foreground);
+}
+
+/* ── Nav ─────────────────────────────────────────────────────────── */
+.drp-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #e1d7bc;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  border-bottom: 1px solid rgba(255 255 255 / 8%);
+}
+

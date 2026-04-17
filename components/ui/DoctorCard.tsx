@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Doctor } from '@/types/appwrite'
 import Image from 'next/image'
+import Link from 'next/link'
 import { Button } from './button'
 import { useState } from 'react'
 import BookAppointmentModal from './BookAppointmentModal'
@@ -109,15 +110,17 @@ const DoctorCard = ({doctor, userId, patientId, authUser, fullUser}: {doctor: Do
                     />  
                 </Button>
                 }
-                <Button variant='ghost' className='border-[1px] border-[#203C67] hover:bg-[#203c671c] px-4 py-3'>
-                    View Full Profile
-                    <Image
-                        src='/assets/icons/arrow-top-right.svg'
-                        alt="go to Doctor's Profile"
-                        height={15}
-                        width={15}
-                    />    
-                </Button>
+                <Link href={`/doctor/${doctor.name.replace(/\s+/g, '-')}`}>
+                  <Button variant='ghost' className='border-[1px] border-[#203C67] hover:bg-[#203c671c] px-4 py-3'>
+                      View Full Profile
+                      <Image
+                          src='/assets/icons/arrow-top-right.svg'
+                          alt="go to Doctor's Profile"
+                          height={15}
+                          width={15}
+                      />    
+                  </Button>
+                </Link>
             </footer>
     </div>
   )

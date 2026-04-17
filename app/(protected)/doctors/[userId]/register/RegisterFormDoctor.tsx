@@ -25,11 +25,14 @@ import { Doctor } from "@/types/appwrite";
 import { AuthUser } from "@/context/UserContext";
 import AvatarUploader from "@/components/ui/AvatarUploader";
 import { registerDoctor } from "@/lib/actions/doctor.actions";
+import TagInputField from "@/components/TagInputField"; // ← new
 
 type FormValues = z.infer<typeof DoctorFormValidation>;
 
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
 const LANGUAGES = ["English", "Hindi", "Bengali", "Tamil", "Telugu", "Marathi", "Gujarati", "Kannada", "Punjabi"]
+
+// Suggestions for tag inputs (doctor can still type custom ones)
 const SPECIALIZATIONS = [
   "General Physician", "Cardiologist", "Neurologist", "Dermatologist",
   "Gynaecologist", "Paediatrician", "Orthopaedic", "Psychiatrist",
@@ -37,6 +40,7 @@ const SPECIALIZATIONS = [
   "Gastroenterologist", "Endocrinologist", "Surgeon", "Radiologist",
 ]
 const QUALIFICATIONS = ["MBBS", "MD", "MS", "BDS", "MDS", "DNB", "DM", "MCh", "FRCS", "MRCP"]
+
 const ID_TYPES = ["Medical Council Registration", "Aadhaar Card", "PAN Card", "Passport", "Driving Licence"]
 
 // ── Section Header ─────────────────────────────────────────────────────────
@@ -76,13 +80,19 @@ export const RegisterFormDoctor = ({ user, doctor }: {
       birthDate: doctor?.birthDate ? new Date(doctor.birthDate) : new Date(),
       gender: (doctor?.gender as any) ?? "male",
       address: doctor?.address ?? "",
-      specialization: doctor?.specialization ?? "",
-      qualification: doctor?.qualification ?? "",
+      // ── now arrays ──────────────────────────────────────────
+      specialization: doctor?.specialization
+        ? (Array.isArray(doctor.specialization) ? doctor.specialization : [doctor.specialization])
+        : [],
+      qualification: doctor?.qualification
+        ? (Array.isArray(doctor.qualification) ? doctor.qualification : [doctor.qualification])
+        : [],
+      // ────────────────────────────────────────────────────────
       experience: doctor?.experience ?? "",
       hospital: doctor?.hospital ?? "",
       availableDays: doctor?.availableDays ?? [],
       consultationHours: doctor?.consultationHours ?? "",
-      consultationFee: doctor?.consultationFee ?? 0,
+      consultationFee: doctor?.consultationFee ?? '',
       appointmentSpan: doctor?.appointmentSpan ?? "",
       about: doctor?.about ?? "",
       languages: doctor?.languages ?? [],
@@ -98,7 +108,6 @@ export const RegisterFormDoctor = ({ user, doctor }: {
 
   async function onSubmit(values: z.infer<typeof DoctorFormValidation>) {
     setLoading(true)
-    
     try {
       const doctorData = {
         identificationDocument: values.identificationDocument ?? [],
@@ -106,6 +115,9 @@ export const RegisterFormDoctor = ({ user, doctor }: {
         ...values,
         birthDate: new Date(values.birthDate),
         profilePic: values.profilePic,
+        // arrays — Appwrite stores these natively when attribute is set to Array: true
+        specialization: values.specialization,
+        qualification: values.qualification,
       }
       const result = await registerDoctor(doctorData as unknown as RegisterDoctorParams)
       if (result) {
@@ -239,32 +251,45 @@ export const RegisterFormDoctor = ({ user, doctor }: {
               {/* ── 2. Professional Details ───────────────────────────── */}
               <SectionHeader title="Professional Details" subtitle="Your medical qualifications and expertise" />
 
-              {/* Specialization + Qualification */}
-              <div className="flex flex-col xl:flex-row gap-4">
-                <CustomFormField
-                  fieldType={FormFieldType.SELECT}
-                  control={form.control}
-                  name="specialization"
-                  label="Specialization"
-                  placeholder="Select your specialization"
-                >
-                  {SPECIALIZATIONS.map((s) => (
-                    <SelectItem key={s} value={s} className='text-black'>{s}</SelectItem>
-                  ))}
-                </CustomFormField>
+              {/* ── Specialization — tag input (replaces SELECT) ── */}
+              <CustomFormField
+                fieldType={FormFieldType.SKELETON}
+                control={form.control}
+                name="specialization"
+                label="Specialization"
+                renderSkeleton={(field: any) => (
+                  <FormControl>
+                    <TagInputField
+                      label="Specialization"
+                      values={field.value ?? []}
+                      onChange={field.onChange}
+                      suggestions={SPECIALIZATIONS}
+                      placeholder="Select or type a specialization..."
+                      allowCustom={true}
+                    />
+                  </FormControl>
+                )}
+              />
 
-                <CustomFormField
-                  fieldType={FormFieldType.SELECT}
-                  control={form.control}
-                  name="qualification"
-                  label="Highest Qualification"
-                  placeholder="Select qualification"
-                >
-                  {QUALIFICATIONS.map((q) => (
-                    <SelectItem key={q} value={q} className="text-black">{q}</SelectItem>
-                  ))}
-                </CustomFormField>
-              </div>
+              {/* ── Qualification — tag input (replaces SELECT) ── */}
+              <CustomFormField
+                fieldType={FormFieldType.SKELETON}
+                control={form.control}
+                name="qualification"
+                label="Qualifications"
+                renderSkeleton={(field: any) => (
+                  <FormControl>
+                    <TagInputField
+                      label="Qualifications"
+                      values={field.value ?? []}
+                      onChange={field.onChange}
+                      suggestions={QUALIFICATIONS}
+                      placeholder="Select or type a qualification..."
+                      allowCustom={true}
+                    />
+                  </FormControl>
+                )}
+              />
 
               {/* Experience + Hospital */}
               <div className="flex flex-col xl:flex-row gap-4">

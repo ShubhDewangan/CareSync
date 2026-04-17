@@ -35,7 +35,7 @@ export default function DashboardBookButton({
     variant={variant}
     text={text}
       DateToday={dateToday}
-      doctor={doctor}
+      doctor={doctor as any}
       isOpen={isOpen}
       setIsOpen={setIsOpen}
       userId={userId}

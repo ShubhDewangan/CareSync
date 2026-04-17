@@ -2,6 +2,7 @@
 import { getLoggedInUser } from "@/lib/actions/auth.actions"
 import { getDoctor } from "@/lib/actions/doctor.actions"
 import { redirect } from "next/navigation"
+import DoctorDashboardClient from "@/components/ui/doctor/DoctorDashboardPage"
 
 export default async function DoctorDashboardPage({
   params,
@@ -21,10 +22,5 @@ export default async function DoctorDashboardPage({
 
   if (!doctor) redirect(`/doctors/${userId}/register`)
 
-  return (
-    <div>
-      {/* Your doctor dashboard UI here */}
-      <h1>Welcome Dr. {doctor.name}</h1>
-    </div>
-  )
+  return <DoctorDashboardClient doctor={doctor} />
 }

@@ -243,7 +243,7 @@ function Home() {
         <div className='bg-[#8FABD4] h-auto w-[95%] flex p-5 gap-5 rounded-2xl mt-5 flex-wrap items-center justify-center mx-auto mb-5 border-[4px] border-[#203C67]'>
           {Doctors.map((doctor, idx) => (
             <DoctorCard
-              doctor={doctor}
+              doctor={doctor as unknown as Doctor}
               key={idx}
               userId={authUser?.$id as string}
               patientId={fullUser?.$id as string}
