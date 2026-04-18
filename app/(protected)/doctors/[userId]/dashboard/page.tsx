@@ -22,5 +22,5 @@ export default async function DoctorDashboardPage({
 
   if (!doctor) redirect(`/doctors/${userId}/register`)
 
-  return <DoctorDashboardClient doctor={doctor} />
+  return <DoctorDashboardClient doctor={doctor} user={authUser} appointments={[]} />
 }

@@ -54,6 +54,8 @@ export const DoctorFormDefaultValues = {
   identificationType: "Birth Certificate",
   identificationNumber: "",
   identificationDocument: [],
+  slotsAvailable: [],
+  earnedTotal: 0,
 }
 
 export const IdentificationTypes = [

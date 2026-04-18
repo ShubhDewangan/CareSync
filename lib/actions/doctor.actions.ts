@@ -150,10 +150,64 @@ export const getDoctor = async (userId: string) => {
       identificationDocument: d.identificationDocument,
       privacyConsent: d.privacyConsent,
       disclosureConsent: d.disclosureConsent,
-      updationConsent: d.updationConsent
+      updationConsent: d.updationConsent,
+      slotsAvailable: d.slotsAvailable,
+      earnedTotal: d.earnedTotal,
     }
   } catch (error) {
     console.log("getDoctor error:", error)
+    return null
+  }
+}
+
+export const updateDoctor = async (
+  doctorId: string,     // ← add this
+  { identificationDocument, profilePic, ...doctor }: RegisterDoctorParams
+) => {
+  try {
+    let file;
+    let profilePicFile;
+
+    if (identificationDocument) {
+      const blobFile = identificationDocument.get('blobFile') as Blob
+      const fileName = identificationDocument.get('fileName') as string
+      const arrayBuffer = await blobFile.arrayBuffer()
+      const buffer = Buffer.from(arrayBuffer)
+      const inputFile = InputFile.fromBuffer(buffer, fileName)
+      file = await storage.createFile(BUCKET_ID!, ID.unique(), inputFile)
+    }
+
+    if (profilePic && profilePic.length > 0) {
+      const pic = profilePic[0]
+      const arrayBuffer = await pic.arrayBuffer()
+      const buffer = Buffer.from(arrayBuffer)
+      const inputFile = InputFile.fromBuffer(buffer, pic.name)
+      profilePicFile = await storage.createFile(BUCKET_ID!, ID.unique(), inputFile)
+    }
+
+    const data: any = {
+      ...doctor,
+    };
+
+    if (file) {
+      data.identificationDocumentationId = file.$id;
+      data.identificationDocumentUrl = `${ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${file.$id}/view?project=${PROJECT_ID}`;
+    }
+
+    if (profilePicFile) {
+      data.profilePic = `${ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${profilePicFile.$id}/view?project=${PROJECT_ID}`;
+    }
+
+    const updatedDoctor = await databases.updateDocument(
+      DATABASE_ID!,
+      PATIENT_COLLECTION_ID!,
+      doctorId,
+      data
+    );
+    
+    return parseStringify(updatedDoctor)
+  } catch (error) {
+    console.log(error)
     return null
   }
 }

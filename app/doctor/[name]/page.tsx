@@ -63,8 +63,9 @@ function getInitials(name: string) {
     const decodedName = decodeURIComponent(name).replace(/-/g, ' ')
 
     let userId: string | null = null
-  let user = null
+  let user: FullUser | null = null
   let userType: string | null = null
+  let selfProfile = false
 
   try {
     const cookieStore = await cookies()
@@ -74,15 +75,16 @@ function getInitials(name: string) {
       const payload = await verifyJwt(token)
       if (payload) {
         userId = payload.userId
+        console.log(userId)
         userType = payload.userType
-        if (userType === 'user') { user = await getPatient(userId) }
-        if (userType === 'doctor') { user = await getDoctor(userId) }
+        if (userType === 'user') { user = await getPatient(userId) as FullUser }
+        if (userType === 'doctor') { user = await getDoctor(userId) as FullUser }
       }
     }
   } catch {
     // Not logged in — userId stays null
   }
-
+  
   // console.log(userId, user)
   // Try static doctors first, then DB
   let doctor = Doctors.find(
@@ -95,6 +97,10 @@ function getInitials(name: string) {
   
   if (!doctor) notFound()
     
+  if (doctor.userId === userId) {
+    selfProfile = true;
+  }
+  
     // Other doctors (exclude current)
     const otherDoctors = Doctors.filter(
       (d) => d.name.toLowerCase() !== decodedName.toLowerCase()
@@ -112,10 +118,6 @@ function getInitials(name: string) {
     
     const allDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
     
-    let selfProfile = false
-    if (doctor.userId === user?.userId) {
-      selfProfile = true;
-    }
     
   function calculateAge(birthDate: string) {
   const today = new Date();
@@ -134,6 +136,8 @@ function getInitials(name: string) {
 
   let age = today.getFullYear() - birth.getFullYear();
   const m = today.getMonth() - birth.getMonth();
+
+  console.log(user)
 
   if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
     age--;

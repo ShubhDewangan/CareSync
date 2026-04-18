@@ -117,9 +117,6 @@ export const PatientFormValidation = z.object({
     }),
 })
 
-// -----------------Doctor--------------------------
-// Add this to lib/validation.ts — replace the existing DoctorFormValidation
-
 // ─── Doctor ──────────────────────────────────────────────────────────────────
 
 export const DoctorFormValidation = z.object({
@@ -145,11 +142,11 @@ export const DoctorFormValidation = z.object({
 
   // professional
   specialization: z
-    .string()
+    .array(z.string())
     .min(2, "Specialization must be at least 2 characters.")
     .max(100, "Specialization must be at most 100 characters."),
   qualification: z
-    .string()
+    .array(z.string())
     .min(2, "Qualification must be at least 2 characters.")
     .max(100, "Qualification must be at most 100 characters."),
   experience: z
@@ -207,6 +204,19 @@ export const DoctorFormValidation = z.object({
     .refine((value) => value === true, {
       message: "You must consent to privacy in order to proceed",
     }),
+
+  slotsAvailable: z
+  .array(
+    z.string().regex(
+      /^(0?[1-9]|1[0-2]):[0-5][0-9] (AM|PM)$/,
+      "Enter a valid time slot (e.g. 9:00 AM)"
+    )
+  )
+  .min(1, "Add at least one time slot."),
+
+  earnedTotal: z
+    .number({ invalid_type_error: "Earned total must be a number." })
+    .min(0, "Earned total cannot be negative."),
 })
 
 export type DoctorFormValues = z.infer<typeof DoctorFormValidation>

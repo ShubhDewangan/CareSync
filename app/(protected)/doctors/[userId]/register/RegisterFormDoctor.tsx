@@ -40,6 +40,22 @@ const SPECIALIZATIONS = [
   "Gastroenterologist", "Endocrinologist", "Surgeon", "Radiologist",
 ]
 const QUALIFICATIONS = ["MBBS", "MD", "MS", "BDS", "MDS", "DNB", "DM", "MCh", "FRCS", "MRCP"]
+const TIME_SLOTS = [
+  "9:00 AM",
+  "9:30 AM",
+  "10:00 AM",
+  "10:30 AM",
+  "11:00 AM",
+  "11:30 AM",
+  "2:00 PM",
+  "2:30 PM",
+  "3:00 PM",
+  "3:30 PM",
+  "4:00 PM",
+  "5:00 PM",
+  "5:30 PM",
+]
+
 
 const ID_TYPES = ["Medical Council Registration", "Aadhaar Card", "PAN Card", "Passport", "Driving Licence"]
 
@@ -103,6 +119,8 @@ export const RegisterFormDoctor = ({ user, doctor }: {
       updationConsent: doctor?.updationConsent ?? false,
       privacyConsent: doctor?.privacyConsent ?? false,
       disclosureConsent: doctor?.disclosureConsent ?? false,
+      slotsAvailable: doctor?.slotsAvailable ? (Array.isArray(doctor.slotsAvailable) ? doctor.slotsAvailable : [doctor.slotsAvailable]) : [],
+      earnedTotal: doctor?.earnedTotal ?? 0,
     } as FormValues,
   });
 
@@ -421,6 +439,25 @@ export const RegisterFormDoctor = ({ user, doctor }: {
                   placeholder="e.g. 500"
                 />
               </div>
+
+              <CustomFormField
+                fieldType={FormFieldType.SKELETON}
+                control={form.control}
+                name="slotsAvailable"
+                label="Slots Availability"
+                renderSkeleton={(field: any) => (
+                  <FormControl>
+                    <TagInputField
+                      label="Slots Availability"
+                      values={field.value ?? []}
+                      onChange={field.onChange}
+                      suggestions={TIME_SLOTS}
+                      placeholder="Select or type Time slots for your appointments..."
+                      allowCustom={true}
+                    />
+                  </FormControl>
+                )}
+              />
 
               {/* ── 4. Identification ─────────────────────────────────── */}
               <SectionHeader title="Identification & Verification" subtitle="Upload your medical registration documents" />

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client"
 
 // components/doctor/DoctorDashboardClient.tsx
@@ -11,15 +12,53 @@ import SettingsTab from "./SettingTab"
 
 type Tab = "dashboard" | "schedule" | "settings"
 
-interface Doctor {
-  name: string
-  email: string
-  specialization: string
-  profilePic?: string
+interface Appointment {
   $id: string
+  schedule: string
+  patientName: string
+  reason: string
+  status: "pending" | "scheduled" | "cancelled"
 }
 
-export default function DoctorDashboardClient({ doctor }: { doctor: Doctor }) {
+interface Doctor {
+  $id: string
+  name: string
+  email: string
+  phone: string
+  specialization: string
+  profilePic?: string
+  gender: string
+  birthDate: string
+  qualification: string
+  experience: string
+  hospital: string
+  address: string
+  availableDays: string[]
+  consultationHours: string
+  consultationFee: string
+  appointmentSpan: string
+  about: string
+  languages: string[]
+  slotsAvailable: string[]
+  earnedTotal: number
+  identificationType: string
+  updationConsent: boolean
+  disclosureConsent: boolean
+  privacyConsent: boolean
+}
+
+interface Props {
+  doctor: Doctor
+  user: {
+    $id: string
+    name: string
+    email: string
+    phone: string
+  }
+  appointments: Appointment[]
+}
+
+export default function DoctorDashboardClient({ doctor, user, appointments }: Props) {
   const [activeTab, setActiveTab] = useState<Tab>("dashboard")
 
   const tabs: { key: Tab; label: string }[] = [
@@ -27,6 +66,8 @@ export default function DoctorDashboardClient({ doctor }: { doctor: Doctor }) {
     { key: "schedule", label: "Schedule" },
     { key: "settings", label: "Settings" },
   ]
+
+  console.log(typeof doctor.specialization, doctor.specialization)
 
   const initials = doctor.name
     .split(" ")
@@ -42,7 +83,7 @@ export default function DoctorDashboardClient({ doctor }: { doctor: Doctor }) {
         <div className="rounded-2xl flex flex-col items-center border border-[#203C67] bg-[#EFECE3] shadow-md overflow-hidden h-full">
           {/* Logo */}
           <div className="w-full flex justify-center pt-4 pb-2 border-b border-[#203C6720]">
-            <Image src="/logo.png" alt="logo" height={1000} width={1000} className="h-14 w-fit" />
+            <Link href='/'><Image src="/logo.png" alt="logo" height={1000} width={1000} className="h-14 w-fit" /></Link>
           </div>
 
           {/* Profile */}
@@ -66,7 +107,7 @@ export default function DoctorDashboardClient({ doctor }: { doctor: Doctor }) {
               {doctor.name}
             </h2>
             <p className="text-[11px] text-gray-500 truncate max-w-full mt-0.5">{doctor.email}</p>
-            <span className="text-[12px] text-gray-600 mt-1">{doctor.specialization}</span>
+            <div className='p-2 text-gray-700 flex gap-2 flex-wrap text-[13px] justify-center'>{doctor.specialization.map((spec: any) => <span className="bg-[#A6BAD7]/50 rounded-full px-2 border border-gray-700/70" key={spec}>{spec}</span>)}</div>
             <div className="flex gap-2 mt-2">
               <span className="text-[11px] bg-[#8fabd4c1] px-3 py-1 rounded-full border border-[#848282]">
                 Doctor
@@ -129,7 +170,7 @@ export default function DoctorDashboardClient({ doctor }: { doctor: Doctor }) {
       </aside>
 
       {/* ── Main content ── */}
-      <main className="flex-1 flex flex-col p-5 gap-4 overflow-y-auto min-w-0">
+      <main className="flex-1 flex flex-col pb-5 pr-5 pt-5 gap-4 overflow-y-auto min-w-0">
         {/* Tab bar */}
         <div className="flex justify-center">
           <div className="bg-[#A6BAD7] flex gap-1.5 rounded-xl px-2 py-2 shadow-sm">
@@ -152,7 +193,14 @@ export default function DoctorDashboardClient({ doctor }: { doctor: Doctor }) {
         {/* Tab content */}
         <div className="flex-1 flex flex-col gap-4 min-h-0">
           {activeTab === "dashboard" && <DashboardTab doctor={doctor} />}
-          {activeTab === "schedule" && <ScheduleTab />}
+          {activeTab === "schedule" && (
+            <ScheduleTab
+              doctorId={doctor.$id}
+              user={user}
+              doctor={doctor as any}
+              appointments={appointments}
+            />
+          )}
           {activeTab === "settings" && <SettingsTab />}
         </div>
       </main>

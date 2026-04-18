@@ -59,11 +59,8 @@ export interface Doctor {
   updationConsent?: boolean;
   privacyConsent?: boolean;
   disclosureConsent?: boolean;
-  // extras you may add to Appwrite collection:
-  proceduresPerformed?: number;
-  patientSatisfaction?: number;
-  yearsInPractice?: number;
-  nextAvailable?: string;
+  earnedTotal: number;
+  slotsAvailable: string;
 }
 
 export interface Appointment extends Models.Document {
@@ -75,4 +72,6 @@ export interface Appointment extends Models.Document {
   note: string;
   userId: string;
   cancellationReason: string | null;
+  expiredAt?: Date;
+  completedAt?: Date;
 }

@@ -104,7 +104,7 @@ declare interface RegisterDoctorParams {
   rating: number
   totalPatients: number
 
-    identificationType: string | undefined;
+  identificationType: string | undefined;
   // identificationNumber: string | undefined;
   identificationDocument: File[] | undefined;
 
@@ -112,8 +112,6 @@ declare interface RegisterDoctorParams {
   updationConsent: boolean
   disclosureConsent: boolean
 
-  proceduresPerformed?: number
-  patientSatisfaction?: number
-  yearsInPractice?: number
-  nextAvailable?: string
+  slotsAvailable: string[]
+  earnedTotal: number
 }
