@@ -13,6 +13,31 @@
     background: transparent;
   }
 
+  .custom-scroll::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+
+  .custom-scroll::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .custom-scroll::-webkit-scrollbar-thumb {
+    background: #A6BAD7;
+    border-radius: 999px;
+  }
+
+  .custom-scroll::-webkit-scrollbar-thumb:hover {
+    background: #203C67;
+  }
+
+  /* Hides arrows on Windows Chrome */
+  /* Firefox */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #A6BAD7 transparent;
+  }
+
   :root {
     /* CareSync Blue/Navy Theme */
     --background: #EFECE3;

@@ -1,10 +1,11 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 declare type SearchParamProps = {
   params: Promise<{ [key: string]: string }>
   searchParams: Promise<{ [key: string]: string[] | undefined }>
 }
 declare type Gender = "male" | "female" | "other" | "prefer not to say";
-declare type Status = "pending" | "scheduled" | "cancelled" | 'Appointment Expired' | 'Completed';
+declare type Status = "pending" | "scheduled" | "cancelled" | 'expired' | 'completed';
 declare type Week = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 
 declare interface CreateUserParams {
@@ -46,7 +47,7 @@ declare interface RegisterUserParams extends CreateUserParams {
 
 declare type CreateAppointmentParams = {
   userId: string;
-  patient: string;
+  patient: any;
   primaryDoctor: string;
   reason: string;
   schedule: Date;

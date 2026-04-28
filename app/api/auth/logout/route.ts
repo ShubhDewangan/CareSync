@@ -33,7 +33,7 @@ export async function POST() {
 
     const res = NextResponse.json({ success: true })
     res.cookies.delete(COOKIE_NAME)
-    console.log('hogya')
+    // console.log('hogya')
     return res
 
   } catch (error) {

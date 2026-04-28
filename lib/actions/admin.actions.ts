@@ -140,8 +140,8 @@ export const getWeeklyAppointments = async () => {
       )
 
       days.push({
-        day: day.toLocaleDateString("en-IN", { weekday: "short" }), // Mon, Tue etc
-        date: day.toLocaleDateString("en-IN", { day: "numeric", month: "short" }),
+        day: day.toLocaleDateString("en-IN", { weekday: "short", timeZone: "Asia/Kolkata" }), // Mon, Tue etc
+        date: day.toLocaleDateString("en-IN", { day: "numeric", month: "short", timeZone: "Asia/Kolkata" }),
         count: result.total,
       })
     }

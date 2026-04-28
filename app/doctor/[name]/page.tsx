@@ -75,15 +75,18 @@ function getInitials(name: string) {
       const payload = await verifyJwt(token)
       if (payload) {
         userId = payload.userId
-        console.log(userId)
+        console.log(userId, typeof userId)
         userType = payload.userType
-        if (userType === 'user') { user = await getPatient(userId) as FullUser }
-        if (userType === 'doctor') { user = await getDoctor(userId) as FullUser }
+        if (userType === 'patient') { user = await getPatient(userId) as FullUser }
+        else if (userType === 'doctor') { user = await getDoctor(userId) as FullUser }
       }
     }
   } catch {
     // Not logged in — userId stays null
   }
+
+// then after getPatient returns null:
+
   
   // console.log(userId, user)
   // Try static doctors first, then DB
@@ -214,7 +217,7 @@ function getInitials(name: string) {
             <div className='flex flex-col gap-3'>
               <span className='flex gap-1 text-[14px] text-nowrap border border-[#4A70A9] px-3 py-2 rounded-full font-label'>Consultation Fee:<span>₹{doctor.consultationFee}</span></span>
               <span className='flex gap-1 text-[14px] text-nowrap border border-[#4A70A9] px-3 py-2 rounded-full font-label'>Appointment Span:<span>₹{doctor.appointmentSpan}</span></span>
-              {selfProfile ? <BookAppointmentModal text='Book Appointment' variant='block' DateToday={new Date().toLocaleDateString()} doctor={doctor} userId={userId as string} fullUser={user as unknown as FullUser} falseButton={true} />:<BookAppointmentModal text='Book Appointment' variant='block' DateToday={new Date().toLocaleDateString()} doctor={doctor} userId={userId as string} fullUser={user as unknown as FullUser}/>}
+              {selfProfile ? <BookAppointmentModal text='Book Appointment' variant='block' DateToday={new Date().toLocaleDateString(undefined, { timeZone: "Asia/Kolkata" })} doctor={doctor} userId={userId as string} fullUser={user as unknown as FullUser} falseButton={true} />:<BookAppointmentModal text='Book Appointment' variant='block' DateToday={new Date().toLocaleDateString(undefined, { timeZone: "Asia/Kolkata" })} doctor={doctor} userId={userId as string} fullUser={user as unknown as FullUser}/>}
             </div>
           </div>
 
@@ -328,7 +331,7 @@ function getInitials(name: string) {
             </div>
 
             <div className='border border-[#203C67] flex items-center justify-center rounded-full'>
-              {selfProfile? <BookAppointmentModal variant='ghost' text='Book Appointment' DateToday={new Date().toLocaleDateString()} doctor={doctor} userId={userId as string} fullUser={user as unknown as FullUser} falseButton={true} />:<BookAppointmentModal variant='ghost' text='Book Appointment' DateToday={new Date().toLocaleDateString()} doctor={doctor} userId={userId as string} fullUser={user as unknown as FullUser}/>}
+              {selfProfile? <BookAppointmentModal variant='ghost' text='Book Appointment' DateToday={new Date().toLocaleDateString(undefined, { timeZone: "Asia/Kolkata" })} doctor={doctor} userId={userId as string} fullUser={user as unknown as FullUser} falseButton={true} />:<BookAppointmentModal variant='ghost' text='Book Appointment' DateToday={new Date().toLocaleDateString(undefined, { timeZone: "Asia/Kolkata" })} doctor={doctor} userId={userId as string} fullUser={user as unknown as FullUser}/>}
             </div>
           </div>
 

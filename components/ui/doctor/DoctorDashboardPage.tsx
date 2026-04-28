@@ -9,6 +9,7 @@ import Link from "next/link"
 import DashboardTab from "./DashboardTab"
 import ScheduleTab from "./ScheduleTab"
 import SettingsTab from "./SettingTab"
+import { Doctor } from "@/types/appwrite"
 
 type Tab = "dashboard" | "schedule" | "settings"
 
@@ -20,45 +21,30 @@ interface Appointment {
   status: "pending" | "scheduled" | "cancelled"
 }
 
-interface Doctor {
-  $id: string
-  name: string
-  email: string
-  phone: string
-  specialization: string
-  profilePic?: string
-  gender: string
-  birthDate: string
-  qualification: string
-  experience: string
-  hospital: string
-  address: string
-  availableDays: string[]
-  consultationHours: string
-  consultationFee: string
-  appointmentSpan: string
-  about: string
-  languages: string[]
-  slotsAvailable: string[]
-  earnedTotal: number
-  identificationType: string
-  updationConsent: boolean
-  disclosureConsent: boolean
-  privacyConsent: boolean
-}
-
 interface Props {
   doctor: Doctor
-  user: {
-    $id: string
-    name: string
-    email: string
-    phone: string
-  }
+  user: { $id: string; name: string; email: string; phone: string }
   appointments: Appointment[]
+  // ← add these three
+  stats: {
+    todayCount: number
+    pendingCount: number
+    scheduledCount: number
+    completedCount: number
+    totalPatients: number
+  }
+  earningsData: { day: string; date: string; thisWeek: number; lastWeek: number }[]
+  pendingRequests: any[]
+  recentActivity: { text: string; time: string; color: string }[]
 }
 
-export default function DoctorDashboardClient({ doctor, user, appointments }: Props) {
+export default function DoctorDashboardClient({ 
+  doctor, user, appointments = [], 
+  stats = { todayCount: 0, pendingCount: 0, scheduledCount: 0, completedCount: 0, totalPatients: 0 },
+  earningsData = [],
+  pendingRequests = [],
+  recentActivity = [],
+}: Props) {
   const [activeTab, setActiveTab] = useState<Tab>("dashboard")
 
   const tabs: { key: Tab; label: string }[] = [
@@ -131,10 +117,10 @@ export default function DoctorDashboardClient({ doctor, user, appointments }: Pr
           <div className="w-full px-4 py-4 border-b border-[#203C6720]">
             <p className="text-[10px] uppercase tracking-widest text-gray-400 mb-3">Quick Stats</p>
             <div className="flex flex-col gap-2">
-              {[
-                { label: "Today's Appointments", value: "4", icon: "📅" },
-                { label: "Pending Requests", value: "8", icon: "⏳" },
-                { label: "Avg Rating", value: "4.8★", icon: "⭐" },
+              {stats && [
+                { label: "Today's Appointments", value: stats.todayCount, icon: "📅" },
+                { label: "Pending Requests", value: stats.pendingCount, icon: "⏳" },
+                { label: "Avg Rating", value: doctor?.rating || '-', icon: "⭐" },
               ].map((s) => (
                 <div key={s.label} className="flex items-center justify-between bg-[#D8E4F0] rounded-lg px-3 py-2">
                   <span className="text-[12px] text-gray-600 flex items-center gap-2">
@@ -151,11 +137,7 @@ export default function DoctorDashboardClient({ doctor, user, appointments }: Pr
           <div className="w-full px-4 py-4">
             <p className="text-[10px] uppercase tracking-widest text-gray-400 mb-3">Last Activity</p>
             <div className="flex flex-col gap-2">
-              {[
-                { text: "Confirmed Priya Sharma", time: "2m ago", color: "bg-green-400" },
-                { text: "Completed Raj Kumar consult", time: "1h ago", color: "bg-blue-400" },
-                { text: "Declined Ankit Gupta", time: "3h ago", color: "bg-red-400" },
-              ].map((a, i) => (
+              {recentActivity.map((a, i) => (
                 <div key={i} className="flex items-start gap-2">
                   <div className={`mt-1.5 h-1.5 w-1.5 rounded-full flex-shrink-0 ${a.color}`} />
                   <div>
@@ -192,7 +174,9 @@ export default function DoctorDashboardClient({ doctor, user, appointments }: Pr
 
         {/* Tab content */}
         <div className="flex-1 flex flex-col gap-4 min-h-0">
-          {activeTab === "dashboard" && <DashboardTab doctor={doctor} />}
+          {activeTab === "dashboard" && (
+            <DashboardTab doctor={doctor as any} doctorId={doctor.$id} stats={stats} earningsData={earningsData} pendingRequests={pendingRequests} userId={user.$id as string} />
+          )}
           {activeTab === "schedule" && (
             <ScheduleTab
               doctorId={doctor.$id}
@@ -201,7 +185,7 @@ export default function DoctorDashboardClient({ doctor, user, appointments }: Pr
               appointments={appointments}
             />
           )}
-          {activeTab === "settings" && <SettingsTab />}
+          {activeTab === "settings" && <SettingsTab doctor={doctor as any} doctorId={doctor.$id as string} />}
         </div>
       </main>
     </div>

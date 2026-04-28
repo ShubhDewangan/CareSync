@@ -1,5 +1,9 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client"
 
+import { Doctor } from "@/types/appwrite"
+import { useRouter } from 'next/navigation'
+import { updateDoctor, updateDoctorSettings } from '@/lib/actions/doctor.actions'
 // components/doctor/tabs/SettingsTab.tsx
 
 import { useState } from "react"
@@ -9,7 +13,7 @@ const ALL_DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 interface Settings {
   startTime: string
   endTime: string
-  fee: string
+  fee: string | number
   appointmentSpan: string
   availableDays: string[]
   emailNotif: boolean
@@ -17,20 +21,57 @@ interface Settings {
   bookingNotif: boolean
   reminderNotif: boolean
 }
+const toTime24 = (t: string) => {
+  const match = t.match(/^(0?[1-9]|1[0-2]):([0-5][0-9]) (AM|PM)$/)
+  if (!match) return "09:00"
+  let h = parseInt(match[1])
+  const m = match[2]
+  const period = match[3]
+  if (period === "PM" && h !== 12) h += 12
+  if (period === "AM" && h === 12) h = 0
+  return `${h.toString().padStart(2, "0")}:${m}`
+}
+const parseHours = (ch: string) => {
+  const parts = ch?.split(" - ")
+  if (parts?.length === 2) return { start: toTime24(parts[0].trim()), end: toTime24(parts[1].trim()) }
+  return { start: "09:00", end: "17:00" }
+}
+const DAY_SHORT: Record<string, string> = {
+  Monday: "Mon", Tuesday: "Tue", Wednesday: "Wed",
+  Thursday: "Thu", Friday: "Fri", Saturday: "Sat", Sunday: "Sun"
+}
 
-export default function SettingsTab() {
+const DAY_FULL: Record<string, string> = {
+  Mon: "Monday", Tue: "Tuesday", Wed: "Wednesday",
+  Thu: "Thursday", Fri: "Friday", Sat: "Saturday", Sun: "Sunday"
+}
+
+const formatTo12Hour = (time: string) => {
+  const [h, m] = time.split(":").map(Number)
+  const period = h >= 12 ? "PM" : "AM"
+  const hour = h % 12 === 0 ? 12 : h % 12
+  return `${hour}:${m.toString().padStart(2, "0")} ${period}`
+}
+export default function SettingsTab({ doctor, doctorId }: { doctor: Doctor, doctorId: string }) {
+  const router = useRouter()
+  const [isLoading, setIsLoading] = useState(false)
+  const { start, end } = parseHours(doctor.consultationHours)
+
   const [settings, setSettings] = useState<Settings>({
-    startTime: "09:00",
-    endTime: "18:00",
-    fee: "500",
-    appointmentSpan: "30",
-    availableDays: ["Mon", "Tue", "Wed", "Thu", "Fri"],
+    startTime: start,
+    endTime: end,
+    fee: doctor.consultationFee ?? "500",
+    appointmentSpan: doctor.appointmentSpan ?? "30",
+    availableDays: (doctor.availableDays ?? []).map(d => DAY_SHORT[d] ?? d),
     emailNotif: true,
     smsNotif: false,
     bookingNotif: true,
     reminderNotif: true,
   })
   const [saved, setSaved] = useState(false)
+
+
+
 
   const toggleDay = (day: string) => {
     setSettings((prev) => ({
@@ -41,10 +82,27 @@ export default function SettingsTab() {
     }))
   }
 
-  const handleSave = () => {
-    setSaved(true)
-    setTimeout(() => setSaved(false), 2500)
+  const handleSave = async () => {
+  setIsLoading(true)
+  try {
+    const updated = await updateDoctorSettings(doctorId, {
+      consultationHours: `${formatTo12Hour(settings.startTime)} - ${formatTo12Hour(settings.endTime)}`,
+      consultationFee: String(settings.fee),
+      appointmentSpan: settings.appointmentSpan,
+      availableDays: settings.availableDays.map(d => DAY_FULL[d] ?? d),
+    })
+
+    if (updated) {
+      setSaved(true)
+      setTimeout(() => setSaved(false), 2500)
+      router.refresh()
+    }
+  } catch (error) {
+    console.error('Settings save error:', error)
+  } finally {
+    setIsLoading(false)
   }
+}
 
   const Toggle = ({
     on,

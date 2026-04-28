@@ -26,13 +26,13 @@ function formatSchedule(date: Date | string) {
   tomorrow.setDate(now.getDate() + 1)
 
   if (d.toDateString() === now.toDateString()) {
-    return `Today, ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+    return `Today, ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Kolkata' })}`
   }
   if (d.toDateString() === tomorrow.toDateString()) {
-    return `Tomorrow, ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+    return `Tomorrow, ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Kolkata' })}`
   }
-  return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) +
-    `, ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+  return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Kolkata' }) +
+    `, ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Kolkata' })}`
 }
 
 // ─── Status badge colors ──────────────────────────────────────────────────────
@@ -194,7 +194,7 @@ const lastVisit = appointments
                     <p className="font-semibold text-[13px]">{lastVisit.primaryDoctor}</p>
                   </div>
                   <span className="text-[11px] text-gray-600">
-                    {new Date(lastVisit.schedule).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                    {new Date(lastVisit.schedule).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', timeZone: 'Asia/Kolkata' })}
                   </span>
                 </>
               ) : (
@@ -232,7 +232,7 @@ const lastVisit = appointments
               userId={userId}
               patientId={patient.$id}
               doctorName={patient.primaryDoctor}
-              dateToday={new Date().toLocaleDateString()} 
+              dateToday={new Date().toLocaleDateString(undefined, { timeZone: "Asia/Kolkata" })} 
               variant={"block"} 
               text={"Book Appointment"}
               authUser={authUser}
@@ -283,7 +283,7 @@ const lastVisit = appointments
               {upcomingAppointments.length === 0 ? (
                 <div className="text-center py-8 text-gray-400">
                   <p className="text-[13px]">No upcoming appointments</p>
-                  <DashboardBookButton variant='ghost' text='Book one now ->' userId={userId} patientId={patient.$id} doctorName={patient.primaryDoctor} dateToday={new Date().toLocaleDateString()} authUser={authUser} fullUser={patient}/>
+                  <DashboardBookButton variant='ghost' text='Book one now ->' userId={userId} patientId={patient.$id} doctorName={patient.primaryDoctor} dateToday={new Date().toLocaleDateString(undefined, { timeZone: "Asia/Kolkata" })} authUser={authUser} fullUser={patient}/>
                 </div>
               ) : (
                 upcomingAppointments.slice(0, 4).map((a, i) => (
@@ -340,7 +340,7 @@ const lastVisit = appointments
                         userId={userId}
                         patientId={patient.$id}
                         doctorName={doctorName}
-                        dateToday={new Date().toLocaleDateString()} 
+                        dateToday={new Date().toLocaleDateString(undefined, { timeZone: "Asia/Kolkata" })} 
                         variant='block' 
                         text='Book Appointment'
                         authUser={authUser}
@@ -422,7 +422,7 @@ const lastVisit = appointments
                 userId={userId}
                 patientId={patient.$id}
                 doctorName={patient.primaryDoctor}
-                dateToday={new Date().toLocaleDateString()}
+                dateToday={new Date().toLocaleDateString(undefined, { timeZone: "Asia/Kolkata" })}
                 authUser={authUser}
                 fullUser={patient}
               />

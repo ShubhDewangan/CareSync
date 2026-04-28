@@ -42,6 +42,7 @@ export const getPatient = async (userId: string) => {
 
     // console.log(p.profilePic)
     // console.log(p.identificationDocumentUrl)
+    // console.log(p)
 
     return {
       $id: p.$id,
@@ -76,6 +77,7 @@ export const getPatient = async (userId: string) => {
     }
   } catch (error) {
     console.log("getPatient error:", error)
+    // console.log('nothing')
     return null
   }
 }

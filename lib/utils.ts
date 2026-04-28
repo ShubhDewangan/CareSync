@@ -79,3 +79,31 @@ export function encryptKey(passkey: string) {
 export function decryptKey(passkey: string) {
   return atob(passkey);
 }
+
+export function scheduleToSlotKey(schedule: Date | string): { dateStr: string; timeStr: string } {
+  const d = new Date(schedule)
+
+  // ← Use local date parts instead of toISOString() which shifts to UTC
+  const year = d.getFullYear()
+  const month = String(d.getMonth() + 1).padStart(2, "0")
+  const day = String(d.getDate()).padStart(2, "0")
+  const dateStr = `${year}-${month}-${day}`
+
+  let hours = d.getHours()
+  const minutes = d.getMinutes()
+  const period = hours >= 12 ? "PM" : "AM"
+  if (hours > 12) hours -= 12
+  if (hours === 0) hours = 12
+
+  const timeStr = `${hours}:${minutes.toString().padStart(2, "0")} ${period}`
+  return { dateStr, timeStr }
+}
+
+// Add this helper in the component (or in utils.ts):
+export function toLocalDateStr(d: Date): string {
+  const year = d.getFullYear()
+  const month = String(d.getMonth() + 1).padStart(2, "0")
+  const day = String(d.getDate()).padStart(2, "0")
+  return `${year}-${month}-${day}` // "2026-04-26" in local timezone
+}
+

@@ -29,18 +29,18 @@ import TagInputField from "@/components/TagInputField"; // ← new
 
 type FormValues = z.infer<typeof DoctorFormValidation>;
 
-const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
-const LANGUAGES = ["English", "Hindi", "Bengali", "Tamil", "Telugu", "Marathi", "Gujarati", "Kannada", "Punjabi"]
+export const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+export const LANGUAGES = ["English", "Hindi", "Bengali", "Tamil", "Telugu", "Marathi", "Gujarati", "Kannada", "Punjabi"]
 
 // Suggestions for tag inputs (doctor can still type custom ones)
-const SPECIALIZATIONS = [
+export const SPECIALIZATIONS = [
   "General Physician", "Cardiologist", "Neurologist", "Dermatologist",
   "Gynaecologist", "Paediatrician", "Orthopaedic", "Psychiatrist",
   "Ophthalmologist", "ENT Specialist", "Dentist", "Urologist",
   "Gastroenterologist", "Endocrinologist", "Surgeon", "Radiologist",
 ]
-const QUALIFICATIONS = ["MBBS", "MD", "MS", "BDS", "MDS", "DNB", "DM", "MCh", "FRCS", "MRCP"]
-const TIME_SLOTS = [
+export const QUALIFICATIONS = ["MBBS", "MD", "MS", "BDS", "MDS", "DNB", "DM", "MCh", "FRCS", "MRCP"]
+export const TIME_SLOTS = [
   "9:00 AM",
   "9:30 AM",
   "10:00 AM",
@@ -149,6 +149,29 @@ export const RegisterFormDoctor = ({ user, doctor }: {
       setLoading(false)
     }
   }
+
+  const parseConsultationHours = (value: string) => {
+  const parts = value?.split(" - ")
+  if (parts?.length === 2) {
+    const toTime = (t: string) => {
+      const [time, period] = t.trim().split(" ")
+      // eslint-disable-next-line prefer-const
+      let [h, m] = time.split(":").map(Number)
+      if (period === "PM" && h !== 12) h += 12
+      if (period === "AM" && h === 12) h = 0
+      return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}`
+    }
+    return { start: toTime(parts[0]), end: toTime(parts[1]) }
+  }
+  return { start: "09:00", end: "17:00" }
+}
+
+const formatTo12Hour = (time: string) => {
+  const [h, m] = time.split(":").map(Number)
+  const period = h >= 12 ? "PM" : "AM"
+  const hour = h % 12 === 0 ? 12 : h % 12
+  return `${hour}:${m.toString().padStart(2, "0")} ${period}`
+}
 
   return (
     <div className="min-h-screen bg-[#EFECE3] overflow-hidden xl:bg-transparent xl:relative">
@@ -417,13 +440,46 @@ export const RegisterFormDoctor = ({ user, doctor }: {
 
               {/* Consultation hours + appointment span + fee */}
               <div className="flex flex-col xl:flex-row gap-4">
-                <CustomFormField
-                  fieldType={FormFieldType.INPUT}
-                  control={form.control}
-                  name="consultationHours"
-                  label="Consultation Hours"
-                  placeholder="e.g. 9:00 AM – 5:00 PM"
-                />
+                {/* Consultation Hours */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[11px] text-gray-500 font-medium">Consultation Hours</label>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-[11px] text-gray-400">Start time</label>
+                      <input
+                        type="time"
+                        defaultValue={parseConsultationHours(form.getValues("consultationHours")).start}
+                        onChange={(e) => {
+                          const end = parseConsultationHours(form.getValues("consultationHours")).end
+                          form.setValue(
+                            "consultationHours",
+                            `${formatTo12Hour(e.target.value)} - ${formatTo12Hour(end)}`
+                          )
+                        }}
+                        className="border border-[#203C6740] rounded-lg px-3 py-2 text-[13px] bg-white/60 focus:outline-none focus:border-[#203C67] text-gray-800"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-[11px] text-gray-400">End time</label>
+                      <input
+                        type="time"
+                        defaultValue={parseConsultationHours(form.getValues("consultationHours")).end}
+                        onChange={(e) => {
+                          const start = parseConsultationHours(form.getValues("consultationHours")).start
+                          form.setValue(
+                            "consultationHours",
+                            `${formatTo12Hour(start)} - ${formatTo12Hour(e.target.value)}`
+                          )
+                        }}
+                        className="border border-[#203C6740] rounded-lg px-3 py-2 text-[13px] bg-white/60 focus:outline-none focus:border-[#203C67] text-gray-800"
+                      />
+                    </div>
+                  </div>
+                  {/* live preview */}
+                  <p className="text-[11px] text-gray-400 mt-1">
+                    Saves as: {form.watch("consultationHours") || "9:00 AM - 5:00 PM"}
+                  </p>
+                </div>
                 <CustomFormField
                   fieldType={FormFieldType.INPUT}
                   control={form.control}

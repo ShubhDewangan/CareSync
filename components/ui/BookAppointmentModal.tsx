@@ -11,28 +11,15 @@ import { Doctor } from '@/types/appwrite'
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
 import { Card, CardContent } from "@/components/ui/card"
-import { cn } from "@/lib/utils"
+import { cn, toLocalDateStr } from "@/lib/utils"
 import { createAppointment } from "@/lib/actions/appointment.actions"
 import { showToast } from "@/components/ui/toaster"
 import { redirect } from 'next/dist/server/api-utils'
 import { usePathname, useRouter } from 'next/navigation'
 import { AuthUser, FullUser } from '@/context/UserContext'
+import { getDoctorBlockedSlots, getDoctorBookedSlots } from '@/lib/actions/doctor.actions'
 
-const TIME_SLOTS = [
-  { label: "09:00 AM", period: "Morning" },
-  { label: "09:30 AM", period: "Morning" },
-  { label: "10:00 AM", period: "Morning" },
-  { label: "10:30 AM", period: "Morning" },
-  { label: "11:00 AM", period: "Morning" },
-  { label: "11:30 AM", period: "Morning" },
-  { label: "02:00 PM", period: "Afternoon" },
-  { label: "02:30 PM", period: "Afternoon" },
-  { label: "03:00 PM", period: "Afternoon" },
-  { label: "03:30 PM", period: "Afternoon" },
-  { label: "04:00 PM", period: "Afternoon" },
-  { label: "05:00 PM", period: "Evening" },
-  { label: "05:30 PM", period: "Evening" },
-]
+
 
 const QUICK_DATES = [
   { label: "Today", value: 0 },
@@ -79,67 +66,135 @@ const BookAppointmentModal = ({
   const [isOpen, setIsOpen] = useState(false)
 
   const path = usePathname()
+  
+    const [blockedSlots, setBlockedSlots] = useState<Record<string, string[]>>({})
+  
+  // Fetch on mount
+  useEffect(() => {
+    getDoctorBlockedSlots(doctor.$id).then(setBlockedSlots)
+  }, [doctor.$id])
+  
+  const [bookedSlots, setBookedSlots] = useState<Record<string, string[]>>({})
+  
+  useEffect(() => {
+    getDoctorBookedSlots(doctor.$id).then(setBookedSlots)
+  }, [doctor.$id])
 
+  // In the slot button — add booked check alongside blocked:
+  
+  const canProceed = !!date && !!selectedTime
+
+  function getPeriod(slot: string): string {
+    const match = slot.match(/^(0?[1-9]|1[0-2]):([0-5][0-9]) (AM|PM)$/)
+    if (!match) return "Other"
+    let hours = parseInt(match[1])
+    const period = match[3]
+    if (period === "PM" && hours !== 12) hours += 12
+    if (period === "AM" && hours === 12) hours = 0
+    if (hours < 12) return "Morning"
+    if (hours < 17) return "Afternoon"
+    return "Evening"
+  }
+  
+  function buildTimeSlots(slotsAvailable: string[]) {
+    return slotsAvailable.map(slot => ({
+      label: slot,
+      period: getPeriod(slot),
+    }))
+  }
+  
+  const TIME_SLOTS = buildTimeSlots(doctor?.slotsAvailable as string[] ?? [])
+  
   const groupedSlots = TIME_SLOTS.reduce<Record<string, string[]>>((acc, s) => {
     if (!acc[s.period]) acc[s.period] = []
     acc[s.period].push(s.label)
     return acc
   }, {})
 
-  const canProceed = !!date && !!selectedTime
+// Helper to check if a slot is blocked for the selected date
 
-  function handleDateChange(d: Date | undefined) {
-    setDate(d)
-    setSelectedTime(null)
-    if (d) setCurrentMonth(new Date(d.getFullYear(), d.getMonth(), 1))
+// Add this helper
+function getSelectedDayName(d: Date): string {
+  return ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"][d.getDay()]
+}
+
+// Add this derived value inside the component (recomputes on date change)
+const selectedDayName = date ? getSelectedDayName(date) : null
+const isDayOff = selectedDayName ? !doctor.availableDays.includes(selectedDayName) : false
+
+  function isBlocked(slot: string): boolean {
+  if (isDayOff) return true  // entire day is off
+  if (!date) return false
+  const dateStr = toLocalDateStr(date)
+  return blockedSlots[dateStr]?.includes(slot) ?? false
+}
+
+function isBooked(slot: string): boolean {
+  if (!date) return false
+  const dateStr = toLocalDateStr(date)
+  return bookedSlots[dateStr]?.includes(slot) ?? false
+}
+
+function handleDateChange(d: Date | undefined) {
+  setDate(d)
+  if (d && selectedTime) {
+    const dateStr = toLocalDateStr(d)  // ← fix
+    if (blockedSlots[dateStr]?.includes(selectedTime)) {
+      setSelectedTime(null)
+    }
   }
-
+  if (d) setCurrentMonth(new Date(d.getFullYear(), d.getMonth(), 1))
+}
+  
   function handleQuickDate(days: number) {
     handleDateChange(addDays(new Date(), days))
   }
-
+  
   // ─── Build schedule datetime from date + time string ─────────────
   function buildSchedule(): Date {
     if (!date || !selectedTime) return new Date()
+      
+      const [time, meridiem] = selectedTime.split(" ")
+      // eslint-disable-next-line prefer-const
+      let [hours, minutes] = time.split(":").map(Number)
+      
+      if (meridiem === "PM" && hours !== 12) hours += 12
+      if (meridiem === "AM" && hours === 12) hours = 0
+      
+      const scheduled = new Date(date)
+      scheduled.setHours(hours, minutes, 0, 0)
+      return scheduled
+    }
+    
+    // ─── Confirm — calls createAppointment server action ─────────────
+    async function handleConfirm() {
+      if (!canProceed) return
+      setIsLoading(true)
+      
+      try {
+        const appointmentData: CreateAppointmentParams = {
+          userId,
+          patient: fullUser?.$id as any,
+          primaryDoctor: doctor.name,
+          schedule: buildSchedule(),
+          reason: reason || "General consultation",
+          note: note || "",
+          status: "pending" as Status,
 
-    const [time, meridiem] = selectedTime.split(" ")
-    // eslint-disable-next-line prefer-const
-    let [hours, minutes] = time.split(":").map(Number)
+        }
 
-    if (meridiem === "PM" && hours !== 12) hours += 12
-    if (meridiem === "AM" && hours === 12) hours = 0
-
-    const scheduled = new Date(date)
-    scheduled.setHours(hours, minutes, 0, 0)
-    return scheduled
-  }
-
-  // ─── Confirm — calls createAppointment server action ─────────────
-  async function handleConfirm() {
-    if (!canProceed) return
-    setIsLoading(true)
-
-    try {
-      const appointmentData: CreateAppointmentParams = {
-        userId,
-        patient: patientId as string,
-        primaryDoctor: doctor.name,
-        schedule: buildSchedule(),
-        reason: reason || "General consultation",
-        note: note || "",
-        status: "pending" as Status,
-      }
-
-      const newAppointment = await createAppointment(appointmentData)
-
-      if (newAppointment) {
-        showToast("success", "Appointment booked successfully!", "top-right")
-        setStep(3)
-        await new Promise(resolve => setTimeout(resolve, 3 * 1000))
-        setIsOpen(false)
-        // Reset state
-        setDate(new Date())
-        setSelectedTime(null)
+        console.log(appointmentData.schedule)
+        
+        const newAppointment = await createAppointment(appointmentData)
+        
+        if (newAppointment) {
+          showToast("success", "Appointment booked successfully!", "top-right")
+          setStep(3)
+          await new Promise(resolve => setTimeout(resolve, 3 * 1000))
+          setIsOpen(false)
+          // Reset state
+          setDate(new Date())
+          setSelectedTime(null)
         setReason("")
         setNote("")
         setStep(1)
@@ -155,13 +210,13 @@ const BookAppointmentModal = ({
       console.log(path)
     }
   }
-
+  
   const handleBookingButton = () => {
-   if (!fullUser) {
-    showToast('info', 'Please log in to book an Appointment!', 'top-right')
-  } else {
-    setIsOpen(true)
-    setStep(1)
+    if (!fullUser) {
+      showToast('info', 'Please log in to book an Appointment!', 'top-right')
+    } else {
+      setIsOpen(true)
+      setStep(1)
   }
 
   if (falseButton) {
@@ -305,20 +360,31 @@ const BookAppointmentModal = ({
                         <div key={period}>
                           <p className="text-[11px] text-[#343641]/50 font-medium mb-2">{period}</p>
                           <div className="grid grid-cols-3 gap-1.5">
-                            {slots.map((slot) => (
-                              <button
-                                key={slot}
-                                onClick={() => setSelectedTime(slot)}
-                                className={cn(
-                                  "py-2 px-2 rounded-lg border text-[12px] font-medium transition-all duration-150",
-                                  selectedTime === slot
-                                    ? "bg-[#4A70A9] text-white border-[#4A70A9] shadow-sm"
-                                    : "bg-white text-[#343641] border-[#c8d4de] hover:border-[#4A70A9] hover:text-[#4A70A9]"
-                                )}
-                              >
-                                {slot}
-                              </button>
-                            ))}
+                            {slots.map((slot) => {
+                              const blocked = isBlocked(slot)
+                              const booked = isBooked(slot)
+                              const unavailable = blocked || booked
+                              return (
+                                <button
+                                  key={slot}
+                                  disabled={unavailable}
+                                  onClick={() => !unavailable && setSelectedTime(slot)}
+                                  className={cn(
+                                    "py-2 px-2 rounded-lg border text-[12px] font-medium transition-all duration-150",
+                                    booked
+                                      ? "bg-[#C8D9EE] text-[#203C67] border-[#A6BAD7] cursor-not-allowed opacity-60"
+                                      : blocked
+                                        ? "bg-gray-100 text-gray-300 border-gray-200 cursor-not-allowed line-through"
+                                        : selectedTime === slot
+                                          ? "bg-[#4A70A9] text-white border-[#4A70A9] shadow-sm"
+                                          : "bg-white text-[#343641] border-[#c8d4de] hover:border-[#4A70A9] hover:text-[#4A70A9]"
+                                  )}
+                                  title={booked ? "Already booked" : blocked ? "Blocked by doctor" : undefined}
+                                >
+                                  {slot}
+                                </button>
+                              )
+                            })}
                           </div>
                         </div>
                       ))}

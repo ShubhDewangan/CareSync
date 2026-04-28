@@ -75,6 +75,7 @@ function Home() {
       }
     }
     checkSession()
+    // setAuthChecked(true)
   }, [])
 
   // ── Load full user from DB ───────────────────────────────────────
@@ -158,7 +159,7 @@ function Home() {
           upcoming,
           lastVisitDoctor: lastVisit?.primaryDoctor,
           lastVisitDate: lastVisit
-            ? new Date(lastVisit.schedule).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
+            ? new Date(lastVisit.schedule).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', timeZone: 'Asia/Kolkata' })
             : undefined,
         })
       } catch (e) {

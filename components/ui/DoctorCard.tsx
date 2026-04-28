@@ -20,7 +20,7 @@ const DoctorCard = ({doctor, userId, patientId, authUser, fullUser}: {doctor: Do
 
     if (isOpen) {
         return (
-            <BookAppointmentModal DateToday={new Date().toLocaleDateString()} doctor={doctor} isOpen={isOpen} setIsOpen={setIsOpen} userId={userId} patientId={patientId} authUser={authUser} fullUser={fullUser} />
+            <BookAppointmentModal DateToday={new Date().toLocaleDateString(undefined, { timeZone: "Asia/Kolkata" })} doctor={doctor} isOpen={true as boolean} setIsOpen={setIsOpen} userId={userId} patientId={patientId} authUser={authUser} fullUser={fullUser} />
         )
     }
 

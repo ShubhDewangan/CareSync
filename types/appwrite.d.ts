@@ -42,8 +42,8 @@ export interface Doctor {
   birthDate: string;             // ISO date string
   gender: Gender
   address: string;
-  specialization: string;
-  qualification: string;
+  specialization: string[];
+  qualification: string[];
   experience: string;
   hospital: string;
   availableDays: string[];       // e.g. ["Mon","Tue","Wed"]
@@ -60,7 +60,7 @@ export interface Doctor {
   privacyConsent?: boolean;
   disclosureConsent?: boolean;
   earnedTotal: number;
-  slotsAvailable: string;
+  slotsAvailable: string[];
 }
 
 export interface Appointment extends Models.Document {

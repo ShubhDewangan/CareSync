@@ -21,6 +21,7 @@ import { RadioGroup, RadioGroupItem } from '../radio-group'
 import { Label } from '../label'
 import { GenderOptions } from '@/constants'
 import TagInputField from '@/components/TagInputField'
+import { SPECIALIZATIONS, QUALIFICATIONS, LANGUAGES, TIME_SLOTS } from '@/app/(protected)/doctors/[userId]/register/RegisterFormDoctor'
 
 interface Props {
   doctorId: string
@@ -259,19 +260,43 @@ const DoctorEditProfileModal = ({ doctorId, user, doctor }: Props) => {
 
                 <div className="flex flex-col xl:flex-row gap-4">
                   <CustomFormField
-                    fieldType={FormFieldType.INPUT}
-                    control={form.control}
-                    name="specialization"
-                    label="Specialization"
-                    placeholder="e.g. Cardiologist"
-                  />
-                  <CustomFormField
-                    fieldType={FormFieldType.INPUT}
-                    control={form.control}
-                    name="qualification"
-                    label="Qualification"
-                    placeholder="e.g. MBBS, MD"
-                  />
+                fieldType={FormFieldType.SKELETON}
+                control={form.control}
+                name="specialization"
+                label="Specialization"
+                renderSkeleton={(field: any) => (
+                  <FormControl>
+                    <TagInputField
+                      label="Specialization"
+                      values={field.value ?? []}
+                      onChange={field.onChange}
+                      suggestions={SPECIALIZATIONS}
+                      placeholder="Select or type a specialization..."
+                      allowCustom={true}
+                    />
+                  </FormControl>
+                )}
+              />
+
+              {/* ── Qualification — tag input (replaces SELECT) ── */}
+              <CustomFormField
+                fieldType={FormFieldType.SKELETON}
+                control={form.control}
+                name="qualification"
+                label="Qualifications"
+                renderSkeleton={(field: any) => (
+                  <FormControl>
+                    <TagInputField
+                      label="Qualifications"
+                      values={field.value ?? []}
+                      onChange={field.onChange}
+                      suggestions={QUALIFICATIONS}
+                      placeholder="Select or type a qualification..."
+                      allowCustom={true}
+                    />
+                  </FormControl>
+                )}
+              />
                 </div>
 
                 <div className="flex flex-col xl:flex-row gap-4">
@@ -316,6 +341,7 @@ const DoctorEditProfileModal = ({ doctorId, user, doctor }: Props) => {
                     <FormControl>
                       <TagInputField
                       label='Languages you know'
+                        suggestions={LANGUAGES}
                         values={field.value}
                         onChange={field.onChange}
                         placeholder="Type a language and press Enter"
@@ -398,6 +424,7 @@ const DoctorEditProfileModal = ({ doctorId, user, doctor }: Props) => {
                       <TagInputField
                         values={field.value}
                         onChange={field.onChange}
+                        suggestions={TIME_SLOTS}
                         placeholder='Type a slot like "9:00 AM" and press Enter'
                         validate={(val: string) => {
                           const valid = /^(0?[1-9]|1[0-2]):[0-5][0-9] (AM|PM)$/.test(val)
@@ -451,7 +478,7 @@ const DoctorEditProfileModal = ({ doctorId, user, doctor }: Props) => {
                   >
                     Cancel
                   </button>
-                  <SubmitButton isLoading={isLoading} className="flex-1 h-10 bg-[#203C67] hover:bg-[#2d5494] rounded-lg text-white text-sm font-medium transition-colors">
+                  <SubmitButton text={'Editing your profile...'} isLoading={isLoading} className="flex-1 h-10 bg-[#203C67] hover:bg-[#2d5494] rounded-lg text-white text-sm font-medium transition-colors">
                     Save Changes
                   </SubmitButton>
                 </div>

@@ -42,7 +42,7 @@ export default function Sidebar({ authUser, fullUser, fullUserChecked, onLogout,
   const dashboardRoute = authUser
     ? authUser.userType === "patient"
       ? `/patients/${authUser.$id}/dashboard`
-      : `/doctors/${authUser.$id}/dashboard`
+      : `/doctors/${authUser.$id}/work-space`
     : null
 
   const registerRoute = authUser
