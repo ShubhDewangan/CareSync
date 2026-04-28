@@ -10,6 +10,7 @@ import DashboardTab from "./DashboardTab"
 import ScheduleTab from "./ScheduleTab"
 import SettingsTab from "./SettingTab"
 import { Doctor } from "@/types/appwrite"
+import { AuthUser } from "@/context/UserContext"
 
 type Tab = "dashboard" | "schedule" | "settings"
 

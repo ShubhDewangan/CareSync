@@ -1,304 +1,376 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client"
 
-import { useState } from "react"
-import { completeAppointment, updateAppointment } from "@/lib/actions/appointment.actions"
-import { getDoctorBookedSlots, updateDoctorBookedSlots } from "@/lib/actions/doctor.actions"
+import { useEffect, useRef, useState } from "react"
+import DoctorEditProfileModal from "@/components/ui/doctor/EditDoctorProfile"
+import { getDoctorBlockedSlots, getDoctorBookedSlots, updateBlockedSlots } from "@/lib/actions/doctor.actions"
 import { toLocalDateStr } from "@/lib/utils"
 import { useWorkspaceLive } from "@/app/hooks/workSpaceLive"
 
-type AppointmentStatus = "pending" | "scheduled" | "cancelled" | "Completed" | "expired"
+type SlotStatus = "available" | "booked" | "off" | "blocked" | "dbblocked"
 
-interface Patient { $id: string; name: string; email?: string; phone?: string }
+interface Patient { $id: string; name: string }
 
 interface Appointment {
   $id: string
   schedule: string
-  status: AppointmentStatus
+  patientName: string
   reason: string
-  note?: string
-  primaryDoctor: string
-  doctorId?: string
-  patient: Patient | null
+  status: "pending" | "scheduled" | "cancelled" | "Completed"
 }
 
-interface DoctorStats {
-  todayCount: number
-  pendingCount: number
-  scheduledCount: number
-  completedCount: number
-  totalPatients: number
-}
-
-interface EarningsDay { day: string; date: string; thisWeek: number; lastWeek: number }
-
-interface DoctorInfo {
-  $id: string
-  name: string
-  email: string
-  specialization: string
-  profilePic?: string
-  consultationFee: string
-  earnedTotal: number
-}
-
-interface DashboardTabProps {
-  doctor: DoctorInfo
+interface DoctorProps {
   doctorId: string
-  stats: DoctorStats
-  earningsData: EarningsDay[]
-  pendingRequests: Appointment[]
-  userId: string
+  user: { $id: string; name: string; email: string; phone: string }
+  doctor: {
+    name: string; phone: string; email: string; profilePic: string
+    gender: string; birthDate: string; specialization: string
+    qualification: string; experience: string; hospital: string
+    address: string; availableDays: string[]; consultationHours: string
+    consultationFee: string; appointmentSpan: string; about: string
+    languages: string[]; slotsAvailable: string[]; earnedTotal: number
+    identificationType: string; updationConsent: boolean
+    disclosureConsent: boolean; privacyConsent: boolean
+    blockedSlots?: string
+    bookedSlots?: string
+  }
+  appointments: Appointment[]
 }
 
-const MAX_BAR_HEIGHT = 100
+const DAY_ORDER = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"]
+const DAY_SHORT = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"]
 
 function toISTDate(iso: string): Date {
   return new Date(new Date(iso).toLocaleString("en-US", { timeZone: "Asia/Kolkata" }))
 }
 
-function formatTime(iso: string) {
+function parseTime(t: string) {
+  const match = t.match(/^(0?[1-9]|1[0-2]):([0-5][0-9]) (AM|PM)$/)
+  if (!match) return null
+  let hours = parseInt(match[1])
+  const minutes = parseInt(match[2])
+  const period = match[3]
+  if (period === "PM" && hours !== 12) hours += 12
+  if (period === "AM" && hours === 12) hours = 0
+  return { hours, minutes }
+}
+
+function parseConsultationHours(ch: string) {
+  const parts = ch.split(" - ")
+  if (parts.length !== 2) return null
+  const start = parseTime(parts[0].trim())
+  const end = parseTime(parts[1].trim())
+  if (!start || !end) return null
+  return { start, end }
+}
+
+function isSlotOutsideHours(slot: string, consultationHours: string) {
+  const range = parseConsultationHours(consultationHours)
+  const slotTime = parseTime(slot)
+  if (!range || !slotTime) return false
+  const slotMinutes = slotTime.hours * 60 + slotTime.minutes
+  const startMinutes = range.start.hours * 60 + range.start.minutes
+  const endMinutes = range.end.hours * 60 + range.end.minutes
+  return slotMinutes < startMinutes || slotMinutes >= endMinutes
+}
+
+function getCurrentWeekDates(): Date[] {
+  const today = new Date()
+  const sunday = new Date(today)
+  sunday.setDate(today.getDate() - today.getDay())
+  return Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(sunday)
+    d.setDate(sunday.getDate() + i)
+    return d
+  })
+}
+
+function parseSlots(raw?: string): Record<string, string[]> {
+  if (!raw) return {}
+  try { return JSON.parse(raw) } catch { return {} }
+}
+
+function formatApptTime(iso: string): string {
   return new Date(iso).toLocaleTimeString("en-IN", {
     hour: "numeric", minute: "2-digit", hour12: true, timeZone: "Asia/Kolkata",
   })
 }
 
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("en-IN", {
-    weekday: "short", month: "short", day: "numeric", timeZone: "Asia/Kolkata",
-  })
-}
-
-function initials(name: string) {
+function initials(name: string): string {
   return name.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase()
 }
 
-export default function DashboardTab({
-  doctor,
-  doctorId,
-  userId,
-  stats = { todayCount: 0, pendingCount: 0, scheduledCount: 0, completedCount: 0, totalPatients: 0 },
-  earningsData = [],
-  pendingRequests: initialRequests = [],
-}: DashboardTabProps) {
-  const [requests, setRequests] = useState<Appointment[]>(initialRequests)
-  const [loading, setLoading] = useState<Record<string, boolean>>({})
-  const [localActions, setLocalActions] = useState<Record<string, string>>({})
+export default function ScheduleTab({ doctorId, user, doctor, appointments }: DoctorProps) {
+  const weekDates = getCurrentWeekDates()
+  const today = new Date()
+  const todayDayIndex = today.getDay()
+
+  const [doneIds, setDoneIds] = useState<Set<string>>(new Set())
+
+  const [dbBlocked, setDbBlocked] = useState<Record<string, string[]>>(() => parseSlots(doctor.blockedSlots))
+  const [blocked, setBlocked] = useState<Record<string, string[]>>(() => parseSlots(doctor.blockedSlots))
+  const [dbBookedSlots, setDbBookedSlots] = useState<Record<string, string[]>>(() => parseSlots(doctor.bookedSlots))
+
+  const [saving, setSaving] = useState<"idle" | "pending" | "saved">("idle")
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const latestBlocked = useRef<Record<string, string[]>>(blocked)
 
   useWorkspaceLive({
     doctorId,
-    onAppointments: (appointments) => {
-      setRequests(
-        appointments
-          .filter(a => a.status === "pending" || a.status === "scheduled")
-          .slice(0, 10)
-          .map(a => ({
-            $id: a.$id,
-            schedule: a.schedule as string,
-            status: (localActions[a.$id] ?? a.status) as AppointmentStatus,
-            reason: a.reason as string,
-            primaryDoctor: a.primaryDoctor as string,
-            doctorId,
-            patient: {
-              $id: (a.patient as any)?.$id ?? "",
-              name: (a.patient as any)?.name ?? "Unknown",
-            },
-          }))
-      )
+    onSlots: ({ blockedSlots, bookedSlots }) => {
+      setDbBlocked(blockedSlots)
+      setBlocked(blockedSlots)
+      setDbBookedSlots(bookedSlots)
+    },
+    onAppointments: (liveAppointments) => {
+      // bookedSlots kept in sync via onSlots — nothing needed here
     },
   })
 
-  const handleRequest = async (appointmentId: string, action: "scheduled" | "cancelled" | "Completed") => {
-    setLocalActions(prev => ({ ...prev, [appointmentId]: action }))
-    setLoading(prev => ({ ...prev, [appointmentId]: true }))
-    try {
-      const req = requests.find(r => r.$id === appointmentId)
-      if (!req) return
-
-      if (action === "Completed") {
-        await completeAppointment(appointmentId)
-      } else {
-        await updateAppointment({
-          appointmentId,
-          userId,
-          appointment: {
-            status: action,
-            primaryDoctor: req.primaryDoctor,
-            schedule: req.schedule,
-            ...(action === "cancelled" ? { cancellationReason: "Declined by doctor" } : {}),
-          } as any,
-          type: action === "scheduled" ? "schedule" : "cancel",
-        })
-
-        if (action === "cancelled" && req.doctorId) {
-          const dateStr = toLocalDateStr(toISTDate(req.schedule))
-          const timeStr = formatTime(req.schedule)
-          const current = await getDoctorBookedSlots(req.doctorId)
-          if (current[dateStr]) {
-            const next = { ...current, [dateStr]: current[dateStr].filter(s => s !== timeStr) }
-            if (next[dateStr].length === 0) delete next[dateStr]
-            await updateDoctorBookedSlots(req.doctorId, next)
-          }
-        }
-      }
-
-      setRequests(prev =>
-        prev.map(r => r.$id === appointmentId ? { ...r, status: action } : r)
-      )
-    } catch (err) {
-      console.error("handleRequest error:", err)
-      setLocalActions(prev => { const n = { ...prev }; delete n[appointmentId]; return n })
-    } finally {
-      setLoading(prev => ({ ...prev, [appointmentId]: false }))
+  useEffect(() => {
+    let cancelled = false
+    const fetch = () => {
+      if (document.visibilityState === "hidden") return
+      Promise.all([
+        getDoctorBlockedSlots(doctorId),
+        getDoctorBookedSlots(doctorId),
+      ]).then(([fresh, freshBooked]) => {
+        if (cancelled) return
+        setDbBlocked(fresh)
+        setBlocked(fresh)
+        setDbBookedSlots(freshBooked)
+      })
     }
+    fetch()
+    document.addEventListener("visibilitychange", fetch)
+    return () => { cancelled = true; document.removeEventListener("visibilitychange", fetch) }
+  }, [doctorId])
+
+  const flushToDb = (next: Record<string, string[]>) => {
+    latestBlocked.current = next
+    setSaving("pending")
+    if (saveTimer.current) clearTimeout(saveTimer.current)
+    saveTimer.current = setTimeout(async () => {
+      await updateBlockedSlots(doctorId, latestBlocked.current)
+      setSaving("saved")
+      setTimeout(() => setSaving("idle"), 1500)
+    }, 1500)
   }
 
-  const thisWeekTotal = earningsData.reduce((s, d) => s + d.thisWeek, 0)
-  const lastWeekTotal = earningsData.reduce((s, d) => s + d.lastWeek, 0)
-  const diff = thisWeekTotal - lastWeekTotal
-  const diffPct = lastWeekTotal > 0 ? Math.round((diff / lastWeekTotal) * 100) : 0
-  const maxEarning = Math.max(...earningsData.flatMap(d => [d.thisWeek, d.lastWeek]), 1)
+  const toggleSlot = (date: Date, slot: string) => {
+    const dateStr = toLocalDateStr(date)
+    const existing = blocked[dateStr] ?? []
+    const next = existing.includes(slot)
+      ? { ...blocked, [dateStr]: existing.filter(s => s !== slot) }
+      : { ...blocked, [dateStr]: [...existing, slot] }
+    if (next[dateStr]?.length === 0) delete next[dateStr]
+    setBlocked(next)
+    flushToDb(next)
+  }
 
-  const STAT_CARDS = [
-    { tag: "TODAY",         value: stats.todayCount,     mention: "appointments", dot: "bg-blue-400",   textColor: "text-blue-700"   },
-    { tag: "PENDING",       value: stats.pendingCount,   mention: "needs action", dot: "bg-yellow-400", textColor: "text-yellow-600" },
-    { tag: "SCHEDULED",     value: stats.scheduledCount, mention: "confirmed",    dot: "bg-green-500",  textColor: "text-green-700"  },
-    { tag: "TOTAL PATIENTS",value: stats.totalPatients,  mention: "all time",     dot: "bg-gray-500",   textColor: "text-gray-600"   },
-  ]
+  const outOfRangeSlots = (doctor.slotsAvailable ?? []).filter(s =>
+    isSlotOutsideHours(s, doctor.consultationHours)
+  )
+
+  // Today's appointments using IST
+  const todayIST = toISTDate(today.toISOString())
+  const todayStr = toLocalDateStr(todayIST)
+
+  const todayAppointments = (appointments ?? [])
+    .filter(a =>
+      toLocalDateStr(toISTDate(a.schedule)) === todayStr &&
+      a.status !== "cancelled" &&
+      a.status !== "Completed"
+    )
+    .sort((a, b) => new Date(a.schedule).getTime() - new Date(b.schedule).getTime())
+
+  const markDone = (id: string) => setDoneIds(prev => new Set([...prev, id]))
+  const doneCount = todayAppointments.filter(a => doneIds.has(a.$id)).length
+
+  function getSlotStatus(dayDate: Date, slot: string): SlotStatus {
+    const fullDayName = DAY_ORDER[dayDate.getDay()]
+    if (!doctor.availableDays.includes(fullDayName)) return "off"
+    const dateStr = toLocalDateStr(dayDate)
+    if (dbBookedSlots[dateStr]?.includes(slot)) return "booked"
+    if (dbBlocked[dateStr]?.includes(slot)) return "dbblocked"
+    if (blocked[dateStr]?.includes(slot)) return "blocked"
+    return "available"
+  }
+
+  const slotStyle: Record<SlotStatus, string> = {
+    available: "bg-green-100 text-green-700 border-green-300 hover:bg-green-200 cursor-pointer",
+    booked:    "bg-[#C8D9EE] text-[#203C67] border-[#A6BAD7] cursor-not-allowed opacity-80",
+    off:       "bg-gray-100 text-gray-300 border-gray-200 cursor-not-allowed",
+    blocked:   "bg-red-50 text-red-400 border-red-200 cursor-pointer hover:bg-red-100",
+    dbblocked: "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed opacity-70",
+  }
+
+  const slotIcon: Record<SlotStatus, string> = {
+    available: "○", booked: "●", off: "—", blocked: "✕", dbblocked: "✕",
+  }
 
   return (
-    <div className="flex flex-col gap-4 flex-1 max-h-screen overflow-hidden">
+    <div className="flex gap-4 flex-1 min-h-0">
 
-      {/* Stat cards */}
-      <section className="grid grid-cols-4 gap-4">
-        {STAT_CARDS.map(stat => (
-          <div key={stat.tag} className="flex flex-col border border-[#203C67] rounded-xl p-5 bg-white/40 backdrop-blur-sm hover:bg-white/60 transition-colors">
-            <span className="flex gap-2 items-center text-[11px] font-medium tracking-widest text-gray-500 mb-2">
-              <span className={`h-2 w-2 rounded-full flex-shrink-0 ${stat.dot}`} />
-              {stat.tag}
-            </span>
-            <span className={`text-3xl font-semibold ${stat.textColor}`}>{stat.value}</span>
-            <span className="text-[12px] text-gray-500 mt-1">{stat.mention}</span>
+      {/* Weekly Calendar */}
+      <div className="flex-1 border border-[#203C67] rounded-xl p-5 bg-white/40 backdrop-blur-sm flex flex-col min-h-0">
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <h2 className="text-[#203C67] font-semibold text-[16px]">Weekly Calendar</h2>
+            <p className="text-[12px] text-gray-500">
+              {weekDates[0].toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "Asia/Kolkata" })} –{" "}
+              {weekDates[6].toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "Asia/Kolkata" })}
+              {" · "}Click a slot to block/unblock
+              {saving === "pending" && <span className="ml-2 text-orange-400">Saving…</span>}
+              {saving === "saved"   && <span className="ml-2 text-green-500">Saved ✓</span>}
+            </p>
           </div>
-        ))}
-      </section>
-
-      {/* Bottom row */}
-      <section className="flex gap-4 flex-1 min-h-0">
-
-        {/* Earnings chart */}
-        <div className="flex-1 border border-[#203C67] rounded-xl p-5 bg-white/40 backdrop-blur-sm flex flex-col">
-          <div className="flex items-start justify-between mb-1">
-            <div>
-              <h2 className="text-[#203C67] font-semibold text-[16px]">Earnings</h2>
-              <span className="text-gray-500 text-[12px]">this week <span className="text-gray-400">vs</span> last week</span>
-            </div>
-            <div className="text-right">
-              <p className="text-[13px] font-semibold text-[#203C67]">₹{thisWeekTotal.toLocaleString("en-IN")}</p>
-              {lastWeekTotal > 0 && (
-                <p className={`text-[11px] font-medium ${diff >= 0 ? "text-green-600" : "text-red-500"}`}>
-                  {diff >= 0 ? "▲" : "▼"} {Math.abs(diffPct)}% vs last week
-                </p>
-              )}
-              <p className="text-[10px] text-gray-400 mt-0.5">
-                Total earned: ₹{doctor.earnedTotal?.toLocaleString("en-IN") ?? 0}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-end gap-2 flex-1 mt-4 min-h-0">
-            {earningsData.map(d => {
-              const lwH = Math.round((d.lastWeek / maxEarning) * MAX_BAR_HEIGHT)
-              const twH = Math.round((d.thisWeek / maxEarning) * MAX_BAR_HEIGHT)
-              return (
-                <div key={d.day} className="flex-1 flex flex-col items-center gap-1">
-                  <div className="flex items-end gap-[3px] w-full" style={{ height: `${MAX_BAR_HEIGHT}px` }}>
-                    <div className="flex-1 rounded-t-sm bg-[#C8D9EE] hover:bg-[#a8c2e0] transition-colors cursor-pointer" style={{ height: `${lwH}%` }} title={`Last week: ₹${d.lastWeek.toLocaleString("en-IN")}`} />
-                    <div className="flex-1 rounded-t-sm bg-[#203C67] hover:bg-[#2d5494] transition-colors cursor-pointer" style={{ height: `${twH}%` }} title={`This week: ₹${d.thisWeek.toLocaleString("en-IN")}`} />
-                  </div>
-                  <span className="text-[10px] text-gray-400">{d.day}</span>
-                </div>
-              )
-            })}
-          </div>
-
-          <div className="flex gap-4 mt-3">
-            <div className="flex items-center gap-1.5"><div className="h-2.5 w-2.5 rounded-sm bg-[#C8D9EE]" /><span className="text-[11px] text-gray-500">Last week</span></div>
-            <div className="flex items-center gap-1.5"><div className="h-2.5 w-2.5 rounded-sm bg-[#203C67]" /><span className="text-[11px] text-gray-500">This week</span></div>
+          <div className="flex gap-3 text-[11px] items-center flex-wrap">
+            <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm bg-green-300" />Available</span>
+            <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm bg-[#A6BAD7]" />Booked</span>
+            <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm bg-red-200" />Blocked</span>
+            <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm bg-gray-200" />Off</span>
           </div>
         </div>
 
-        {/* Requests panel */}
-        <div className="w-[340px] min-w-[300px] border border-[#203C67] rounded-xl p-5 bg-white/40 backdrop-blur-sm flex flex-col">
+        {outOfRangeSlots.length > 0 && (
+          <div className="mb-3 flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2">
+            <svg className="mt-0.5 flex-shrink-0 text-red-500" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+            <p className="text-[11px] text-red-600 leading-relaxed">
+              Slots <strong>{outOfRangeSlots.join(", ")}</strong> fall outside consultation hours ({doctor.consultationHours}). Update in{" "}
+              <DoctorEditProfileModal doctorId={doctorId} user={user} doctor={doctor} />
+            </p>
+          </div>
+        )}
+
+        <div className="overflow-auto flex-1 custom-scroll">
+          <table className="w-full text-[11px] border-collapse table-fixed">
+            <colgroup>
+              <col className="w-20" />
+              {weekDates.map((_, i) => <col key={i} />)}
+            </colgroup>
+            <thead>
+              <tr className="border-b border-[#203C6720]">
+                <th className="text-left text-gray-400 font-normal pb-3 pr-3 sticky left-0 bg-white/60 backdrop-blur-sm z-10">Time</th>
+                {weekDates.map((date, i) => {
+                  const isToday = i === todayDayIndex
+                  const fullDay = DAY_ORDER[date.getDay()]
+                  const isAvailable = doctor.availableDays.includes(fullDay)
+                  return (
+                    <th key={i} className={`text-center font-medium pb-3 px-1 ${isToday ? "text-[#203C67]" : isAvailable ? "text-gray-600" : "text-gray-300"}`}>
+                      <div className="text-[10px] font-normal tracking-wide uppercase">{DAY_SHORT[date.getDay()]}</div>
+                      <div className={`text-[15px] font-semibold mt-0.5 w-7 h-7 mx-auto flex items-center justify-center rounded-full ${isToday ? "bg-[#203C67] text-white" : ""}`}>
+                        {date.getDate()}
+                      </div>
+                    </th>
+                  )
+                })}
+              </tr>
+            </thead>
+            <tbody>
+              {doctor.slotsAvailable.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="text-center py-10 text-gray-400 text-[12px]">
+                    No time slots added yet. Add slots via Edit Profile.
+                  </td>
+                </tr>
+              ) : (
+                doctor.slotsAvailable.map((slot, rowIdx) => (
+                  <tr key={slot} className={`border-b border-[#203C6710] ${rowIdx % 2 === 0 ? "bg-transparent" : "bg-[#203C6704]"}`}>
+                    <td className="text-gray-500 pr-3 py-2 whitespace-nowrap font-medium sticky left-0 bg-inherit z-10 text-[10px] tracking-wide">
+                      {slot}
+                    </td>
+                    {weekDates.map((date, di) => {
+                      const status = getSlotStatus(date, slot)
+                      const isClickable = status !== "booked" && status !== "off" && status !== "dbblocked"
+                      return (
+                        <td key={di} className="px-1.5 py-2">
+                          <div
+                            onClick={() => isClickable && toggleSlot(date, slot)}
+                            className={`rounded-md border text-center py-2 transition-colors text-[11px] font-semibold select-none ${slotStyle[status]}`}
+                            title={
+                              status === "booked"    ? "Patient booked — cannot modify" :
+                              status === "blocked"   ? "Blocked by you — click to unblock" :
+                              status === "dbblocked" ? "Blocked (saved) — reload to unblock" :
+                              status === "off"       ? "Unavailable day" :
+                              "Available — click to block"
+                            }
+                          >
+                            {slotIcon[status]}
+                          </div>
+                        </td>
+                      )
+                    })}
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Right Column */}
+      <div className="w-[300px] min-w-[260px] flex flex-col gap-4">
+
+        {/* Today's List */}
+        <div className="border border-[#203C67] rounded-xl p-5 bg-white/40 backdrop-blur-sm flex flex-col flex-1 min-h-0">
           <div className="flex items-center justify-between mb-3">
             <div>
-              <h2 className="text-[#203C67] font-semibold text-[16px]">Requests</h2>
-              <span className="text-gray-500 text-[12px]">confirm · decline · complete</span>
+              <h2 className="text-[#203C67] font-semibold text-[15px]">Today&apos;s List</h2>
+              <p className="text-[11px] text-gray-500">
+                {today.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", timeZone: "Asia/Kolkata" })}
+              </p>
             </div>
-            <span className="text-[11px] bg-yellow-100 text-yellow-700 border border-yellow-300 rounded-full px-2 py-0.5 font-medium">
-              {requests.filter(r => r.status === "pending").length} pending
+            <span className="text-[11px] bg-[#A6BAD7] text-[#203C67] rounded-full px-2 py-0.5 font-medium">
+              {doneCount}/{todayAppointments.length} done
             </span>
           </div>
 
-          <div className="flex flex-col gap-2 overflow-y-auto custom-scroll flex-1 pr-1">
-            {requests.length === 0 ? (
-              <p className="text-[12px] text-gray-400 text-center mt-6">No active requests.</p>
-            ) : (
-              requests.map(req => {
-                const isPending  = req.status === "pending"
-                const isScheduled = req.status === "scheduled"
-                const isCompleted = (req.status as string) === "Completed"
-                const isCancelled = req.status === "cancelled"
-                const isLoad = loading[req.$id]
-                const patientName = req.patient?.name ?? "Unknown Patient"
+          <div className="h-1.5 bg-gray-200 rounded-full mb-3 overflow-hidden">
+            <div
+              className="h-full bg-[#203C67] rounded-full transition-all duration-500"
+              style={{ width: todayAppointments.length ? `${(doneCount / todayAppointments.length) * 100}%` : "0%" }}
+            />
+          </div>
 
+          <div className="flex flex-col gap-2 overflow-y-auto custom-scroll flex-1">
+            {todayAppointments.length === 0 ? (
+              <p className="text-[12px] text-gray-400 text-center mt-4">No appointments today.</p>
+            ) : (
+              todayAppointments.map(appt => {
+                const done = doneIds.has(appt.$id)
                 return (
                   <div
-                    key={req.$id}
-                    className={`border rounded-lg p-3 transition-all ${
-                      isCompleted || isCancelled
-                        ? "opacity-50 border-gray-200 bg-gray-50"
-                        : "border-[#203C6740] bg-white/50"
+                    key={appt.$id}
+                    className={`flex items-center gap-2 p-2.5 rounded-lg border transition-opacity ${
+                      done ? "opacity-50 border-gray-200 bg-gray-50" : "border-[#203C6730] bg-white/60"
                     }`}
                   >
-                    {/* Patient info row */}
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="h-8 w-8 rounded-full bg-[#A6BAD7] flex items-center justify-center text-[11px] font-semibold text-[#203C67] flex-shrink-0">
-                        {initials(patientName)}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-[13px] font-medium text-gray-800 truncate">{patientName}</p>
-                        <p className="text-[11px] text-gray-500 truncate">{formatDate(req.schedule)} · {formatTime(req.schedule)}</p>
-                      </div>
-                      {isScheduled  && <span className="text-[10px] bg-green-100 text-green-700 border border-green-200 rounded-full px-2 py-0.5">confirmed</span>}
-                      {isCancelled  && <span className="text-[10px] bg-red-100 text-red-600 border border-red-200 rounded-full px-2 py-0.5">declined</span>}
-                      {isCompleted  && <span className="text-[10px] bg-green-100 text-green-700 border border-green-200 rounded-full px-2 py-0.5">completed ✓</span>}
+                    <div className="h-8 w-8 rounded-full bg-[#A6BAD7] flex items-center justify-center text-[10px] font-semibold text-[#203C67] flex-shrink-0">
+                      {initials(appt.patientName)}
                     </div>
-
-                    <p className="text-[11px] text-gray-500 mb-2 pl-10">{req.reason}</p>
-
-                    {/* Confirm / Decline for pending */}
-                    {isPending && (
-                      <div className="flex gap-2 pl-10">
-                        <button onClick={() => handleRequest(req.$id, "scheduled")} disabled={isLoad}
-                          className="flex-1 text-[11px] py-1.5 rounded-md bg-[#203C67] text-white hover:bg-[#2d5494] transition-colors font-medium disabled:opacity-50">
-                          {isLoad ? "..." : "Confirm"}
-                        </button>
-                        <button onClick={() => handleRequest(req.$id, "cancelled")} disabled={isLoad}
-                          className="flex-1 text-[11px] py-1.5 rounded-md border border-[#203C6740] text-gray-500 hover:bg-gray-100 transition-colors disabled:opacity-50">
-                          {isLoad ? "..." : "Decline"}
-                        </button>
-                      </div>
-                    )}
-
-                    {/* Mark Complete for scheduled */}
-                    {isScheduled && (
-                      <div className="flex gap-2 pl-10 mt-1">
-                        <button onClick={() => handleRequest(req.$id, "Completed")} disabled={isLoad}
-                          className="flex-1 text-[11px] py-1.5 rounded-md bg-green-600 text-white hover:bg-green-700 transition-colors font-medium disabled:opacity-50">
-                          {isLoad ? "..." : "Mark Complete ✓"}
-                        </button>
-                      </div>
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-[12px] font-medium truncate ${done ? "line-through text-gray-400" : "text-gray-800"}`}>
+                        {appt.patientName}
+                      </p>
+                      <p className="text-[10px] text-gray-400 truncate">
+                        {formatApptTime(appt.schedule)} · {appt.reason}
+                      </p>
+                    </div>
+                    {done ? (
+                      <span className="text-green-500 flex-shrink-0">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                          <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                      </span>
+                    ) : (
+                      <button
+                        onClick={() => markDone(appt.$id)}
+                        className="text-[10px] bg-[#203C67] text-white rounded-md px-2 py-1 hover:bg-[#2d5494] transition-colors flex-shrink-0"
+                      >
+                        Done
+                      </button>
                     )}
                   </div>
                 )
@@ -306,7 +378,24 @@ export default function DashboardTab({
             )}
           </div>
         </div>
-      </section>
+
+        {/* Slot info + Edit Profile */}
+        <div className="border border-[#203C67] rounded-xl p-4 bg-[#203C6710] flex flex-col gap-3">
+          <div>
+            <h3 className="text-[12px] font-semibold text-[#203C67] mb-1 flex items-center gap-1.5">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
+              </svg>
+              Slot info
+            </h3>
+            <p className="text-[11px] text-gray-500 leading-relaxed">
+              Green ○ → click to block. Red ✕ → click to unblock. Blue ● = booked, unmodifiable. Grey ✕ = saved block.
+            </p>
+          </div>
+          <DoctorEditProfileModal doctorId={doctorId} user={user} doctor={doctor} />
+        </div>
+
+      </div>
     </div>
   )
 }
