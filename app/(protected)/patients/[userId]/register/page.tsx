@@ -4,6 +4,7 @@ import { getLoggedInUser } from "@/lib/actions/auth.actions"
 import { getPatient } from "@/lib/actions/patient.actions"
 import { redirect } from "next/navigation"
 import { RegisterForm } from "./RegisterForm"
+import { getAllDoctors } from "@/lib/actions/doctor.actions"
 
 export default async function PatientRegisterPage({
   params,
@@ -25,9 +26,11 @@ export default async function PatientRegisterPage({
   const patient = await getPatient(userId)
   if (patient) redirect(`/patients/${userId}/dashboard`)
 
+  const doctors = await getAllDoctors()
+
   return (
     <div className="h-auto overflow-y-auto ">
-      <RegisterForm user={authUser} patient={patient? patient : undefined}/>
+      <RegisterForm user={authUser} patient={patient? patient : undefined} doctors={doctors}/>
     </div>
   )
 }

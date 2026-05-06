@@ -1,7 +1,6 @@
 /* eslint-disable react-hooks/rules-of-hooks */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { getDoctor, getDoctorByName } from '@/lib/actions/doctor.actions'
-import { Doctors } from '@/constants'
+import { getAllDoctors, getDoctor, getDoctorByName } from '@/lib/actions/doctor.actions'
 import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
@@ -33,7 +32,10 @@ export async function generateMetadata({
 
 // ── Static params for constant doctors ────────────────────────────
 export async function generateStaticParams() {
-  return Doctors.map((doc) => ({
+
+  const Doctors = await getAllDoctors()
+
+  return Doctors?.map((doc: any) => ({
     name: doc.name.replace(/\s+/g, '-'),
   }))
 }
@@ -67,6 +69,8 @@ function getInitials(name: string) {
   let userType: string | null = null
   let selfProfile = false
 
+  const Doctors = await getAllDoctors()
+
   try {
     const cookieStore = await cookies()
     const token = cookieStore.get('caresync_token')?.value
@@ -91,7 +95,7 @@ function getInitials(name: string) {
   // console.log(userId, user)
   // Try static doctors first, then DB
   let doctor = Doctors.find(
-    (d) => d.name.toLowerCase() === decodedName.toLowerCase()
+    (d: any) => d.name.toLowerCase() === decodedName.toLowerCase()
   ) as any
   
   if (!doctor) {
@@ -106,7 +110,7 @@ function getInitials(name: string) {
   
     // Other doctors (exclude current)
     const otherDoctors = Doctors.filter(
-      (d) => d.name.toLowerCase() !== decodedName.toLowerCase()
+      (d: any) => d.name.toLowerCase() !== decodedName.toLowerCase()
     ).slice(0, 4)
     
     const dayAbbreviations: Record<string, string> = {

@@ -8,8 +8,9 @@ import ColorBends from "@/components/ColorBends"
 import CategoryScroll from "@/components/ui/CategoryScroll"
 import { getAdminDashboardData } from "@/lib/actions/admin.actions"
 import { DataTable } from "@/components/table/DataTable"
-import { columns } from "@/components/table/columns"
+import { getColumns } from "@/components/table/columns"
 import StatCard from "@/components/ui/StatCard"
+import { getAllDoctors } from "@/lib/actions/doctor.actions"
 
 export default async function AdminDashboardPage() {
     // const authUser = await getLoggedInUser()
@@ -26,6 +27,10 @@ export default async function AdminDashboardPage() {
 
   const recentAppointments = data?.recentAppointments ?? []
   const maxWeekly = Math.max(...weekly.map((d) => d.count), 1)
+
+  const doctors = await getAllDoctors()
+
+  const columns = getColumns(doctors)
 
     const statScrollData = [
       { tag: "Total Patients: ", data: `${stats?.totalPatients}`},

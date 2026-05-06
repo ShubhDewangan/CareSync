@@ -18,7 +18,7 @@ import { useRouter } from "next/navigation";
 import { registerPatient } from "@/lib/actions/patient.actions";
 import { FormFieldType } from "@/app/(root)/signin/SignUpForm";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Doctors, GenderOptions, IdentificationTypes, PatientFormDefaultValues } from "@/constants";
+import { GenderOptions, IdentificationTypes, PatientFormDefaultValues } from "@/constants";
 import { Label } from "@/components/ui/label";
 import { SelectItem } from "@/components/ui/select";
 import Image from "next/image";
@@ -29,9 +29,10 @@ import AvatarUploader from "@/components/ui/AvatarUploader";
 
 type FormValues = z.infer<typeof PatientFormValidation>;
 
-export const RegisterForm = ({ user, patient }: {
+export const RegisterForm = ({ user, patient, doctors }: {
   user: AuthUser
   patient?: Patient
+  doctors: any
 }) => {
   const router = useRouter();
   const [isLoading, setLoading] = useState(false);
@@ -317,7 +318,7 @@ export const RegisterForm = ({ user, patient }: {
                 label="Primary Doctor"
                 placeholder="Select a Doctor"
               >
-                {Doctors.map((doctor) => (
+                {doctors.map((doctor: any) => (
                   <SelectItem key={doctor.name} value={doctor.name} className="w-full">
                     <div className="flex cursor-pointer items-center gap-5 ml-2">
                       <Image
