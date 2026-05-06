@@ -11,6 +11,9 @@ const nextConfig: NextConfig = {
     },
     experimental: {
       useCache: true,
+      serverActions: {
+        bodySizeLimit: '10mb', // matches your "max 10MB" UI label
+      },
     },
 };
 

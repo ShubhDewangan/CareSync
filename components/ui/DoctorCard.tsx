@@ -20,21 +20,21 @@ const DoctorCard = ({doctor, userId, patientId, authUser, fullUser}: {doctor: Do
 
     if (isOpen) {
         return (
-            <BookAppointmentModal DateToday={new Date().toLocaleDateString(undefined, { timeZone: "Asia/Kolkata" })} doctor={doctor} isOpen={true as boolean} setIsOpen={setIsOpen} userId={userId} patientId={patientId} authUser={authUser} fullUser={fullUser} />
+            <BookAppointmentModal DateToday={new Date().toLocaleDateString(undefined, { timeZone: "Asia/Kolkata" })} doctor={doctor} userId={userId} patientId={patientId} authUser={authUser} fullUser={fullUser} />
         )
     }
 
   return (
-    <div key={doctor.name} className='bg-[#EFECE3] w-[32%] rounded-2xl'>
+    <div key={doctor.name} className='bg-[#EFECE3] w-[32%] rounded-2xl flex-1'>
         <header className='w-full flex gap-5 justify-between items-center border-[1px] border-gray-950 p-5 rounded-t-2xl'>
             <div className='w-full flex gap-5'>
-                <div className='border-[2px] border-gray-950 rounded-full w-fit'>
+                <div className='border-[1px] border-gray-950 rounded-full w-fit h-fit'>
                     <Image
                         src={doctor.profilePic || '/assets/images/user_default.webp'}
                         alt='profile pic'
                         height={1000}
                         width={1000}
-                        className='h-20 w-20'
+                        className='min-h-20 min-w-20 h-20 w-20'
                         />
                 </div>
                 <div className='flex flex-col justify-between'>
@@ -53,7 +53,7 @@ const DoctorCard = ({doctor, userId, patientId, authUser, fullUser}: {doctor: Do
             </div>
         </header>
         <div className='main-div-doctor border-x-[1px] flex flex-col py-5 border-gray-950 gap-5'>
-            <p className='text-[13px] px-5'>{doctor.about}</p>
+            <p className='text-[13px] px-5 line-clamp-3'>{doctor.about}</p>
             <div className='flex gap-2 px-3'>
                 <div className='bg-[#fff] py-3 px-2 w-1/3 rounded-2xl border-[1px] border-gray-400 flex flex-col gap-1 justify-center'>
                     <span className='text-[12px]'>Consultation Fee</span>
@@ -64,7 +64,7 @@ const DoctorCard = ({doctor, userId, patientId, authUser, fullUser}: {doctor: Do
                     <h4 className='font-semibold'>{doctor.totalPatients}</h4>
                 </div>
                 <div className='bg-[#fff] p-2 w-1/3 rounded-2xl border-[1px] border-gray-400 flex flex-col gap-1 justify-center'>
-                    <span className='text-[12px] text-nowrap'>Appointment Span</span>
+                    <span className='text-[12px]'>Appointment Span</span>
                     <h4 className='font-semibold'>{doctor.appointmentSpan}</h4>
                 </div>
             </div>
@@ -92,15 +92,7 @@ const DoctorCard = ({doctor, userId, patientId, authUser, fullUser}: {doctor: Do
         </div>
             <footer className='p-5 flex justify-center items-center gap-5 border-[1px] border-[#203C67] rounded-b-2xl'>
                 {
-                    fullUser ? <Button onClick={() => setIsOpen(true)} variant='default' className='bg-[#203C67] border-[1px] border-gray-950 hover:bg-[#203c67ce] text-white px-4 py-3'>
-                    Book Appointment
-                    <Image
-                        src='/assets/icons/arrow-top-right-white.svg'
-                        alt="go to Doctor's Profile"
-                        height={15}
-                        width={15}
-                    />    
-                </Button> : <Button onClick={() => setShowToast(true)} variant='default' className='bg-[#203C67] border-[1px] border-gray-950 hover:bg-[#203c67ce] text-white px-4 py-3>Book Appointment'>
+                    fullUser ? <BookAppointmentModal DateToday={new Date().toLocaleDateString()} doctor={doctor} userId={userId} fullUser={fullUser}  />  : <Button onClick={() => setShowToast(true)} variant='default' className='bg-[#203C67] border-[1px] border-gray-950 hover:bg-[#203c67ce] text-white px-4 py-3'>
                     Book Appointment
                     <Image
                         src='/assets/icons/arrow-top-right-white.svg'

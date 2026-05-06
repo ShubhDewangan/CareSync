@@ -7,7 +7,6 @@ import Link from "next/link"
 import SignOutButton from '@/components/ui/signOutButton'
 import { Patient, Doctor } from '@/types/appwrite'
 
-// From JWT — always available after mount
 type AuthUser = {
   $id: string
   name: string
@@ -15,10 +14,9 @@ type AuthUser = {
   email: string
 } | null
 
-// From DB — loads after authUser, has profilePic + registrationComplete
 type FullUser =
   | (Patient & { userType: "patient" })
-  | (Doctor & { userType: "doctor" })
+  | (Doctor  & { userType: "doctor"  })
   | null
 
 interface SidebarProps {
@@ -29,16 +27,16 @@ interface SidebarProps {
   onLogout: () => void
   stats?: {
     upcoming: number
-    lastvisitDoctor?: string
-    lastvisitDate?: string
+    lastVisitDoctor?: string
+    lastVisitDate?: string
     active?: number
   }
+  onClose?: () => void
 }
 
-export default function Sidebar({ authUser, fullUser, fullUserChecked, onLogout, stats }: SidebarProps) {
+export default function Sidebar({ authUser, fullUser, fullUserChecked, onLogout, stats, onClose }: SidebarProps) {
   const router = useRouter()
 
-  // ─── Routing helpers ──────────────────────────────────────────────
   const dashboardRoute = authUser
     ? authUser.userType === "patient"
       ? `/patients/${authUser.$id}/dashboard`
@@ -51,168 +49,217 @@ export default function Sidebar({ authUser, fullUser, fullUserChecked, onLogout,
       : `/doctors/${authUser.$id}/register`
     : null
 
-  // profilePic: use fullUser's if available, else default
-  const profilePic = fullUser?.profilePic || '/assets/images/user_default.webp'
-
-  // registrationComplete: only true if fullUser exists from DB
+  const profilePic           = fullUser?.profilePic || '/assets/images/user_default.webp'
   const registrationComplete = !!fullUser
 
-  return (
-    <div className='max-w-[300px] bg-[#EFECE3] w-[300px] ml-5 my-5 rounded-xl flex flex-col items-center drop-shadow-2xl drop-shadow-black z-10'>
+  const initials = authUser?.name
+    ? authUser.name.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase()
+    : "?"
 
-      {/* ── Header ─────────────────────────────────────────────────── */}
-      <header className='border-[1px] border-[#203C67] w-full rounded-t-2xl flex flex-col justify-center items-center'>
-        <Image
-          src='/logo.png'
-          alt='logo'
-          height={1000}
-          width={1000}
-          className='mt-2 h-20 w-fit'
-        />
-        
+  return (
+    <div style={{
+      width: 260, minWidth: 260, margin: "16px 0 16px 16px",
+      display: "flex", flexDirection: "column",
+      background: "#edeae4",
+      border: "1px solid rgba(32,60,103,0.15)",
+      borderRadius: 18,
+      boxShadow: "0 2px 16px rgba(32,60,103,0.08)",
+      overflow: "hidden",
+      fontFamily: "'DM Sans', system-ui, sans-serif",
+    }}>
+
+      {/* ── Logo ── */}
+      <div style={{ padding: "16px 16px 12px", borderBottom: "1px solid rgba(32,60,103,0.1)", display: "flex", justifyContent: "center" }}>
+        <Link href="/">
+          <Image src="/logo.png" alt="CareSync" height={1000} width={1000} style={{ height: 44, width: "auto" }} />
+        </Link>
+      </div>
+
+      {/* ── Profile ── */}
+      <div style={{ padding: "16px", borderBottom: "1px solid rgba(32,60,103,0.1)" }}>
         {authUser ? (
-          // ── Logged in ─────────────────────────────────────────────
-          <div className='flex flex-col justify-center items-center gap-2 w-full px-2 pb-5'>
-            <div className='flex gap-2 items-center justify-center'>
-              <Image
-                src={profilePic || 'assets/images/user_default.webp'}
-                alt='profile pic'
-                height={1000}
-                width={1000}
-                className='h-20 w-20 rounded-full object-cover'
-              />
-              <div>
-                {/* Name from authUser — available instantly from JWT */}
-                <h2 className='text-[20px] font-semibold'>{authUser.name}</h2>
-                {/* Email from fullUser — shows once DB loads */}
-                {authUser.email && <h4 className='text-[12px]'>{authUser.email}</h4>}
-                {/* Small loading indicator while fullUser loads */}
-                {!fullUser && !fullUserChecked && (
-                  <div className='flex items-center gap-1 mt-1'>
-                    <div className='w-3 h-3 border-2 border-[#203C67] border-t-transparent rounded-full animate-spin' />
-                    <span className='text-[11px] text-gray-400'>Loading profile...</span>
-                  </div>
-                )}
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
+            {/* Avatar */}
+            <div style={{ position: "relative" }}>
+              {fullUser?.profilePic ? (
+                <Image
+                  src={profilePic}
+                  alt="profile"
+                  height={200} width={200}
+                  style={{ width: 64, height: 64, borderRadius: "50%", objectFit: "cover", border: "2px solid rgba(32,60,103,0.2)" }}
+                />
+              ) : (
+                <div style={{
+                  width: 64, height: 64, borderRadius: "50%",
+                  background: "linear-gradient(135deg, #c8dab8, #8ab878)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: 18, fontWeight: 700, color: "#2d5230",
+                  border: "2px solid rgba(61,107,63,0.2)",
+                }}>
+                  {initials}
+                </div>
+              )}
+              {/* Online dot */}
+              <div style={{
+                position: "absolute", bottom: 2, right: 2,
+                width: 12, height: 12, borderRadius: "50%",
+                background: "#4ade80", border: "2px solid #edeae4",
+              }} />
+            </div>
+
+            <div style={{ textAlign: "center" }}>
+              <p style={{ fontSize: 14, fontWeight: 700, color: "#1a2e10", margin: 0 }}>{authUser.name}</p>
+              <p style={{ fontSize: 11, color: "#9a9690", margin: "2px 0 6px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 200 }}>
+                {authUser.email}
+              </p>
+              <div style={{ display: "flex", gap: 6, justifyContent: "center" }}>
+                <span style={{
+                  fontSize: 10, fontWeight: 600, padding: "2px 10px", borderRadius: 20,
+                  background: "#A6BAD7", color: "#203C67", border: "1px solid rgba(32,60,103,0.2)",
+                }}>
+                  {authUser.userType === "doctor" ? "Doctor" : "Patient"}
+                </span>
+                <span style={{
+                  fontSize: 10, fontWeight: 600, padding: "2px 10px", borderRadius: 20,
+                  background: "#dcfce7", color: "#166534", border: "1px solid #bbf7d0",
+                }}>
+                  Active
+                </span>
               </div>
             </div>
 
-            <div>
-              {(registrationComplete) ? (
-                // Has DB record → show dashboard link
-                <Link
-                  href={dashboardRoute!}
-                  className='bg-[#8FABD4] text-[14px] rounded-full py-1 px-2 border-[1px] border-[#848282]'
-                >
-                  Your Dashboard
-                </Link>
-              ) : fullUser ? (
-                // authUser exists but fullUser not loaded yet — show skeleton
-                // Once fullUser loads, either dashboard or register shows
-                <div className='bg-[#8FABD4] rounded-full px-3 py-2 border-[1px] border-[#848282] opacity-50 text-[13px]'>
-                  Loading...
-                </div>
-              ) : (
-                // fullUser loaded but null → no registration yet
-                <Link
-                  href={registerRoute!}
-                  className='bg-[#8FABD4] text-[13px] rounded-full py-1 px-2 border-[1px] border-[#848282]'
-                >
-                  Complete Registration
-                </Link>
-              )}
-            </div>
+            {/* Loading shimmer */}
+            {!fullUser && !fullUserChecked && (
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <div style={{ width: 12, height: 12, borderRadius: "50%", border: "2px solid #A6BAD7", borderTopColor: "#203C67", animation: "spin 0.8s linear infinite" }} />
+                <span style={{ fontSize: 11, color: "#9a9690" }}>Loading profile…</span>
+              </div>
+            )}
+
+            {/* Dashboard / Register button */}
+            {registrationComplete ? (
+              <Link href={dashboardRoute!} style={{
+                display: "block", width: "100%", textAlign: "center",
+                fontSize: 12, fontWeight: 600, padding: "8px 0", borderRadius: 10,
+                background: "#2a3320", color: "#e8ede0", textDecoration: "none",
+                transition: "background 0.15s",
+              }}>
+                Your Dashboard →
+              </Link>
+            ) : fullUserChecked && !fullUser ? (
+              <Link href={registerRoute!} style={{
+                display: "block", width: "100%", textAlign: "center",
+                fontSize: 12, fontWeight: 600, padding: "8px 0", borderRadius: 10,
+                background: "#3d6b3f", color: "#e8ede0", textDecoration: "none",
+              }}>
+                Complete Registration →
+              </Link>
+            ) : null}
           </div>
         ) : (
-          // ── Not logged in ─────────────────────────────────────────
-          <div className='flex w-full items-center justify-center gap-3 px-5 pb-5'>
-            <Image
-              src='/assets/images/user_default.webp'
-              alt='profile pic'
-              height={1000}
-              width={1000}
-              className='h-20 w-fit'
-            />
-            <div className='flex flex-col gap-2 items-center justify-center'>
+          /* Not logged in */
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
+            <div style={{
+              width: 56, height: 56, borderRadius: "50%",
+              background: "#d8e4dc", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22,
+            }}>
+              👤
+            </div>
+            <p style={{ fontSize: 13, color: "#7a7670", margin: 0, textAlign: "center" }}>
+              Sign in to access your health dashboard
+            </p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8, width: "100%" }}>
               <button
                 onClick={() => router.push('/signin')}
-                className='bg-[#203C67] py-1 border-[1px] border-[#203C67] text-white rounded-2xl min-w-[130px]'
+                style={{
+                  width: "100%", fontSize: 13, fontWeight: 600, padding: "9px 0", borderRadius: 10,
+                  background: "#203C67", color: "#fff", border: "none", cursor: "pointer",
+                }}
               >
                 Sign In
               </button>
               <button
                 onClick={() => router.push('/login')}
-                className='bg-transparent py-1 border-[1px] border-[#203C67] rounded-2xl min-w-[130px]'
+                style={{
+                  width: "100%", fontSize: 13, fontWeight: 500, padding: "9px 0", borderRadius: 10,
+                  background: "transparent", color: "#203C67", border: "1px solid rgba(32,60,103,0.3)", cursor: "pointer",
+                }}
               >
-                Log In?
+                Log In
               </button>
             </div>
           </div>
         )}
-      </header>
+      </div>
 
-      {/* ── Menu ───────────────────────────────────────────────────── */}
-      <div className='border-x-[1px] border-[#203C67] w-full p-2'>
-        <h3 className='mb-2'>MENU</h3>
-        <div className='flex flex-col gap-2'>
-          <Link href='/Doctors' className='bg-[#8FABD4] rounded-md px-3 py-2 border-[1px] border-[#848282]'>
-            Find Doctors
-          </Link>
-          <Link href='' className='bg-[#8FABD4] rounded-md px-3 py-2 border-[1px] border-[#848282]'>
-            Hospitals/Clinic
-          </Link>
-          <Link href='' className='bg-[#8FABD4] rounded-md px-3 py-2 border-[1px] border-[#848282]'>
-            Prescriptions
-          </Link>
-          <Link href='' className='bg-[#8FABD4] rounded-md px-3 py-2 border-[1px] border-[#848282]'>
-            Medical Records
-          </Link>
+      {/* ── Menu ── */}
+      <div style={{ padding: "12px 12px 8px" }}>
+        <p style={{ fontSize: 10, fontWeight: 700, color: "#9a9690", letterSpacing: "0.1em", textTransform: "uppercase", margin: "0 4px 8px" }}>
+          Menu
+        </p>
+        <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+          {[
+            { label: "Find Doctors",     href: "/Doctors",   icon: "🩺" },
+            { label: "Hospitals/Clinic", href: "#",          icon: "🏥" },
+            { label: "Medical Records",  href: "#",          icon: "📋" },
+          ].map(item => (
+            <Link key={item.label} href={item.href} style={{
+              display: "flex", alignItems: "center", gap: 10,
+              padding: "9px 12px", borderRadius: 10, fontSize: 13, fontWeight: 500,
+              color: "#3a4a2a", textDecoration: "none", background: "rgba(32,60,103,0.05)",
+              transition: "background 0.15s",
+            }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(32,60,103,0.1)" }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "rgba(32,60,103,0.05)" }}
+            >
+              <span style={{ fontSize: 15 }}>{item.icon}</span>
+              {item.label}
+            </Link>
+          ))}
         </div>
       </div>
 
-      {/* ── Quick Stats ─────────────────────────────────────────────── */}
-      <div className='border-[1px] border-[#203C67] w-full p-2'>
-        <h3 className='mb-2'>QUICK STATS</h3>
-        <div className='flex flex-col w-full gap-2'>
-          <div className='flex gap-2'>
-            <div className='bg-[#FFFFFF] flex-1 rounded-md p-5'>
-              <span>Upcoming</span>
-              <h3 className='text-blue-800 font-semibold'>{stats?.upcoming}</h3>
-              <span className='text-[13px]'>appointments</span>
+      {/* ── Quick Stats ── */}
+      {authUser && (
+        <div style={{ padding: "8px 12px 12px", borderTop: "1px solid rgba(32,60,103,0.08)" }}>
+          <p style={{ fontSize: 10, fontWeight: 700, color: "#9a9690", letterSpacing: "0.1em", textTransform: "uppercase", margin: "0 4px 8px" }}>
+            Quick Stats
+          </p>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 8 }}>
+            <div style={{ background: "#fff", borderRadius: 10, padding: "10px 12px", border: "1px solid rgba(32,60,103,0.08)" }}>
+              <p style={{ fontSize: 18, fontWeight: 700, color: "#203C67", margin: 0 }}>{stats?.upcoming ?? 0}</p>
+              <p style={{ fontSize: 10, color: "#9a9690", margin: "2px 0 0" }}>Upcoming</p>
             </div>
-            <div className='bg-[#FFFFFF] rounded-md p-5'>
-              <span>Active</span>
-              <h3 className='text-green-700 font-semibold'>{stats?.active}</h3>
-              <span className='text-[13px]'>prescriptions</span>
+            <div style={{ background: "#fff", borderRadius: 10, padding: "10px 12px", border: "1px solid rgba(32,60,103,0.08)" }}>
+              <p style={{ fontSize: 18, fontWeight: 700, color: "#3d6b3f", margin: 0 }}>{stats?.active ?? 0}</p>
+              <p style={{ fontSize: 10, color: "#9a9690", margin: "2px 0 0" }}>Active Rx</p>
             </div>
           </div>
-          <div className='flex items-center justify-between rounded-md p-5 bg-[#FFFFFF]'>
+          <div style={{ background: "#fff", borderRadius: 10, padding: "10px 12px", border: "1px solid rgba(32,60,103,0.08)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <div>
-              <span>Last visit</span>
-              <h2 className='font-semibold'>{stats?.lastvisitDoctor || 'You have not visited any Doctor'}</h2>
+              <p style={{ fontSize: 10, color: "#9a9690", margin: 0 }}>Last visit</p>
+              <p style={{ fontSize: 12, fontWeight: 600, color: "#2a3320", margin: "2px 0 0" }}>
+                {stats?.lastVisitDoctor || "No past visits"}
+              </p>
             </div>
-            <span>{stats?.lastvisitDate}</span>
+            {stats?.lastVisitDate && (
+              <span style={{ fontSize: 11, color: "#9a9690" }}>{stats.lastVisitDate}</span>
+            )}
           </div>
+        </div>
+      )}
+
+      {/* ── Footer ── */}
+      <div style={{ marginTop: "auto", padding: "12px", borderTop: "1px solid rgba(32,60,103,0.08)", display: "flex", flexDirection: "column", gap: 8 }}>
+        {authUser && <SignOutButton onLogout={onLogout} />}
+        <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
+          <Link href="/help" style={{ fontSize: 11, color: "#9a9690", textDecoration: "none" }}>Help</Link>
+          <span style={{ color: "#d0cdc7", fontSize: 11 }}>·</span>
+          <Link href="/help/how-to-use" style={{ fontSize: 11, color: "#9a9690", textDecoration: "none" }}>How to use</Link>
         </div>
       </div>
 
-      {/* ── Footer ─────────────────────────────────────────────────── */}
-      <footer className='flex flex-1 flex-col w-full rounded-b-2xl justify-center items-center gap-2 p-2 border-b-[1px] border-x-[1px] border-[#203C67]'>
-        <div className='w-full flex justify-center px-5'>
-          {/* <div className='flex items-center justify-center text-gray-700'>
-            <Image
-              src='/assets/icons/settings.svg'
-              alt='settings'
-              height={30}
-              width={30}
-            />
-            Settings
-          </div> */}
-          {/* SignOutButton calls onLogout */}
-          <SignOutButton onLogout={onLogout}/>
-        </div>
-        <span className='text-red-800 mt-2'><Link href='/help'>Help?</Link> | <Link href='/help/how-to-use'>How to Use!</Link></span>
-      </footer>
-
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   )
 }

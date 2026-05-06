@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import CustomFormField from '../CustomFormField'
 import { Form, FormControl } from './form'
@@ -8,7 +8,7 @@ import Image from 'next/image'
 import SubmitButton from '../SubmitButton'
 import { FormFieldType } from '../../app/(root)/signin/SignUpForm'
 import { SelectItem } from './select'
-import { Doctors, GenderOptions } from '@/constants'
+import { GenderOptions } from '@/constants'
 import { RadioGroup, RadioGroupItem } from './radio-group'
 import { Label } from './label'
 import { updatePatient } from '@/lib/actions/patient.actions'
@@ -22,6 +22,8 @@ import mapImage from "@/public/assets/icons/map.svg";
 import { IdentificationTypes, PatientFormDefaultValues } from "@/constants";
 import FileUploader from "../ui/FileUploader";
 import AvatarUploader from './AvatarUploader'
+import { getAllDoctors } from '@/lib/actions/doctor.actions'
+import { Doctor } from '@/types/appwrite'
 
 interface Props {
     userId: string
@@ -88,6 +90,16 @@ const EditProfileModal = ({ patientId, user, patient }: Props) => {
     const [isOpen, setIsOpen] = useState(false)
     const [isLoading, setLoading] = useState(false)
     const router = useRouter()
+    const [Doctors, setDoctors] = useState<Doctor[] | null>(null)
+
+    useEffect(() => {
+    async function loadDoctors() {
+        const res = await fetch('/api/doctors')
+        const data = await res.json()
+        setDoctors(data)
+    }
+    loadDoctors()
+    }, [])
 
     const form = useForm<FormValues>({
         resolver: zodResolver(PatientFormValidation) as Resolver<FormValues>,
@@ -345,10 +357,10 @@ const EditProfileModal = ({ patientId, user, patient }: Props) => {
                                     label="Primary Physician"
                                     placeholder="Select a Physician"
                                 >
-                                    {Doctors.map((doctor) => (
+                                    {Doctors && Doctors.map((doctor) => (
                                         <SelectItem key={doctor.name} value={doctor.name} className="w-full">
                                             <div className="flex cursor-pointer items-center gap-3 ml-2">
-                                                <Image src={doctor.profilePic} width={28} height={28} alt={doctor.name} className="rounded-full border border-dark-500" />
+                                                <Image src={doctor.profilePic as any} width={28} height={28} alt={doctor.name} className="rounded-full border border-dark-500" />
                                                 <p>{doctor.name}</p>
                                             </div>
                                         </SelectItem>

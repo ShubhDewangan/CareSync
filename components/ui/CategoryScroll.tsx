@@ -13,12 +13,12 @@ type Category = {
 
 export default function CategoryScroll({ categories }: { categories: Category[] }) {
   const wrapperRef = useRef<HTMLDivElement>(null);
-  const trackRef = useRef<HTMLDivElement>(null);
-  const posRef = useRef(0);
-  const dragRef = useRef({ active: false, startX: 0, startPos: 0 });
+  const trackRef  = useRef<HTMLDivElement>(null);
+  const posRef    = useRef(0);
+  const dragRef   = useRef({ active: false, startX: 0, startPos: 0 });
   const pausedRef = useRef(false);
-  const rafRef = useRef<number>(0);
-  const SPEED = 0.6;
+  const rafRef    = useRef<number>(0);
+  const SPEED     = 0.5;
 
   const getTrackWidth = useCallback(() => {
     const track = trackRef.current;
@@ -47,7 +47,6 @@ export default function CategoryScroll({ categories }: { categories: Category[] 
   useEffect(() => {
     const wrapper = wrapperRef.current;
     if (!wrapper) return;
-
     const onPointerDown = (e: PointerEvent) => {
       dragRef.current = { active: true, startX: e.clientX, startPos: posRef.current };
       pausedRef.current = true;
@@ -66,20 +65,19 @@ export default function CategoryScroll({ categories }: { categories: Category[] 
     const onMouseEnter = () => { pausedRef.current = true; };
     const onMouseLeave = () => { if (!dragRef.current.active) pausedRef.current = false; };
 
-    wrapper.addEventListener('pointerdown', onPointerDown);
-    wrapper.addEventListener('pointermove', onPointerMove);
-    wrapper.addEventListener('pointerup', onPointerUp);
+    wrapper.addEventListener('pointerdown',   onPointerDown);
+    wrapper.addEventListener('pointermove',   onPointerMove);
+    wrapper.addEventListener('pointerup',     onPointerUp);
     wrapper.addEventListener('pointercancel', onPointerUp);
-    wrapper.addEventListener('mouseenter', onMouseEnter);
-    wrapper.addEventListener('mouseleave', onMouseLeave);
-
+    wrapper.addEventListener('mouseenter',    onMouseEnter);
+    wrapper.addEventListener('mouseleave',    onMouseLeave);
     return () => {
-      wrapper.removeEventListener('pointerdown', onPointerDown);
-      wrapper.removeEventListener('pointermove', onPointerMove);
-      wrapper.removeEventListener('pointerup', onPointerUp);
+      wrapper.removeEventListener('pointerdown',   onPointerDown);
+      wrapper.removeEventListener('pointermove',   onPointerMove);
+      wrapper.removeEventListener('pointerup',     onPointerUp);
       wrapper.removeEventListener('pointercancel', onPointerUp);
-      wrapper.removeEventListener('mouseenter', onMouseEnter);
-      wrapper.removeEventListener('mouseleave', onMouseLeave);
+      wrapper.removeEventListener('mouseenter',    onMouseEnter);
+      wrapper.removeEventListener('mouseleave',    onMouseLeave);
     };
   }, [setPos]);
 
@@ -87,55 +85,84 @@ export default function CategoryScroll({ categories }: { categories: Category[] 
 
   return (
     <div className="w-full overflow-hidden select-none">
-      <div ref={wrapperRef} className="w-full overflow-hidden mt-5" style={{ cursor: 'grab' }}>
-        <div ref={trackRef} className="flex gap-4 py-3 w-max" style={{ willChange: 'transform' }}>
-          {doubled.map((category, idx) => {
+      {/* fade edges */}
+      <div className="relative">
+        <div
+          className="absolute left-0 top-0 bottom-0 w-16 z-10 pointer-events-none"
+          style={{ background: 'linear-gradient(to right, #EFECE3, transparent)' }}
+        />
+        <div
+          className="absolute right-0 top-0 bottom-0 w-16 z-10 pointer-events-none"
+          style={{ background: 'linear-gradient(to left, #EFECE3, transparent)' }}
+        />
 
-            // ── tag + data → admin card ──────────────────────────────
-            if (category.data) {
+        <div ref={wrapperRef} className="w-full overflow-hidden py-3" style={{ cursor: 'grab' }}>
+          <div ref={trackRef} className="flex gap-3 w-max" style={{ willChange: 'transform' }}>
+            {doubled.map((category, idx) => {
+
+              /* ── admin stat card ── */
+              if (category.data) {
+                return (
+                  <div
+                    key={idx}
+                    className="flex flex-col items-start justify-between w-36 px-4 py-3 rounded-2xl border border-white/20 backdrop-blur-sm gap-1"
+                    style={{ background: 'rgba(113,103,122,0.6)' }}
+                  >
+                    <p className="text-white/50 text-[11px] text-nowrap">{category.tag}</p>
+                    <p className="text-white text-[18px] font-semibold leading-tight">
+                      {typeof category.data === 'string' ? category.data : JSON.stringify(category.data)}
+                    </p>
+                  </div>
+                );
+              }
+
+              /* ── homepage specialization card ── */
               return (
                 <div
                   key={idx}
-                  className="bg-[#71677a9d] border border-white/20 backdrop-blur-sm
-                             flex items-center justify-center
-                             w-auto px-3 py-3 rounded-2xl gap-2
-                             transition-transform hover:scale-105 hover:bg-white/20"
+                  className="group relative flex items-center gap-3 bg-white border border-[#e2ddd4] rounded-2xl px-4 py-3 transition-all duration-200 hover:border-[#8FABD4] hover:shadow-sm"
+                  style={{ width: '210px', flexShrink: 0, cursor: 'grab' }}
+                  draggable={false}
                 >
-                  {/* Avatar placeholder */}
-                  {/* Tag */}
-                  <p className=" text-white/50 text-[14px] text-center text-nowrap w-full">
-                    {category.tag}
-                  </p>
-                  {/* Data — render whatever is passed */}
-                  <p className="text-white text-[18px] font-semibold text-center leading-tight truncate w-full ">
-                    {typeof category.data === 'string' ? category.data : JSON.stringify(category.data)}
-                  </p>
-                </div>
-              )
-            }
+                  {/* Icon box */}
+                  <div
+                    className="flex-shrink-0 flex items-center justify-center rounded-xl transition-colors duration-200 group-hover:bg-[#dde8f5]"
+                    style={{
+                      width: 56,   // was 48
+                      height: 56,  // was 48
+                      background: '#eef3fa',
+                    }}
+                  >
+                    <Image
+                      src={category.image!}
+                      alt={category.tag}
+                      width={42}    // was 28
+                      height={42}   // was 28
+                      className="object-contain opacity-80 group-hover:opacity-100 transition-opacity"
+                      draggable={false}
+                    />
+                  </div>
 
-            // ── tag + image → homepage card ──────────────────────────
-            return (
-              <div
-                key={idx}
-                className="bg-[#8FABD4] flex flex-col items-center
-                           w-[160px] h-[180px] px-4 pt-4 pb-3 rounded-2xl
-                           transition-transform hover:scale-105 border border-[#203C67]"
-              >
-                <div className="relative w-full flex-1 min-h-0">
-                  <Image
-                    src={category.image!}
-                    alt={category.tag}
-                    className="p-2 px-5 h-[100px] w-fit"
-                    draggable={false}
-                  />
+                  {/* Label */}
+                  <div className="flex flex-col min-w-0">
+                    <span
+                      className="text-[13px] font-semibold leading-tight text-[#1a2535] truncate"
+                    >
+                      {category.tag}
+                    </span>
+                    <span className="text-[10px] text-[#a0afc0] mt-0.5">Specialist</span>
+                  </div>
+
+                  {/* Arrow indicator */}
+                  <div
+                    className="absolute right-3 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity text-[#8FABD4] text-[14px]"
+                  >
+                    →
+                  </div>
                 </div>
-                <h2 className="font-medium text-[#203C67] text-base text-center leading-tight w-full truncate flex-shrink-0">
-                  {category.tag}
-                </h2>
-              </div>
-            )
-          })}
+              );
+            })}
+          </div>
         </div>
       </div>
     </div>

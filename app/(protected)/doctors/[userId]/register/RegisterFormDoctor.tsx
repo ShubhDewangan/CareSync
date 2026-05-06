@@ -139,7 +139,7 @@ export const RegisterFormDoctor = ({ user, doctor }: {
       }
       const result = await registerDoctor(doctorData as unknown as RegisterDoctorParams)
       if (result) {
-        router.push(`/doctors/${user?.$id}/dashboard`)
+        router.push(`/doctors/${user?.$id}/work-space`)
       } else {
         throw new Error('Doctor registration failed')
       }
@@ -253,6 +253,7 @@ const formatTo12Hour = (time: string) => {
                   control={form.control}
                   name="birthDate"
                   label="Date of Birth"
+                  time={false}
                 />
                 <CustomFormField
                   fieldType={FormFieldType.SKELETON}
@@ -567,7 +568,11 @@ const formatTo12Hour = (time: string) => {
               <SubmitButton isLoading={isLoading} className="w-full h-11 bg-[#203C67] hover:bg-[#162d50] text-white rounded-lg mt-2">
                 Complete Registration
               </SubmitButton>
-
+              {Object.keys(form.formState.errors).length > 0 && (
+                <pre className="text-red-500 text-xs bg-red-50 p-3 rounded">
+                  {JSON.stringify(form.formState.errors, null, 2)}
+                </pre>
+              )}
             </form>
           </Form>
         </div>

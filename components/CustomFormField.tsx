@@ -41,6 +41,7 @@ interface CustomProps {
   Required?: string
   value?: any
   units?: string
+  time?: boolean
 }
 
 const RenderField = ({ field, props }: { field: any; props: CustomProps }) => {
@@ -53,7 +54,8 @@ const RenderField = ({ field, props }: { field: any; props: CustomProps }) => {
     renderSkeleton,
     Required,
     disabled,
-    units
+    units,
+    time=true,
   } = props;
 
   const [showPassword, setShowPassword] = useState(false)
@@ -134,12 +136,15 @@ const RenderField = ({ field, props }: { field: any; props: CustomProps }) => {
           <FormControl>
             <DatePicker
               selected={field.value}
-              onChange={(date: any) => field.onChange(date)}
-              // showTimeSelect={showTimeSelect ?? false}
-              showDateSelect
-              showTimeSelect
-              dateFormat="d-MMMM-yyyy | h:mm aa"
-              timeInputLabel="Time:"
+              onChange={(date: any) => {
+                if (date && !time) {
+                  date.setHours(0, 0, 0, 0); // strip time portion
+                }
+                field.onChange(date);
+              }}
+              showTimeSelect={time === true}
+              showTimeSelectOnly={false}
+              dateFormat={time ? "d-MMMM-yyyy | h:mm aa" : "d-MMMM-yyyy"}
               wrapperClassName="date-picker flex-1"
             />
           </FormControl>

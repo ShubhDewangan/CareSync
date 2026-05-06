@@ -1,140 +1,481 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client"
 
-// components/ui/doctor/PatientRecordsClient.tsx
-
 import { useState, useRef, useTransition } from "react"
-import { createPrescription, uploadMedicalReport, deletePrescription, deleteMedicalReport, getFileViewUrl } from "@/lib/actions/prescriptions.actions"
+import {
+  createPrescription,
+  uploadMedicalReport,
+  deletePrescription,
+  deleteMedicalReport,
+} from "@/lib/actions/prescriptions.actions"
 import { useRouter } from "next/navigation"
+import { getFileViewUrl } from "@/lib/utils";
+
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 interface Medication {
-  name: string
-  dosage: string
-  frequency: string
-  duration: string
-  instructions: string
+  name: string; dosage: string; frequency: string; duration: string; instructions: string
 }
-
 interface Prescription {
-  $id: string
-  diagnosis: string
-  medications: Medication[]
-  notes: string
-  followUpDate: string | null
-  $createdAt: string
+  $id: string; diagnosis: string; medications: any // string | string[] | Medication[]
+  notes: string; followUpDate: string | null; content?: string; $createdAt: string
 }
-
 interface MedicalReport {
-  $id: string
-  title: string
-  reportType: string
-  notes: string
-  fileId: string
-  fileName: string
-  fileSize: number
-  mimeType: string
-  $createdAt: string
+  $id: string; title: string; reportType: string; notes: string
+  fileId: string; fileName: string; fileSize: number; mimeType: string; $createdAt: string
 }
-
 interface PatientInfo {
-  $id: string
-  name: string
-  email?: string
-  phone?: string
-  bloodGroup?: string
-  allergies?: string
-  currentMedication?: string
+  $id: string; name: string; email?: string; phone?: string
+  bloodGroup?: string; allergies?: string; currentMedication?: string
+  gender?: string; birthDate?: string; address?: string
+  emergencyContactName?: string; emergencyContactNumber?: string
+  insuranceProvider?: string; pastMedicalHistory?: string
+  familyMedicalHistory?: string; occupation?: string
+  height?: string; weight?: string
 }
-
 interface Props {
   doctor: { $id: string; name: string; specialization: string; profilePic?: string }
-  doctorId: string
-  userId: string
-  patient: PatientInfo
-  patientId: string
-  prescriptions: Prescription[]
-  reports: MedicalReport[]
+  doctorId: string; userId: string; patient: PatientInfo; patientId: string
+  prescriptions: Prescription[]; reports: MedicalReport[]
 }
 
-type Tab = "prescriptions" | "reports"
-type Modal = null | "prescription" | "report"
+type Tab       = "prescriptions" | "reports"
+type Modal     = null | "prescription" | "report"
+type PanelItem = { type: "rx"; data: Prescription } | { type: "report"; data: MedicalReport }
+
+// ─── Constants ────────────────────────────────────────────────────────────────
 
 const REPORT_TYPES = [
-  { value: "lab", label: "Lab Report" },
-  { value: "imaging", label: "Imaging / X-Ray / MRI" },
-  { value: "discharge", label: "Discharge Summary" },
-  { value: "referral", label: "Referral Letter" },
-  { value: "other", label: "Other" },
+  { value: "lab",       label: "Lab Report",        icon: "🧪" },
+  { value: "imaging",   label: "Imaging / X-Ray",   icon: "🩻" },
+  { value: "discharge", label: "Discharge Summary",  icon: "🏥" },
+  { value: "referral",  label: "Referral Letter",    icon: "📨" },
+  { value: "other",     label: "Other",              icon: "📄" },
 ]
 
-const EMPTY_MED: Medication = { name: "", dosage: "", frequency: "", duration: "", instructions: "" }
-
-function formatBytes(bytes: number) {
-  if (bytes < 1024) return `${bytes} B`
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+const REPORT_PILL: Record<string, string> = {
+  lab:       "bg-[#f3e8ff] text-[#7e22ce] border-[#d8b4fe]",
+  imaging:   "bg-[#dde8f5] text-[#203C67] border-[#b8d0ea]",
+  discharge: "bg-[#fef6e4] text-[#92400e] border-[#fcd89a]",
+  referral:  "bg-[#e6f4e8] text-[#2d6b3f] border-[#b8d4c0]",
+  other:     "bg-[#f7f4ef] text-[#5a6a7e] border-[#d4cfc6]",
 }
 
+const EMPTY_MED: Medication = { name: "", dosage: "", frequency: "", duration: "", instructions: "" }
+const INPUT = "w-full border border-[#d4cfc6] rounded-xl px-3.5 py-2.5 text-[12.5px] text-[#1a2535] bg-[#faf8f4] focus:outline-none focus:border-[#203C67] focus:bg-white transition-colors placeholder:text-[#b0a99e]"
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+/**
+ * Medications can arrive in three shapes from Appwrite + local state:
+ *   1. string   — the whole array JSON.stringify'd:  '[{"name":"Amox"...}]'
+ *   2. string[] — each item JSON.stringify'd:        ['{"name":"Amox"...}']
+ *   3. object[] — already parsed (optimistic local): [{name:"Amox"...}]
+ */
+function parseMedications(raw: any): Medication[] {
+  if (!raw) return []
+
+  // Case 1: single string — the whole array was stringified
+  if (typeof raw === "string") {
+    try {
+      const parsed = JSON.parse(raw)
+      if (Array.isArray(parsed)) return parsed.filter(Boolean)
+    } catch {}
+    return []
+  }
+
+  // Case 2 & 3: already an array — each item may or may not be a string
+  if (Array.isArray(raw)) {
+    return raw.map((m: any) => {
+      if (!m) return null
+      if (typeof m === "string") {
+        try { return JSON.parse(m) } catch { return null }
+      }
+      return m
+    }).filter(Boolean) as Medication[]
+  }
+
+  return []
+}
+
+function formatBytes(b: number) {
+  if (b < 1024) return `${b} B`
+  if (b < 1024 * 1024) return `${(b / 1024).toFixed(1)} KB`
+  return `${(b / (1024 * 1024)).toFixed(1)} MB`
+}
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("en-IN", {
-    day: "numeric", month: "short", year: "numeric", timeZone: "Asia/Kolkata"
+    day: "numeric", month: "short", year: "numeric", timeZone: "Asia/Kolkata",
   })
 }
-
-const REPORT_TYPE_COLORS: Record<string, string> = {
-  lab: "bg-purple-100 text-purple-700 border-purple-200",
-  imaging: "bg-blue-100 text-blue-700 border-blue-200",
-  discharge: "bg-orange-100 text-orange-700 border-orange-200",
-  referral: "bg-teal-100 text-teal-700 border-teal-200",
-  other: "bg-gray-100 text-gray-600 border-gray-200",
+function formatTime(iso: string) {
+  return new Date(iso).toLocaleTimeString("en-IN", {
+    hour: "numeric", minute: "2-digit", hour12: true, timeZone: "Asia/Kolkata",
+  })
+}
+function groupLabel(iso: string): string {
+  const d   = new Date(new Date(iso).toLocaleString("en-US", { timeZone: "Asia/Kolkata" }))
+  const now = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }))
+  const diff = Math.floor((now.getTime() - d.getTime()) / 86400000)
+  if (diff === 0) return "Today"
+  if (diff === 1) return "Yesterday"
+  return d.toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })
+}
+function groupByDate<T extends { $createdAt: string }>(items: T[]): { label: string; items: T[] }[] {
+  const map = new Map<string, T[]>()
+  for (const item of items) {
+    const label = groupLabel(item.$createdAt)
+    if (!map.has(label)) map.set(label, [])
+    map.get(label)!.push(item)
+  }
+  return Array.from(map.entries()).map(([label, items]) => ({ label, items }))
+}
+function getInitials(name: string) {
+  return name.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase()
+}
+function calcAge(birthDate?: string) {
+  if (!birthDate) return null
+  return Math.floor((Date.now() - new Date(birthDate).getTime()) / (1000 * 60 * 60 * 24 * 365.25))
+}
+function calcBMI(h?: string, w?: string) {
+  const hm = parseFloat(h ?? "") / 100
+  const wk = parseFloat(w ?? "")
+  if (!hm || !wk) return null
+  const val = (wk / (hm * hm)).toFixed(1)
+  const n = parseFloat(val)
+  const info = n < 18.5 ? { label: "Underweight", color: "#b45309" }
+             : n < 25   ? { label: "Normal",       color: "#3d6b3f" }
+             : n < 30   ? { label: "Overweight",   color: "#b45309" }
+             :             { label: "Obese",         color: "#991b1b" }
+  return { val, ...info }
 }
 
+// ─── Sub-components ───────────────────────────────────────────────────────────
+
+function InfoPill({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex flex-col gap-0.5">
+      <span className="text-[9px] font-semibold text-[#a0afc0] uppercase tracking-wide">{label}</span>
+      <span className="text-[11px] text-[#1a2535] leading-snug">{value}</span>
+    </div>
+  )
+}
+
+function DateHeading({ label }: { label: string }) {
+  return (
+    <div className="flex items-center gap-3 py-1">
+      <span className="text-[11px] font-semibold text-[#a0afc0] uppercase tracking-wider whitespace-nowrap">{label}</span>
+      <div className="flex-1 h-px bg-[#e2ddd4]" />
+    </div>
+  )
+}
+
+function EmptyState({ icon, title, subtitle, action, actionLabel }: {
+  icon: string; title: string; subtitle: string; action: () => void; actionLabel: string
+}) {
+  return (
+    <div className="flex flex-col items-center justify-center py-16 text-center bg-white border border-[#e2ddd4] rounded-2xl">
+      <p className="text-[40px] mb-3">{icon}</p>
+      <p className="text-[14px] font-semibold text-[#1a2535] mb-1">{title}</p>
+      <p className="text-[12px] text-[#a0afc0] mb-5">{subtitle}</p>
+      <button onClick={action} className="bg-[#203C67] text-white text-[12px] font-semibold px-5 py-2.5 rounded-xl hover:bg-[#162d50] transition-colors">
+        {actionLabel}
+      </button>
+    </div>
+  )
+}
+
+// ─── Patient Side Panel ───────────────────────────────────────────────────────
+
+function PatientSidePanel({ patient }: { patient: PatientInfo }) {
+  const age         = calcAge(patient.birthDate)
+  const bmi         = calcBMI(patient.height, patient.weight)
+  const allergyList = patient.allergies?.split(",").map(s => s.trim()).filter(Boolean) ?? []
+
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="flex flex-col items-center gap-2 pb-3 border-b border-[#e2ddd4]">
+        <div className="w-14 h-14 rounded-2xl bg-[#dde8f5] flex items-center justify-center text-[18px] font-bold text-[#203C67]">
+          {getInitials(patient.name)}
+        </div>
+        <div className="text-center">
+          <p className="text-[14px] font-semibold text-[#1a2535]">{patient.name}</p>
+          <p className="text-[11px] text-[#a0afc0]">
+            {[age ? `${age} yrs` : null, patient.gender].filter(Boolean).join(" · ")}
+          </p>
+        </div>
+        <div className="flex gap-1.5 flex-wrap justify-center">
+          {patient.bloodGroup && (
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#fdecea] text-[#991b1b] border border-[#f5c6c2]">
+              {patient.bloodGroup}
+            </span>
+          )}
+          {allergyList.length > 0 && (
+            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#fef6e4] text-[#92400e] border border-[#fcd89a]">
+              ⚠ {allergyList.length} allerg{allergyList.length > 1 ? "ies" : "y"}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {(patient.height || patient.weight) && (
+        <div>
+          <p className="text-[9px] font-semibold text-[#a0afc0] uppercase tracking-wide mb-2">Vitals</p>
+          <div className="grid grid-cols-3 gap-1.5">
+            {patient.height && (
+              <div className="bg-[#f7f4ef] rounded-xl p-2 text-center">
+                <p className="text-[8px] text-[#a0afc0]">Height</p>
+                <p className="text-[13px] font-bold text-[#1a2535]">{patient.height}</p>
+                <p className="text-[8px] text-[#a0afc0]">cm</p>
+              </div>
+            )}
+            {patient.weight && (
+              <div className="bg-[#f7f4ef] rounded-xl p-2 text-center">
+                <p className="text-[8px] text-[#a0afc0]">Weight</p>
+                <p className="text-[13px] font-bold text-[#1a2535]">{patient.weight}</p>
+                <p className="text-[8px] text-[#a0afc0]">kg</p>
+              </div>
+            )}
+            {bmi && (
+              <div className="bg-[#f7f4ef] rounded-xl p-2 text-center">
+                <p className="text-[8px] text-[#a0afc0]">BMI</p>
+                <p className="text-[13px] font-bold" style={{ color: bmi.color }}>{bmi.val}</p>
+                <p className="text-[8px] font-medium" style={{ color: bmi.color }}>{bmi.label}</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {allergyList.length > 0 && (
+        <div>
+          <p className="text-[9px] font-semibold text-[#a0afc0] uppercase tracking-wide mb-2">Allergies</p>
+          <div className="bg-[#fef6e4] border border-[#fcd89a] rounded-xl p-2.5 flex flex-wrap gap-1">
+            {allergyList.map(a => (
+              <span key={a} className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#fdecea] text-[#991b1b] border border-[#f5c6c2]">{a}</span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {(patient.phone || patient.email || patient.address) && (
+        <div>
+          <p className="text-[9px] font-semibold text-[#a0afc0] uppercase tracking-wide mb-2">Contact</p>
+          <div className="bg-white border border-[#e2ddd4] rounded-xl p-3 flex flex-col gap-2">
+            {patient.phone   && <InfoPill label="Phone"   value={patient.phone} />}
+            {patient.email   && <InfoPill label="Email"   value={patient.email} />}
+            {patient.address && <InfoPill label="Address" value={patient.address} />}
+          </div>
+        </div>
+      )}
+
+      {(patient.currentMedication || patient.pastMedicalHistory || patient.familyMedicalHistory) && (
+        <div>
+          <p className="text-[9px] font-semibold text-[#a0afc0] uppercase tracking-wide mb-2">History</p>
+          <div className="bg-white border border-[#e2ddd4] rounded-xl p-3 flex flex-col gap-2">
+            {patient.currentMedication    && <InfoPill label="Current Medication"   value={patient.currentMedication} />}
+            {patient.pastMedicalHistory   && <InfoPill label="Past Medical History" value={patient.pastMedicalHistory} />}
+            {patient.familyMedicalHistory && <InfoPill label="Family History"       value={patient.familyMedicalHistory} />}
+          </div>
+        </div>
+      )}
+
+      {(patient.emergencyContactName || patient.insuranceProvider) && (
+        <div>
+          <p className="text-[9px] font-semibold text-[#a0afc0] uppercase tracking-wide mb-2">Emergency & Insurance</p>
+          <div className="bg-white border border-[#e2ddd4] rounded-xl p-3 flex flex-col gap-2">
+            {patient.emergencyContactName   && <InfoPill label="Emergency Contact" value={patient.emergencyContactName} />}
+            {patient.emergencyContactNumber && <InfoPill label="Emergency Phone"   value={patient.emergencyContactNumber} />}
+            {patient.insuranceProvider      && <InfoPill label="Insurance"         value={patient.insuranceProvider} />}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─── Prescription Detail ──────────────────────────────────────────────────────
+
+function PrescriptionDetail({ rx }: { rx: Prescription }) {
+  const meds = parseMedications(rx.medications)
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex items-start justify-between">
+        <div>
+          <p className="text-[16px] font-semibold text-[#1a2535]">{rx.diagnosis}</p>
+          <p className="text-[11px] text-[#a0afc0] mt-0.5">
+            {formatDate(rx.$createdAt)} · {formatTime(rx.$createdAt)}
+          </p>
+        </div>
+        {rx.followUpDate && (
+          <div className="bg-[#dde8f5] border border-[#c8d8ea] rounded-xl px-3 py-1.5 text-right flex-shrink-0">
+            <p className="text-[9px] font-semibold text-[#8FABD4] uppercase tracking-wide">Follow-up</p>
+            <p className="text-[12px] font-semibold text-[#203C67]">{formatDate(rx.followUpDate)}</p>
+          </div>
+        )}
+      </div>
+
+      <div>
+        <p className="text-[10px] font-semibold text-[#a0afc0] uppercase tracking-wide mb-2">
+          Medications ({meds.length})
+        </p>
+        {meds.length === 0 ? (
+          <p className="text-[12px] text-[#a0afc0] italic">No medications recorded.</p>
+        ) : (
+          <div className="flex flex-col gap-2">
+            {meds.map((med, i) => (
+              <div key={i} className="bg-[#faf8f4] border border-[#e2ddd4] rounded-xl p-3">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-5 h-5 rounded-md bg-[#dde8f5] flex items-center justify-center text-[9px] font-bold text-[#203C67] flex-shrink-0">
+                    {i + 1}
+                  </div>
+                  <p className="text-[13px] font-semibold text-[#1a2535]">{med.name}</p>
+                </div>
+                <div className="grid grid-cols-3 gap-2 pl-7">
+                  {med.dosage && (
+                    <div>
+                      <p className="text-[9px] text-[#a0afc0] uppercase tracking-wide">Dosage</p>
+                      <p className="text-[12px] text-[#5a6a7e] font-medium">{med.dosage}</p>
+                    </div>
+                  )}
+                  {med.frequency && (
+                    <div>
+                      <p className="text-[9px] text-[#a0afc0] uppercase tracking-wide">Frequency</p>
+                      <p className="text-[12px] text-[#5a6a7e] font-medium">{med.frequency}</p>
+                    </div>
+                  )}
+                  {med.duration && (
+                    <div>
+                      <p className="text-[9px] text-[#a0afc0] uppercase tracking-wide">Duration</p>
+                      <p className="text-[12px] text-[#5a6a7e] font-medium">{med.duration}</p>
+                    </div>
+                  )}
+                  {med.instructions && (
+                    <div className="col-span-3">
+                      <p className="text-[9px] text-[#a0afc0] uppercase tracking-wide">Instructions</p>
+                      <p className="text-[12px] text-[#5a6a7e] italic">{med.instructions}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {rx.content && (
+        <div>
+          <p className="text-[10px] font-semibold text-[#a0afc0] uppercase tracking-wide mb-2">Clinical Notes</p>
+          <div
+            className="bg-white border border-[#e2ddd4] rounded-xl px-4 py-3 text-[12px] text-[#1a2535] leading-relaxed prose prose-sm max-w-none"
+            style={{ fontFamily: "Georgia, serif" }}
+            dangerouslySetInnerHTML={{ __html: rx.content }}
+          />
+        </div>
+      )}
+
+      {rx.notes && (
+        <div className="bg-[#fef6e4] border border-[#fcd89a] rounded-xl p-3">
+          <p className="text-[9px] font-semibold text-[#92400e] uppercase tracking-wide mb-1">Doctor&apos;s Notes</p>
+          <p className="text-[12px] text-[#5a6a7e] leading-relaxed">{rx.notes}</p>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─── Report Detail ────────────────────────────────────────────────────────────
+
+function ReportDetail({ report }: { report: MedicalReport }) {
+  const rt      = REPORT_TYPES.find(t => t.value === report.reportType)
+  const viewUrl = getFileViewUrl(report.fileId) as any
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex items-start gap-3">
+        <div className="w-12 h-12 rounded-xl bg-[#f7f4ef] border border-[#e2ddd4] flex items-center justify-center text-2xl flex-shrink-0">
+          {rt?.icon ?? "📄"}
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-[16px] font-semibold text-[#1a2535]">{report.title}</p>
+          <p className="text-[11px] text-[#a0afc0] mt-0.5">
+            {formatDate(report.$createdAt)} · {formatTime(report.$createdAt)}
+          </p>
+          <span className={`mt-1.5 inline-block text-[10px] font-semibold border rounded-full px-2.5 py-0.5 ${REPORT_PILL[report.reportType] ?? REPORT_PILL.other}`}>
+            {rt?.label ?? report.reportType}
+          </span>
+        </div>
+      </div>
+
+      <div className="bg-white border border-[#e2ddd4] rounded-xl p-4 flex items-center gap-3">
+        <div className="w-10 h-10 rounded-lg bg-[#f7f4ef] flex items-center justify-center flex-shrink-0">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#a0afc0" strokeWidth="1.5">
+            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+          </svg>
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-[12px] font-semibold text-[#1a2535] truncate">{report.fileName}</p>
+          <p className="text-[10px] text-[#a0afc0]">{formatBytes(report.fileSize)} · {report.mimeType}</p>
+        </div>
+        <a
+          href={viewUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-1.5 text-[12px] font-semibold px-3 py-2 rounded-xl bg-[#203C67] text-white hover:bg-[#162d50] transition-colors flex-shrink-0"
+        >
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+          View File
+        </a>
+      </div>
+
+      {report.notes && (
+        <div>
+          <p className="text-[10px] font-semibold text-[#a0afc0] uppercase tracking-wide mb-2">Notes</p>
+          <div className="bg-[#faf8f4] border border-[#e2ddd4] rounded-xl p-3">
+            <p className="text-[12px] text-[#5a6a7e] leading-relaxed">{report.notes}</p>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─── Main Component ───────────────────────────────────────────────────────────
+
 export default function PatientRecordsClient({
-  doctor, doctorId, userId, patient, patientId, prescriptions: initRx, reports: initReports
+  doctor, doctorId, userId, patient, patientId,
+  prescriptions: initRx, reports: initReports,
 }: Props) {
   const router = useRouter()
-  const [tab, setTab] = useState<Tab>("prescriptions")
-  const [modal, setModal] = useState<Modal>(null)
+  const [tab, setTab]         = useState<Tab>("prescriptions")
+  const [modal, setModal]     = useState<Modal>(null)
+  const [panel, setPanel]     = useState<PanelItem | null>(null)
   const [isPending, startTransition] = useTransition()
 
-  // ── Prescription form state ──
-  const [diagnosis, setDiagnosis] = useState("")
+  const [diagnosis, setDiagnosis]     = useState("")
   const [medications, setMedications] = useState<Medication[]>([{ ...EMPTY_MED }])
-  const [rxNotes, setRxNotes] = useState("")
-  const [followUp, setFollowUp] = useState("")
-  const [rxError, setRxError] = useState("")
+  const [rxNotes, setRxNotes]         = useState("")
+  const [followUp, setFollowUp]       = useState("")
+  const [rxError, setRxError]         = useState("")
 
-  // ── Report form state ──
   const [reportTitle, setReportTitle] = useState("")
-  const [reportType, setReportType] = useState("lab")
+  const [reportType, setReportType]   = useState("lab")
   const [reportNotes, setReportNotes] = useState("")
-  const [reportFile, setReportFile] = useState<File | null>(null)
+  const [reportFile, setReportFile]   = useState<File | null>(null)
   const [reportError, setReportError] = useState("")
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  // ── Local state for optimistic updates ──
   const [prescriptions, setPrescriptions] = useState(initRx)
-  const [reports, setReports] = useState(initReports)
-
-  // ── Expanded prescription (view detail) ──
-  const [expandedRx, setExpandedRx] = useState<string | null>(null)
-
-  function addMedication() {
-    setMedications(prev => [...prev, { ...EMPTY_MED }])
-  }
-
-  function removeMedication(i: number) {
-    setMedications(prev => prev.filter((_, idx) => idx !== i))
-  }
-
-  function updateMedication(i: number, field: keyof Medication, value: string) {
-    setMedications(prev => prev.map((m, idx) => idx === i ? { ...m, [field]: value } : m))
-  }
+  const [reports, setReports]             = useState(initReports)
 
   function resetRxForm() {
     setDiagnosis(""); setMedications([{ ...EMPTY_MED }]); setRxNotes(""); setFollowUp(""); setRxError("")
   }
-
   function resetReportForm() {
     setReportTitle(""); setReportType("lab"); setReportNotes(""); setReportFile(null); setReportError("")
     if (fileInputRef.current) fileInputRef.current.value = ""
@@ -144,22 +485,17 @@ export default function PatientRecordsClient({
     if (!diagnosis.trim()) { setRxError("Diagnosis is required."); return }
     if (medications.some(m => !m.name.trim())) { setRxError("All medication names are required."); return }
     setRxError("")
-
     startTransition(async () => {
       try {
         const doc = await createPrescription({
-          doctorId, patientId,
-          diagnosis,
-          medications,
-          notes: rxNotes,
-          followUpDate: followUp || undefined,
+          doctorId, patientId, diagnosis, medications,
+          notes: rxNotes, followUpDate: followUp || undefined,
+          appointmentId: "", type: "typed",
         })
+        // Store medications as objects so parseMedications works immediately
         setPrescriptions(prev => [{ ...doc, medications }, ...prev])
-        setModal(null)
-        resetRxForm()
-      } catch {
-        setRxError("Failed to save. Please try again.")
-      }
+        setModal(null); resetRxForm()
+      } catch { setRxError("Failed to save. Please try again.") }
     })
   }
 
@@ -167,25 +503,15 @@ export default function PatientRecordsClient({
     if (!reportTitle.trim()) { setReportError("Title is required."); return }
     if (!reportFile) { setReportError("Please select a file."); return }
     setReportError("")
-
-    const formData = new FormData()
-    formData.append("file", reportFile)
-
+    const formData = new FormData(); formData.append("file", reportFile)
     startTransition(async () => {
       try {
         const doc = await uploadMedicalReport({
-          doctorId, patientId,
-          title: reportTitle,
-          reportType: reportType as any,
-          notes: reportNotes,
-          file: formData,
+          doctorId, patientId, title: reportTitle,
+          reportType: reportType as any, notes: reportNotes, file: formData,
         })
-        setReports(prev => [doc, ...prev])
-        setModal(null)
-        resetReportForm()
-      } catch {
-        setReportError("Upload failed. Please try again.")
-      }
+        setReports(prev => [doc, ...prev]); setModal(null); resetReportForm()
+      } catch { setReportError("Upload failed. Please try again.") }
     })
   }
 
@@ -194,6 +520,7 @@ export default function PatientRecordsClient({
     startTransition(async () => {
       await deletePrescription(rxId, doctorId, patientId)
       setPrescriptions(prev => prev.filter(r => r.$id !== rxId))
+      if (panel?.type === "rx" && panel.data.$id === rxId) setPanel(null)
     })
   }
 
@@ -202,547 +529,358 @@ export default function PatientRecordsClient({
     startTransition(async () => {
       await deleteMedicalReport(reportId, fileId, doctorId, patientId)
       setReports(prev => prev.filter(r => r.$id !== reportId))
+      if (panel?.type === "report" && panel.data.$id === reportId) setPanel(null)
     })
   }
 
+  // Safe med count for list row subtitle
+  function medCount(rx: Prescription): number {
+    return parseMedications(rx.medications).length
+  }
+
+  const rxGroups     = groupByDate(prescriptions)
+  const reportGroups = groupByDate(reports)
+  const panelOpen    = panel !== null
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#EEF3FA] via-white to-[#E8F0FB] p-6">
-      {/* ── Header ─────────────────────────────────────────────── */}
-      <div className="flex items-start justify-between mb-6">
-        <div className="flex items-center gap-4">
-          <button
-            onClick={() => router.back()}
-            className="h-9 w-9 rounded-full border border-[#203C6740] flex items-center justify-center text-[#203C67] hover:bg-white transition-colors"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M19 12H5M5 12l7 7M5 12l7-7" />
+    <div className="min-h-screen bg-[#EFECE3] font-sans flex flex-col">
+
+      {/* ── Header ── */}
+      <header
+        className="sticky top-0 z-20 flex items-center justify-between px-6 py-3 border-b border-[#d4cfc6] flex-shrink-0"
+        style={{ background: "rgba(239,236,227,0.92)", backdropFilter: "blur(14px)" }}
+      >
+        <div className="flex items-center gap-3">
+          <button onClick={() => router.back()}
+            className="w-8 h-8 rounded-full border border-[#d4cfc6] flex items-center justify-center text-[#7a8fa8] hover:border-[#203C67] hover:text-[#203C67] transition-colors">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M19 12H5M5 12l7 7M5 12l7-7"/>
             </svg>
           </button>
           <div>
-            <h1 className="text-[22px] font-semibold text-[#203C67]">Patient Records</h1>
-            <p className="text-[13px] text-gray-500">Dr. {doctor.name} · {doctor.specialization}</p>
+            <h1 className="text-[16px] font-semibold text-[#1a2535]">{patient.name}</h1>
+            <p className="text-[11px] text-[#a0afc0]">Dr. {doctor.name} · {doctor.specialization}</p>
           </div>
         </div>
-
         <button
           onClick={() => setModal(tab === "prescriptions" ? "prescription" : "report")}
-          className="flex items-center gap-2 bg-[#203C67] text-white text-[13px] font-medium px-4 py-2.5 rounded-xl hover:bg-[#2d5494] transition-colors"
+          className="flex items-center gap-2 bg-[#203C67] text-white text-[12px] font-semibold px-4 py-2 rounded-xl hover:bg-[#162d50] transition-colors"
         >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-            <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
-          </svg>
+          <span className="text-base leading-none">+</span>
           {tab === "prescriptions" ? "New Prescription" : "Upload Report"}
         </button>
-      </div>
+      </header>
 
-      {/* ── Patient Info Card ───────────────────────────────────── */}
-      <div className="bg-white border border-[#203C6720] rounded-2xl p-5 mb-6 flex items-center gap-5">
-        <div className="h-14 w-14 rounded-full bg-[#A6BAD7] flex items-center justify-center text-[18px] font-semibold text-[#203C67] flex-shrink-0">
-          {patient.name?.split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase()}
-        </div>
-        <div className="flex-1 grid grid-cols-4 gap-4">
-          <div>
-            <p className="text-[11px] text-gray-400 uppercase tracking-wider mb-0.5">Patient</p>
-            <p className="text-[14px] font-semibold text-gray-800">{patient.name}</p>
-          </div>
-          {patient.email && (
-            <div>
-              <p className="text-[11px] text-gray-400 uppercase tracking-wider mb-0.5">Email</p>
-              <p className="text-[13px] text-gray-600 truncate">{patient.email}</p>
-            </div>
-          )}
-          {patient.bloodGroup && (
-            <div>
-              <p className="text-[11px] text-gray-400 uppercase tracking-wider mb-0.5">Blood Group</p>
-              <p className="text-[13px] font-medium text-red-600">{patient.bloodGroup}</p>
-            </div>
-          )}
-          {patient.allergies && (
-            <div>
-              <p className="text-[11px] text-gray-400 uppercase tracking-wider mb-0.5">Allergies</p>
-              <p className="text-[13px] text-orange-600 truncate">{patient.allergies}</p>
-            </div>
-          )}
-        </div>
-        <div className="flex gap-2">
-          <span className="text-[11px] bg-[#EEF3FA] text-[#203C67] border border-[#203C6720] rounded-full px-3 py-1 font-medium">
-            {prescriptions.length} Rx
-          </span>
-          <span className="text-[11px] bg-[#EEF3FA] text-[#203C67] border border-[#203C6720] rounded-full px-3 py-1 font-medium">
-            {reports.length} Reports
-          </span>
-        </div>
-      </div>
+      {/* ── Body ── */}
+      <div className="flex flex-1 min-h-0">
 
-      {/* ── Tabs ────────────────────────────────────────────────── */}
-      <div className="flex gap-1 p-1 bg-[#203C6710] rounded-xl w-fit mb-5">
-        {(["prescriptions", "reports"] as Tab[]).map(t => (
-          <button
-            key={t}
-            onClick={() => setTab(t)}
-            className={`px-5 py-2 rounded-lg text-[13px] font-medium transition-all capitalize ${
-              tab === t ? "bg-white text-[#203C67] shadow-sm" : "text-gray-500 hover:text-gray-700"
-            }`}
-          >
-            {t === "prescriptions" ? `💊 Prescriptions (${prescriptions.length})` : `📄 Reports (${reports.length})`}
-          </button>
-        ))}
-      </div>
+        {/* List column */}
+        <div className={`flex flex-col transition-all duration-300 ${panelOpen ? "w-[380px] min-w-[320px]" : "flex-1"} border-r border-[#d4cfc6] overflow-y-auto`}>
+          <div className="p-4 flex flex-col gap-3">
 
-      {/* ── Prescriptions List ──────────────────────────────────── */}
-      {tab === "prescriptions" && (
-        <div className="flex flex-col gap-3">
-          {prescriptions.length === 0 ? (
-            <EmptyState
-              icon="💊"
-              title="No prescriptions yet"
-              subtitle="Create the first prescription for this patient"
-              action={() => setModal("prescription")}
-              actionLabel="New Prescription"
-            />
-          ) : (
-            prescriptions.map(rx => (
-              <div key={rx.$id} className="bg-white border border-[#203C6720] rounded-2xl overflow-hidden">
-                {/* Card header */}
-                <div
-                  className="flex items-center gap-4 p-5 cursor-pointer hover:bg-[#f9fbff] transition-colors"
-                  onClick={() => setExpandedRx(expandedRx === rx.$id ? null : rx.$id)}
-                >
-                  <div className="h-10 w-10 rounded-xl bg-[#EEF3FA] flex items-center justify-center text-[18px] flex-shrink-0">
-                    💊
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[14px] font-semibold text-gray-800">{rx.diagnosis}</p>
-                    <p className="text-[12px] text-gray-500">
-                      {rx.medications.length} medication{rx.medications.length !== 1 ? "s" : ""} ·{" "}
-                      {formatDate(rx.$createdAt)}
-                      {rx.followUpDate && ` · Follow-up: ${formatDate(rx.followUpDate)}`}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={e => { e.stopPropagation(); handleDeleteRx(rx.$id) }}
-                      className="h-8 w-8 rounded-lg flex items-center justify-center text-gray-400 hover:bg-red-50 hover:text-red-500 transition-colors"
-                    >
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14H6L5 6" /><path d="M10 11v6M14 11v6" /><path d="M9 6V4h6v2" />
-                      </svg>
-                    </button>
-                    <svg
-                      className={`transition-transform text-gray-400 ${expandedRx === rx.$id ? "rotate-180" : ""}`}
-                      width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
-                    >
-                      <polyline points="6 9 12 15 18 9" />
-                    </svg>
-                  </div>
-                </div>
-
-                {/* Expanded detail */}
-                {expandedRx === rx.$id && (
-                  <div className="border-t border-[#203C6710] p-5 bg-[#fafcff]">
-                    <div className="mb-4">
-                      <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wider mb-2">Medications</p>
-                      <div className="flex flex-col gap-2">
-                        {rx.medications.map((med, i) => (
-                          <div key={i} className="flex items-start gap-3 p-3 bg-white rounded-xl border border-[#203C6715]">
-                            <div className="h-7 w-7 rounded-lg bg-[#203C6710] flex items-center justify-center text-[11px] font-semibold text-[#203C67] flex-shrink-0 mt-0.5">
-                              {i + 1}
-                            </div>
-                            <div className="flex-1 grid grid-cols-4 gap-3 text-[12px]">
-                              <div>
-                                <p className="text-gray-400 text-[10px]">Medicine</p>
-                                <p className="font-semibold text-gray-800">{med.name}</p>
-                              </div>
-                              <div>
-                                <p className="text-gray-400 text-[10px]">Dosage</p>
-                                <p className="text-gray-700">{med.dosage}</p>
-                              </div>
-                              <div>
-                                <p className="text-gray-400 text-[10px]">Frequency</p>
-                                <p className="text-gray-700">{med.frequency}</p>
-                              </div>
-                              <div>
-                                <p className="text-gray-400 text-[10px]">Duration</p>
-                                <p className="text-gray-700">{med.duration}</p>
-                              </div>
-                              {med.instructions && (
-                                <div className="col-span-4">
-                                  <p className="text-gray-400 text-[10px]">Instructions</p>
-                                  <p className="text-gray-600 italic">{med.instructions}</p>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                    {rx.notes && (
-                      <div className="mt-3 p-3 bg-yellow-50 rounded-xl border border-yellow-100">
-                        <p className="text-[11px] font-medium text-yellow-700 mb-1">Doctor&apos;s Notes</p>
-                        <p className="text-[12px] text-gray-600">{rx.notes}</p>
-                      </div>
-                    )}
-                  </div>
-                )}
+            {/* Patient strip */}
+            <div className="bg-white border border-[#e2ddd4] rounded-2xl px-4 py-3 flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-[#dde8f5] flex items-center justify-center text-[12px] font-bold text-[#203C67] flex-shrink-0">
+                {getInitials(patient.name)}
               </div>
-            ))
-          )}
-        </div>
-      )}
-
-      {/* ── Medical Reports List ────────────────────────────────── */}
-      {tab === "reports" && (
-        <div className="grid grid-cols-2 gap-3">
-          {reports.length === 0 ? (
-            <div className="col-span-2">
-              <EmptyState
-                icon="📄"
-                title="No reports uploaded"
-                subtitle="Upload the first medical report for this patient"
-                action={() => setModal("report")}
-                actionLabel="Upload Report"
-              />
-            </div>
-          ) : (
-            reports.map(report => (
-              <div key={report.$id} className="bg-white border border-[#203C6720] rounded-2xl p-5 flex flex-col gap-3">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-xl bg-[#EEF3FA] flex items-center justify-center text-[18px] flex-shrink-0">
-                      {report.reportType === "lab" ? "🧪" :
-                       report.reportType === "imaging" ? "🔬" :
-                       report.reportType === "discharge" ? "🏥" :
-                       report.reportType === "referral" ? "📋" : "📄"}
-                    </div>
-                    <div>
-                      <p className="text-[14px] font-semibold text-gray-800">{report.title}</p>
-                      <p className="text-[11px] text-gray-400">{formatDate(report.$createdAt)}</p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => handleDeleteReport(report.$id, report.fileId, )}
-                    className="h-8 w-8 rounded-lg flex items-center justify-center text-gray-400 hover:bg-red-50 hover:text-red-500 transition-colors"
-                  >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14H6L5 6" /><path d="M10 11v6M14 11v6" /><path d="M9 6V4h6v2" />
-                    </svg>
-                  </button>
-                </div>
-
-                <span className={`text-[10px] font-medium border rounded-full px-2.5 py-0.5 w-fit ${REPORT_TYPE_COLORS[report.reportType] ?? REPORT_TYPE_COLORS.other}`}>
-                  {REPORT_TYPES.find(t => t.value === report.reportType)?.label ?? report.reportType}
+              <div className="flex-1 min-w-0">
+                <p className="text-[13px] font-semibold text-[#1a2535] truncate">{patient.name}</p>
+                <p className="text-[10px] text-[#a0afc0]">
+                  {[patient.bloodGroup, patient.allergies ? "⚠ allergies" : null].filter(Boolean).join(" · ")}
+                </p>
+              </div>
+              <div className="flex gap-1.5 flex-shrink-0">
+                <span className="text-[10px] bg-[#dde8f5] text-[#203C67] border border-[#c8d8ea] rounded-full px-2 py-0.5 font-medium">
+                  {prescriptions.length} Rx
                 </span>
-
-                {report.notes && (
-                  <p className="text-[12px] text-gray-500 line-clamp-2">{report.notes}</p>
-                )}
-
-                <div className="flex items-center justify-between pt-2 border-t border-[#203C6710]">
-                  <div className="flex items-center gap-1.5 text-[11px] text-gray-400">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" />
-                    </svg>
-                    <span className="truncate max-w-[120px]">{report.fileName}</span>
-                    <span>· {formatBytes(report.fileSize)}</span>
-                  </div>
-                  <a
-                    href={getFileViewUrl(report.fileId)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-[11px] font-medium text-[#203C67] hover:underline flex items-center gap-1"
-                  >
-                    View
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /><polyline points="15 3 21 3 21 9" /><line x1="10" y1="14" x2="21" y2="3" />
-                    </svg>
-                  </a>
-                </div>
+                <span className="text-[10px] bg-[#f7f4ef] text-[#5a6a7e] border border-[#d4cfc6] rounded-full px-2 py-0.5 font-medium">
+                  {reports.length} Reports
+                </span>
               </div>
-            ))
-          )}
-        </div>
-      )}
-
-      {/* ── Prescription Modal ──────────────────────────────────── */}
-      {modal === "prescription" && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl">
-            <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between rounded-t-2xl">
-              <div>
-                <h2 className="text-[17px] font-semibold text-[#203C67]">New Prescription</h2>
-                <p className="text-[12px] text-gray-500">For {patient.name}</p>
-              </div>
-              <button onClick={() => { setModal(null); resetRxForm() }} className="h-8 w-8 rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-400">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-                </svg>
-              </button>
             </div>
 
-            <div className="p-6 flex flex-col gap-5">
-              {/* Diagnosis */}
-              <div>
-                <label className="block text-[12px] font-medium text-gray-600 mb-1.5">Diagnosis *</label>
-                <input
-                  value={diagnosis}
-                  onChange={e => setDiagnosis(e.target.value)}
-                  placeholder="e.g. Acute pharyngitis, Type 2 diabetes..."
-                  className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-[13px] focus:outline-none focus:border-[#203C67] transition-colors"
-                />
-              </div>
+            {/* Tabs */}
+            <div className="flex gap-1 bg-white border border-[#e2ddd4] rounded-xl p-1">
+              {(["prescriptions", "reports"] as Tab[]).map(t => (
+                <button key={t} onClick={() => { setTab(t); setPanel(null) }}
+                  className={`flex-1 py-2 rounded-lg text-[12px] font-medium transition-all ${
+                    tab === t ? "bg-[#203C67] text-white shadow-sm" : "text-[#7a8fa8] hover:text-[#203C67]"
+                  }`}
+                >
+                  {t === "prescriptions" ? `💊 Prescriptions (${prescriptions.length})` : `📄 Reports (${reports.length})`}
+                </button>
+              ))}
+            </div>
 
-              {/* Medications */}
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <label className="text-[12px] font-medium text-gray-600">Medications *</label>
-                  <button
-                    onClick={addMedication}
-                    className="text-[11px] text-[#203C67] font-medium flex items-center gap-1 hover:underline"
-                  >
-                    + Add another
-                  </button>
-                </div>
-
-                <div className="flex flex-col gap-3">
-                  {medications.map((med, i) => (
-                    <div key={i} className="border border-gray-200 rounded-xl p-4 bg-[#fafcff]">
-                      <div className="flex items-center justify-between mb-3">
-                        <span className="text-[11px] font-semibold text-[#203C67] bg-[#EEF3FA] px-2 py-0.5 rounded-md">
-                          Medication {i + 1}
-                        </span>
-                        {medications.length > 1 && (
-                          <button onClick={() => removeMedication(i)} className="text-[11px] text-red-400 hover:text-red-600">
-                            Remove
+            {/* Prescriptions list */}
+            {tab === "prescriptions" && (
+              <div className="flex flex-col gap-1">
+                {prescriptions.length === 0 ? (
+                  <EmptyState icon="💊" title="No prescriptions yet" subtitle="Create the first prescription for this patient" action={() => setModal("prescription")} actionLabel="New Prescription" />
+                ) : rxGroups.map(group => (
+                  <div key={group.label} className="flex flex-col gap-1.5 mb-1">
+                    <DateHeading label={group.label} />
+                    {group.items.map(rx => {
+                      const isActive = panel?.type === "rx" && panel.data.$id === rx.$id
+                      return (
+                        <div key={rx.$id} onClick={() => setPanel({ type: "rx", data: rx })}
+                          className={`flex items-center gap-3 px-4 py-3 rounded-xl border cursor-pointer transition-all group ${
+                            isActive ? "bg-[#203C67] border-[#203C67]" : "bg-white border-[#e2ddd4] hover:border-[#8FABD4] hover:bg-[#f7f9fc]"
+                          }`}
+                        >
+                          <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-base flex-shrink-0 ${isActive ? "bg-white/20" : "bg-[#dde8f5]"}`}>💊</div>
+                          <div className="flex-1 min-w-0">
+                            <p className={`text-[13px] font-semibold truncate ${isActive ? "text-white" : "text-[#1a2535]"}`}>{rx.diagnosis}</p>
+                            <p className={`text-[10px] mt-0.5 ${isActive ? "text-white/60" : "text-[#a0afc0]"}`}>
+                              {medCount(rx)} med{medCount(rx) !== 1 ? "s" : ""} · {formatTime(rx.$createdAt)}
+                            </p>
+                          </div>
+                          <button onClick={e => { e.stopPropagation(); handleDeleteRx(rx.$id) }}
+                            className={`w-7 h-7 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all flex-shrink-0 ${
+                              isActive ? "hover:bg-white/20 text-white/70 hover:text-white" : "hover:bg-red-50 text-[#c0b9b0] hover:text-red-400"
+                            }`}
+                          >
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M9 6V4h6v2"/>
+                            </svg>
                           </button>
-                        )}
-                      </div>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <label className="text-[11px] text-gray-400 mb-1 block">Medicine Name *</label>
-                          <input
-                            value={med.name}
-                            onChange={e => updateMedication(i, "name", e.target.value)}
-                            placeholder="e.g. Amoxicillin"
-                            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-[12px] focus:outline-none focus:border-[#203C67]"
-                          />
                         </div>
-                        <div>
-                          <label className="text-[11px] text-gray-400 mb-1 block">Dosage</label>
-                          <input
-                            value={med.dosage}
-                            onChange={e => updateMedication(i, "dosage", e.target.value)}
-                            placeholder="e.g. 500mg"
-                            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-[12px] focus:outline-none focus:border-[#203C67]"
-                          />
-                        </div>
-                        <div>
-                          <label className="text-[11px] text-gray-400 mb-1 block">Frequency</label>
-                          <input
-                            value={med.frequency}
-                            onChange={e => updateMedication(i, "frequency", e.target.value)}
-                            placeholder="e.g. Twice daily"
-                            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-[12px] focus:outline-none focus:border-[#203C67]"
-                          />
-                        </div>
-                        <div>
-                          <label className="text-[11px] text-gray-400 mb-1 block">Duration</label>
-                          <input
-                            value={med.duration}
-                            onChange={e => updateMedication(i, "duration", e.target.value)}
-                            placeholder="e.g. 7 days"
-                            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-[12px] focus:outline-none focus:border-[#203C67]"
-                          />
-                        </div>
-                        <div className="col-span-2">
-                          <label className="text-[11px] text-gray-400 mb-1 block">Special Instructions</label>
-                          <input
-                            value={med.instructions}
-                            onChange={e => updateMedication(i, "instructions", e.target.value)}
-                            placeholder="e.g. Take after meals, avoid dairy"
-                            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-[12px] focus:outline-none focus:border-[#203C67]"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                      )
+                    })}
+                  </div>
+                ))}
               </div>
+            )}
 
-              {/* Notes */}
-              <div>
-                <label className="block text-[12px] font-medium text-gray-600 mb-1.5">Doctor&apos;s Notes</label>
-                <textarea
-                  value={rxNotes}
-                  onChange={e => setRxNotes(e.target.value)}
-                  rows={3}
-                  placeholder="Additional advice, dietary restrictions, lifestyle changes..."
-                  className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-[13px] resize-none focus:outline-none focus:border-[#203C67]"
-                />
+            {/* Reports list */}
+            {tab === "reports" && (
+              <div className="flex flex-col gap-1">
+                {reports.length === 0 ? (
+                  <EmptyState icon="📄" title="No reports uploaded" subtitle="Upload the first medical report for this patient" action={() => setModal("report")} actionLabel="Upload Report" />
+                ) : reportGroups.map(group => (
+                  <div key={group.label} className="flex flex-col gap-1.5 mb-1">
+                    <DateHeading label={group.label} />
+                    {group.items.map(report => {
+                      const isActive = panel?.type === "report" && panel.data.$id === report.$id
+                      const rt = REPORT_TYPES.find(t => t.value === report.reportType)
+                      return (
+                        <div key={report.$id} onClick={() => setPanel({ type: "report", data: report })}
+                          className={`flex items-center gap-3 px-4 py-3 rounded-xl border cursor-pointer transition-all group ${
+                            isActive ? "bg-[#203C67] border-[#203C67]" : "bg-white border-[#e2ddd4] hover:border-[#8FABD4] hover:bg-[#f7f9fc]"
+                          }`}
+                        >
+                          <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-base flex-shrink-0 ${isActive ? "bg-white/20" : "bg-[#f7f4ef]"}`}>
+                            {rt?.icon ?? "📄"}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className={`text-[13px] font-semibold truncate ${isActive ? "text-white" : "text-[#1a2535]"}`}>{report.title}</p>
+                            <p className={`text-[10px] mt-0.5 ${isActive ? "text-white/60" : "text-[#a0afc0]"}`}>
+                              {rt?.label ?? report.reportType} · {formatTime(report.$createdAt)}
+                            </p>
+                          </div>
+                          <button onClick={e => { e.stopPropagation(); handleDeleteReport(report.$id, report.fileId) }}
+                            className={`w-7 h-7 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all flex-shrink-0 ${
+                              isActive ? "hover:bg-white/20 text-white/70 hover:text-white" : "hover:bg-red-50 text-[#c0b9b0] hover:text-red-400"
+                            }`}
+                          >
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M9 6V4h6v2"/>
+                            </svg>
+                          </button>
+                        </div>
+                      )
+                    })}
+                  </div>
+                ))}
               </div>
-
-              {/* Follow-up */}
-              <div>
-                <label className="block text-[12px] font-medium text-gray-600 mb-1.5">Follow-up Date (optional)</label>
-                <input
-                  type="date"
-                  value={followUp}
-                  onChange={e => setFollowUp(e.target.value)}
-                  className="border border-gray-200 rounded-xl px-4 py-2.5 text-[13px] focus:outline-none focus:border-[#203C67]"
-                />
-              </div>
-
-              {rxError && (
-                <p className="text-[12px] text-red-500 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{rxError}</p>
-              )}
-            </div>
-
-            <div className="sticky bottom-0 bg-white border-t border-gray-100 px-6 py-4 flex gap-3 rounded-b-2xl">
-              <button
-                onClick={() => { setModal(null); resetRxForm() }}
-                className="flex-1 py-2.5 rounded-xl border border-gray-200 text-[13px] text-gray-500 hover:bg-gray-50 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleCreatePrescription}
-                disabled={isPending}
-                className="flex-1 py-2.5 rounded-xl bg-[#203C67] text-white text-[13px] font-medium hover:bg-[#2d5494] transition-colors disabled:opacity-50"
-              >
-                {isPending ? "Saving..." : "Save Prescription"}
-              </button>
-            </div>
+            )}
           </div>
         </div>
-      )}
 
-      {/* ── Report Upload Modal ─────────────────────────────────── */}
-      {modal === "report" && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl">
-            <div className="border-b border-gray-100 px-6 py-4 flex items-center justify-between">
-              <div>
-                <h2 className="text-[17px] font-semibold text-[#203C67]">Upload Medical Report</h2>
-                <p className="text-[12px] text-gray-500">For {patient.name}</p>
+        {/* Split panel */}
+        {panelOpen && (
+          <div className="flex-1 flex min-h-0 overflow-hidden">
+            <div className="w-[220px] min-w-[200px] flex-shrink-0 border-r border-[#d4cfc6] overflow-y-auto p-4 bg-[#f7f4ef]">
+              <PatientSidePanel patient={patient} />
+            </div>
+            <div className="flex-1 overflow-y-auto p-5 bg-white">
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-[10px] font-semibold text-[#a0afc0] uppercase tracking-wide">
+                  {panel.type === "rx" ? "Prescription Detail" : "Report Detail"}
+                </p>
+                <button onClick={() => setPanel(null)}
+                  className="w-7 h-7 rounded-full hover:bg-[#f7f4ef] flex items-center justify-center text-[#a0afc0] hover:text-[#1a2535] transition-colors">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                  </svg>
+                </button>
               </div>
-              <button onClick={() => { setModal(null); resetReportForm() }} className="h-8 w-8 rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-400">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-                </svg>
+              {panel.type === "rx"     && <PrescriptionDetail rx={panel.data} />}
+              {panel.type === "report" && <ReportDetail report={panel.data} />}
+            </div>
+          </div>
+        )}
+
+        {/* Nothing selected hint */}
+        {!panelOpen && prescriptions.length + reports.length > 0 && (
+          <div className="hidden lg:flex flex-1 items-center justify-center text-center p-8 bg-[#faf8f4]">
+            <div>
+              <p className="text-[36px] mb-3">👈</p>
+              <p className="text-[14px] font-semibold text-[#1a2535]">Select an item</p>
+              <p className="text-[12px] text-[#a0afc0] mt-1">Click any prescription or report to view details here</p>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* ── New Prescription Modal ── */}
+      {modal === "prescription" && (
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-[#EFECE3] rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-[#d4cfc6] shadow-2xl">
+            <div className="sticky top-0 bg-[#EFECE3] border-b border-[#d4cfc6] px-6 py-4 flex items-center justify-between rounded-t-2xl z-10">
+              <div>
+                <h2 className="text-[16px] font-semibold text-[#1a2535]">New Prescription</h2>
+                <p className="text-[11px] text-[#a0afc0]">For {patient.name}</p>
+              </div>
+              <button onClick={() => { setModal(null); resetRxForm() }} className="w-8 h-8 rounded-full hover:bg-[#e2ddd4] flex items-center justify-center text-[#a0afc0] transition-colors">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
               </button>
             </div>
-
             <div className="p-6 flex flex-col gap-4">
               <div>
-                <label className="block text-[12px] font-medium text-gray-600 mb-1.5">Report Title *</label>
-                <input
-                  value={reportTitle}
-                  onChange={e => setReportTitle(e.target.value)}
-                  placeholder="e.g. CBC Blood Test, Chest X-Ray..."
-                  className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-[13px] focus:outline-none focus:border-[#203C67]"
-                />
+                <label className="text-[11px] font-semibold text-[#7a8fa8] uppercase tracking-wide block mb-1.5">Diagnosis *</label>
+                <input value={diagnosis} onChange={e => setDiagnosis(e.target.value)} placeholder="e.g. Acute pharyngitis…" className={INPUT} />
               </div>
-
               <div>
-                <label className="block text-[12px] font-medium text-gray-600 mb-1.5">Report Type</label>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-[11px] font-semibold text-[#7a8fa8] uppercase tracking-wide">Medications *</label>
+                  <button onClick={() => setMedications(p => [...p, { ...EMPTY_MED }])} className="text-[11px] font-semibold text-[#203C67] hover:underline">+ Add</button>
+                </div>
+                <div className="flex flex-col gap-3">
+                  {medications.map((med, i) => (
+                    <div key={i} className="bg-white border border-[#e2ddd4] rounded-xl p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-[10px] font-bold text-[#203C67] bg-[#dde8f5] px-2 py-0.5 rounded-md">Medication {i + 1}</span>
+                        {medications.length > 1 && (
+                          <button onClick={() => setMedications(p => p.filter((_, idx) => idx !== i))} className="text-[11px] text-red-400 hover:text-red-600">Remove</button>
+                        )}
+                      </div>
+                      <div className="grid grid-cols-2 gap-2.5">
+                        <div>
+                          <label className="text-[10px] text-[#a0afc0] mb-1 block">Medicine Name *</label>
+                          <input value={med.name} onChange={e => setMedications(p => p.map((m, idx) => idx === i ? { ...m, name: e.target.value } : m))} placeholder="Amoxicillin" className={INPUT} />
+                        </div>
+                        <div>
+                          <label className="text-[10px] text-[#a0afc0] mb-1 block">Dosage</label>
+                          <input value={med.dosage} onChange={e => setMedications(p => p.map((m, idx) => idx === i ? { ...m, dosage: e.target.value } : m))} placeholder="500mg" className={INPUT} />
+                        </div>
+                        <div>
+                          <label className="text-[10px] text-[#a0afc0] mb-1 block">Frequency</label>
+                          <input value={med.frequency} onChange={e => setMedications(p => p.map((m, idx) => idx === i ? { ...m, frequency: e.target.value } : m))} placeholder="Twice daily" className={INPUT} />
+                        </div>
+                        <div>
+                          <label className="text-[10px] text-[#a0afc0] mb-1 block">Duration</label>
+                          <input value={med.duration} onChange={e => setMedications(p => p.map((m, idx) => idx === i ? { ...m, duration: e.target.value } : m))} placeholder="7 days" className={INPUT} />
+                        </div>
+                        <div className="col-span-2">
+                          <label className="text-[10px] text-[#a0afc0] mb-1 block">Instructions</label>
+                          <input value={med.instructions} onChange={e => setMedications(p => p.map((m, idx) => idx === i ? { ...m, instructions: e.target.value } : m))} placeholder="After meals, avoid dairy" className={INPUT} />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <label className="text-[11px] font-semibold text-[#7a8fa8] uppercase tracking-wide block mb-1.5">Doctor&apos;s Notes</label>
+                <textarea value={rxNotes} onChange={e => setRxNotes(e.target.value)} rows={3} placeholder="Dietary advice, lifestyle changes…" className={`${INPUT} resize-none`} />
+              </div>
+              <div>
+                <label className="text-[11px] font-semibold text-[#7a8fa8] uppercase tracking-wide block mb-1.5">Follow-up Date</label>
+                <input type="date" value={followUp} onChange={e => setFollowUp(e.target.value)} className={INPUT} />
+              </div>
+              {rxError && <p className="text-[12px] text-red-500 bg-red-50 border border-red-200 rounded-xl px-3 py-2">{rxError}</p>}
+            </div>
+            <div className="sticky bottom-0 bg-[#EFECE3] border-t border-[#d4cfc6] px-6 py-4 flex gap-3 rounded-b-2xl">
+              <button onClick={() => { setModal(null); resetRxForm() }} className="flex-1 py-2.5 rounded-xl border border-[#d4cfc6] text-[12px] text-[#7a8fa8] hover:bg-[#e2ddd4] transition-colors">Cancel</button>
+              <button onClick={handleCreatePrescription} disabled={isPending} className="flex-1 py-2.5 rounded-xl bg-[#203C67] text-white text-[12px] font-semibold hover:bg-[#162d50] disabled:opacity-50 transition-colors">
+                {isPending ? "Saving…" : "Save Prescription"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Upload Report Modal ── */}
+      {modal === "report" && (
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-[#EFECE3] rounded-2xl w-full max-w-lg border border-[#d4cfc6] shadow-2xl">
+            <div className="border-b border-[#d4cfc6] px-6 py-4 flex items-center justify-between">
+              <div>
+                <h2 className="text-[16px] font-semibold text-[#1a2535]">Upload Medical Report</h2>
+                <p className="text-[11px] text-[#a0afc0]">For {patient.name}</p>
+              </div>
+              <button onClick={() => { setModal(null); resetReportForm() }} className="w-8 h-8 rounded-full hover:bg-[#e2ddd4] flex items-center justify-center text-[#a0afc0] transition-colors">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+            <div className="p-6 flex flex-col gap-4">
+              <div>
+                <label className="text-[11px] font-semibold text-[#7a8fa8] uppercase tracking-wide block mb-1.5">Report Title *</label>
+                <input value={reportTitle} onChange={e => setReportTitle(e.target.value)} placeholder="e.g. CBC Blood Test, Chest X-Ray…" className={INPUT} />
+              </div>
+              <div>
+                <label className="text-[11px] font-semibold text-[#7a8fa8] uppercase tracking-wide block mb-2">Report Type</label>
                 <div className="grid grid-cols-2 gap-2">
                   {REPORT_TYPES.map(t => (
-                    <button
-                      key={t.value}
-                      onClick={() => setReportType(t.value)}
-                      className={`py-2 px-3 rounded-xl border text-[12px] font-medium transition-colors text-left ${
-                        reportType === t.value
-                          ? "bg-[#203C67] text-white border-[#203C67]"
-                          : "border-gray-200 text-gray-600 hover:border-[#203C6740]"
+                    <button key={t.value} onClick={() => setReportType(t.value)}
+                      className={`py-2 px-3 rounded-xl border text-[12px] font-medium transition-colors text-left flex items-center gap-2 ${
+                        reportType === t.value ? "bg-[#203C67] text-white border-[#203C67]" : "border-[#d4cfc6] text-[#5a6a7e] bg-white hover:border-[#8FABD4]"
                       }`}
                     >
-                      {t.label}
+                      <span>{t.icon}</span>{t.label}
                     </button>
                   ))}
                 </div>
               </div>
-
-              {/* File upload */}
               <div>
-                <label className="block text-[12px] font-medium text-gray-600 mb-1.5">File *</label>
-                <div
-                  onClick={() => fileInputRef.current?.click()}
+                <label className="text-[11px] font-semibold text-[#7a8fa8] uppercase tracking-wide block mb-1.5">File *</label>
+                <div onClick={() => fileInputRef.current?.click()}
                   className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-colors ${
-                    reportFile ? "border-[#203C67] bg-[#EEF3FA]" : "border-gray-200 hover:border-[#203C6740]"
+                    reportFile ? "border-[#203C67] bg-[#dde8f5]" : "border-[#d4cfc6] bg-white hover:border-[#8FABD4]"
                   }`}
                 >
                   {reportFile ? (
                     <div>
                       <p className="text-[13px] font-medium text-[#203C67]">📎 {reportFile.name}</p>
-                      <p className="text-[11px] text-gray-400 mt-1">{formatBytes(reportFile.size)}</p>
+                      <p className="text-[11px] text-[#a0afc0] mt-1">{formatBytes(reportFile.size)}</p>
                     </div>
                   ) : (
                     <div>
-                      <p className="text-[13px] text-gray-500">Click to upload</p>
-                      <p className="text-[11px] text-gray-400 mt-1">PDF, JPG, PNG — max 10MB</p>
+                      <p className="text-[13px] text-[#7a8fa8]">Click to upload</p>
+                      <p className="text-[11px] text-[#a0afc0] mt-1">PDF, JPG, PNG — max 10MB</p>
                     </div>
                   )}
                 </div>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".pdf,.jpg,.jpeg,.png"
-                  className="hidden"
-                  onChange={e => setReportFile(e.target.files?.[0] ?? null)}
-                />
+                <input ref={fileInputRef} type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden"
+                  onChange={e => setReportFile(e.target.files?.[0] ?? null)} />
               </div>
-
               <div>
-                <label className="block text-[12px] font-medium text-gray-600 mb-1.5">Notes (optional)</label>
-                <textarea
-                  value={reportNotes}
-                  onChange={e => setReportNotes(e.target.value)}
-                  rows={2}
-                  placeholder="Summary or context for this report..."
-                  className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-[13px] resize-none focus:outline-none focus:border-[#203C67]"
-                />
+                <label className="text-[11px] font-semibold text-[#7a8fa8] uppercase tracking-wide block mb-1.5">Notes (optional)</label>
+                <textarea value={reportNotes} onChange={e => setReportNotes(e.target.value)} rows={2}
+                  placeholder="Summary or context for this report…" className={`${INPUT} resize-none`} />
               </div>
-
-              {reportError && (
-                <p className="text-[12px] text-red-500 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{reportError}</p>
-              )}
+              {reportError && <p className="text-[12px] text-red-500 bg-red-50 border border-red-200 rounded-xl px-3 py-2">{reportError}</p>}
             </div>
-
-            <div className="border-t border-gray-100 px-6 py-4 flex gap-3">
-              <button
-                onClick={() => { setModal(null); resetReportForm() }}
-                className="flex-1 py-2.5 rounded-xl border border-gray-200 text-[13px] text-gray-500 hover:bg-gray-50 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleUploadReport}
-                disabled={isPending}
-                className="flex-1 py-2.5 rounded-xl bg-[#203C67] text-white text-[13px] font-medium hover:bg-[#2d5494] transition-colors disabled:opacity-50"
-              >
-                {isPending ? "Uploading..." : "Upload Report"}
+            <div className="border-t border-[#d4cfc6] px-6 py-4 flex gap-3">
+              <button onClick={() => { setModal(null); resetReportForm() }} className="flex-1 py-2.5 rounded-xl border border-[#d4cfc6] text-[12px] text-[#7a8fa8] hover:bg-[#e2ddd4] transition-colors">Cancel</button>
+              <button onClick={handleUploadReport} disabled={isPending} className="flex-1 py-2.5 rounded-xl bg-[#203C67] text-white text-[12px] font-semibold hover:bg-[#162d50] disabled:opacity-50 transition-colors">
+                {isPending ? "Uploading…" : "Upload Report"}
               </button>
             </div>
           </div>
         </div>
       )}
-    </div>
-  )
-}
-
-function EmptyState({ icon, title, subtitle, action, actionLabel }: {
-  icon: string; title: string; subtitle: string; action: () => void; actionLabel: string
-}) {
-  return (
-    <div className="flex flex-col items-center justify-center py-16 text-center">
-      <div className="text-[40px] mb-3">{icon}</div>
-      <p className="text-[15px] font-semibold text-gray-700 mb-1">{title}</p>
-      <p className="text-[13px] text-gray-400 mb-5">{subtitle}</p>
-      <button
-        onClick={action}
-        className="bg-[#203C67] text-white text-[13px] font-medium px-5 py-2.5 rounded-xl hover:bg-[#2d5494] transition-colors"
-      >
-        {actionLabel}
-      </button>
     </div>
   )
 }

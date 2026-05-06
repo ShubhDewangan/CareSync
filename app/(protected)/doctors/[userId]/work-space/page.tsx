@@ -29,7 +29,7 @@ export default async function DashboardPage({
       schedule: a.schedule,
       patientName: (a as any).patient?.name ?? "Unknown",
       reason: a.reason,
-      status: a.status as "pending" | "scheduled" | "cancelled",
+      status: a.status as "pending" | "scheduled" | "cancelled" | 'completed' | 'expired',
     }))
 
   const now = new Date()
@@ -95,7 +95,13 @@ export default async function DashboardPage({
           ? "bg-green-400"
           : a.status === "pending"
           ? "bg-amber-400"
-          : "bg-red-400",
+          : a.status === 'completed'
+          ? 'bg-green-300'
+          : a.status === 'cancelled'
+          ? 'bg-red-500'
+          : a.status === 'expired'
+          ? 'bg-gray-400'
+          : 'bg-gray-700'
     }))
 
   // ── Pending requests ─────────────────────────────────────────────

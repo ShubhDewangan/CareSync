@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { BUCKET_ID } from "./appwrite.config";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -107,3 +108,12 @@ export function toLocalDateStr(d: Date): string {
   return `${year}-${month}-${day}` // "2026-04-26" in local timezone
 }
 
+export function getFileViewUrl(fileId: string): string {
+  const endpoint = process.env.NEXT_PUBLIC_ENDPOINT
+  const bucketId = process.env.NEXT_PUBLIC_BUCKET_ID
+  const projectId = process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID
+  
+  console.log("getFileViewUrl debug:", { endpoint, bucketId, projectId, fileId })
+  
+  return `${endpoint}/storage/buckets/${bucketId}/files/${fileId}/view?project=${projectId}`
+}

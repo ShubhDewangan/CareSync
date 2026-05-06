@@ -77,12 +77,6 @@ export const registerDoctor = async ({
 export const getDoctorByName = async (name: string) => {
   try {
     // First check constant doctors list
-    const { Doctors } = await import('@/constants')
-    const staticDoc = Doctors.find(
-      (d: any) => d.name.toLowerCase() === name.toLowerCase()
-    )
-    if (staticDoc) return parseStringify(staticDoc)
-
     // Fallback: query Appwrite DB
     const result = await databases.listDocuments(
       DATABASE_ID!,

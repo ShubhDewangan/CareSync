@@ -20,5 +20,6 @@ export const {
     DATABASE_ID,
     PATIENT_COLLECTION_ID,
     APPOINTMENT_COLLECTION_ID,
-    DOCTOR_COLLECTION_ID,   // ← added
+    DOCTOR_COLLECTION_ID,
+    PRESCRIPTION_COLLECTION_ID,   // ← added
 } = process.env

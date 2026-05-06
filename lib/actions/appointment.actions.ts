@@ -11,48 +11,67 @@ import { scheduleToSlotKey } from "@/lib/utils"
 import { getDoctorBookedSlots, updateDoctorBookedSlots } from "@/lib/actions/doctor.actions"
 
 export async function createAppointment(appointment: CreateAppointmentParams) {
-  const newAppointment = await databases.createDocument(
-    process.env.DATABASE_ID!,
-    process.env.APPOINTMENT_COLLECTION_ID!,
-    ID.unique(),
-    appointment
-  )
-
-  // ── Update doctor's bookedSlots ──────────────────────────────
+  // ── 1. Check slot availability FIRST ──────────────────────
   const doctor = await databases.listDocuments(
     process.env.DATABASE_ID!,
     process.env.DOCTOR_COLLECTION_ID!,
     [Query.equal("name", appointment.primaryDoctor)]
   )
 
-  if (doctor.documents.length > 0) {
-    const doctorId = doctor.documents[0].$id
-    const { dateStr, timeStr } = scheduleToSlotKey(appointment.schedule)
+  if (doctor.documents.length === 0) throw new Error("Doctor not found")
 
-    const current = await getDoctorBookedSlots(doctorId)
-    const existing = current[dateStr] ?? []
+  const doctorId = doctor.documents[0].$id
+  const { dateStr, timeStr } = scheduleToSlotKey(appointment.schedule)
+  const current = await getDoctorBookedSlots(doctorId)
+  const existing = current[dateStr] ?? []
 
-    console.log('dateStr:',dateStr, 'timeStr:',timeStr, 'current:',current, 'existing:',existing)
-
-    if (!existing.includes(timeStr)) {
-      await updateDoctorBookedSlots(doctorId, {
-        ...current,
-        [dateStr]: [...existing, timeStr],
-      })
+  if (existing.includes(timeStr)) {
+    return {
+      success: false,
+      error: "SLOT_TAKEN",
+      bookedSlots: current, // ← full updated slots map for UI
     }
   }
 
-//   revalidatePath("/admin")
-  return parseStringify(newAppointment)
+  // ── 2. Mark slot as booked immediately ────────────────────
+  const updatedSlots = {
+    ...current,
+    [dateStr]: [...existing, timeStr],
+  }
+  await updateDoctorBookedSlots(doctorId, updatedSlots)
+
+  // ── 3. Now create the appointment ─────────────────────────
+  try {
+    const newAppointment = await databases.createDocument(
+      process.env.DATABASE_ID!,
+      process.env.APPOINTMENT_COLLECTION_ID!,
+      ID.unique(),
+      appointment
+    )
+    return {
+      success: true,
+      appointment: parseStringify(newAppointment),
+      bookedSlots: updatedSlots, // ← updated slots including this new booking
+    }
+  } catch (err) {
+    // ── 4. Rollback slot if appointment creation fails ───────
+    await updateDoctorBookedSlots(doctorId, {
+      ...current,
+      [dateStr]: existing.filter((t: string) => t !== timeStr),
+    })
+    throw err
+  }
 }
 
 export const getAppointment = async (appointmentId: string) => {
+    console.log(appointmentId)
     try {
         const appointment = await databases.getDocument(
             DATABASE_ID!,
             APPOINTMENT_COLLECTION_ID!,
             appointmentId
         )
+        console.log('patient',appointment.patient)
         return parseStringify(appointment);
     } catch (error) {
         console.log(error)

@@ -34,8 +34,6 @@ const BookAppointmentModal = ({
   variant,
   DateToday,
   doctor,
-  // isOpen,
-  // setIsOpen,
   userId,
   patientId,
   authUser,
@@ -46,8 +44,6 @@ const BookAppointmentModal = ({
   variant?: string
   DateToday: string
   doctor: Doctor
-  // isOpen: boolean
-  // setIsOpen?: any
   userId: string
   patientId?: string
   authUser?: AuthUser
@@ -168,49 +164,52 @@ function handleDateChange(d: Date | undefined) {
     
     // ─── Confirm — calls createAppointment server action ─────────────
     async function handleConfirm() {
-      if (!canProceed) return
-      setIsLoading(true)
-      
-      try {
-        const appointmentData: CreateAppointmentParams = {
-          userId,
-          patient: fullUser?.$id as any,
-          primaryDoctor: doctor.name,
-          schedule: buildSchedule(),
-          reason: reason || "General consultation",
-          note: note || "",
-          status: "pending" as Status,
+  if (!canProceed) return
+  setIsLoading(true)
 
-        }
-
-        console.log(appointmentData.schedule)
-        
-        const newAppointment = await createAppointment(appointmentData)
-        
-        if (newAppointment) {
-          showToast("success", "Appointment booked successfully!", "top-right")
-          setStep(3)
-          await new Promise(resolve => setTimeout(resolve, 3 * 1000))
-          setIsOpen(false)
-          // Reset state
-          setDate(new Date())
-          setSelectedTime(null)
-        setReason("")
-        setNote("")
-        setStep(1)
-        // Redirect to success page
-      } else {
-        throw new Error("Failed to create appointment")
-      }
-    } catch (error) {
-      console.log("Appointment error:", error)
-      showToast("error", "Could not book appointment. Please try again.", "top-right")
-    } finally {
-      setIsLoading(false)
-      console.log(path)
+  try {
+    const appointmentData: CreateAppointmentParams = {
+      userId,
+      patient: fullUser?.$id as any,
+      primaryDoctor: doctor.name,
+      schedule: buildSchedule(),
+      reason: reason || "General consultation",
+      note: note || "",
+      status: "pending" as Status,
     }
+
+    const result = await createAppointment(appointmentData)
+
+    // ── Slot was just taken by someone else ──
+    if (!result.success && result.error === "SLOT_TAKEN") {
+      setBookedSlots(result.bookedSlots) // refresh calendar UI
+      setSelectedTime(null)              // clear stale selection
+      setStep(1)                         // send back to picker
+      showToast("error", "That slot was just taken! Please pick another time.", "top-right")
+      return
+    }
+
+    // ── Success ──
+    if (result.success) {
+      setBookedSlots(result.bookedSlots) // keep local state in sync
+      showToast("success", "Appointment booked successfully!", "top-right")
+      setStep(3)
+      await new Promise(resolve => setTimeout(resolve, 3000))
+      setIsOpen(false)
+      setDate(new Date())
+      setSelectedTime(null)
+      setReason("")
+      setNote("")
+      setStep(1)
+    }
+
+  } catch (error) {
+    console.error("Appointment error:", error)
+    showToast("error", "Could not book appointment. Please try again.", "top-right")
+  } finally {
+    setIsLoading(false)
   }
-  
+}
   const handleBookingButton = () => {
     if (!fullUser) {
       showToast('info', 'Please log in to book an Appointment!', 'top-right')
