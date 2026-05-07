@@ -19,8 +19,8 @@ import { parseStringify } from "../utils"
 
 const DOCTOR_COLLECTION_ID = process.env.DOCTOR_COLLECTION_ID!
 
-const databases = getDatabases()
-const storage = getStorage()
+function databases(){return getDatabases()}
+function storage(){return getStorage()}
 
 // ============================
 // 👤 CREATE USER
@@ -33,7 +33,7 @@ const storage = getStorage()
 
 export const getPatient = async (userId: string) => {
   try {
-    const patients = await databases.listDocuments(
+    const patients = await databases().listDocuments(
       DATABASE_ID!,
       PATIENT_COLLECTION_ID!,
       [Query.equal('userId', userId)]
@@ -85,7 +85,7 @@ export const getPatient = async (userId: string) => {
 }
 export const getPatientbyId = async (id: string) => {
   try {
-    const patients = await databases.listDocuments(
+    const patients = await databases().listDocuments(
       DATABASE_ID!,
       PATIENT_COLLECTION_ID!,
       [Query.equal('$id', id)]
@@ -162,7 +162,7 @@ export const registerPatient = async ({
       const arrayBuffer = await blobFile.arrayBuffer()
       const buffer = Buffer.from(arrayBuffer)
       const inputFile = InputFile.fromBuffer(buffer, fileName)
-      file = await storage.createFile(BUCKET_ID!, ID.unique(), inputFile)
+      file = await storage().createFile(BUCKET_ID!, ID.unique(), inputFile)
     }
 
     // ── Profile picture ──────────────────────────────────
@@ -171,21 +171,21 @@ export const registerPatient = async ({
       const arrayBuffer = await pic.arrayBuffer()
       const buffer = Buffer.from(arrayBuffer)
       const inputFile = InputFile.fromBuffer(buffer, pic.name)
-      profilePicFile = await storage.createFile(BUCKET_ID!, ID.unique(), inputFile)
+      profilePicFile = await storage().createFile(BUCKET_ID!, ID.unique(), inputFile)
     }
 
-    const newPatient = await databases.createDocument(
+    const newPatient = await databases().createDocument(
       DATABASE_ID!,
       PATIENT_COLLECTION_ID!,
       ID.unique(),
       {
         identificationDocumentationId: file?.$id || null,
         identificationDocumentUrl: file
-          ? `${ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${file.$id}/view?project=${PROJECT_ID}`
+          ? `${ENDPOINT}/storage()/buckets/${BUCKET_ID}/files/${file.$id}/view?project=${PROJECT_ID}`
           : null,
         // ── Profile pic URL ────────────────────────────
         profilePic: profilePicFile
-          ? `${ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${profilePicFile.$id}/view?project=${PROJECT_ID}`
+          ? `${ENDPOINT}/storage()/buckets/${BUCKET_ID}/files/${profilePicFile.$id}/view?project=${PROJECT_ID}`
           : null,
         ...patient
       }
@@ -216,7 +216,7 @@ export const updatePatient = async (
       const arrayBuffer = await blobFile.arrayBuffer()
       const buffer = Buffer.from(arrayBuffer)
       const inputFile = InputFile.fromBuffer(buffer, fileName)
-      file = await storage.createFile(BUCKET_ID!, ID.unique(), inputFile)
+      file = await storage().createFile(BUCKET_ID!, ID.unique(), inputFile)
     }
 
     if (profilePic && profilePic.length > 0) {
@@ -224,7 +224,7 @@ export const updatePatient = async (
       const arrayBuffer = await pic.arrayBuffer()
       const buffer = Buffer.from(arrayBuffer)
       const inputFile = InputFile.fromBuffer(buffer, pic.name)
-      profilePicFile = await storage.createFile(BUCKET_ID!, ID.unique(), inputFile)
+      profilePicFile = await storage().createFile(BUCKET_ID!, ID.unique(), inputFile)
     }
 
     const data: any = {
@@ -240,7 +240,7 @@ export const updatePatient = async (
       data.profilePic = `${ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${profilePicFile.$id}/view?project=${PROJECT_ID}`;
     }
 
-    const updatedPatient = await databases.updateDocument(
+    const updatedPatient = await databases().updateDocument(
       DATABASE_ID!,
       PATIENT_COLLECTION_ID!,
       patientId,
