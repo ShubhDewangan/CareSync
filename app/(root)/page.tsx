@@ -401,7 +401,8 @@ function Home() {
           </div>
 
           <div
-            className="bg-[#8FABD4]/30 border border-[#203C6720] rounded-2xl p-3 sm:p-5 flex gap-3 sm:gap-4 flex-wrap items-center justify-center min-h-[200px]"
+            // className="bg-[#8FABD4]/30 border border-[#203C6720] rounded-2xl p-3 sm:p-5 flex gap-3 sm:gap-4 flex-wrap items-center justify-center min-h-[200px]"
+            className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 w-full'
           >
             {doctorsLoading ? (
               Array.from({ length: 6 }).map((_, i) => (
