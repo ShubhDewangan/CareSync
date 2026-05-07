@@ -7,8 +7,7 @@ import Link from "next/link"
 import ColorBends from "@/components/ColorBends"
 import CategoryScroll from "@/components/ui/CategoryScroll"
 import { getAdminDashboardData } from "@/lib/actions/admin.actions"
-import { DataTable } from "@/components/table/DataTable"
-import { getColumns } from "@/components/table/columns"
+import AdminTable from '@/components/table/AdminTable'
 import StatCard from "@/components/ui/StatCard"
 import { getAllDoctors } from "@/lib/actions/doctor.actions"
 
@@ -30,7 +29,6 @@ export default async function AdminDashboardPage() {
 
   const doctors = await getAllDoctors()
 
-  const columns = getColumns(doctors)
 
     const statScrollData = [
       { tag: "Total Patients: ", data: `${stats?.totalPatients}`},
@@ -199,7 +197,7 @@ export default async function AdminDashboardPage() {
         </div>
         <div className="w-screen p-4 remove-scrollbar">
           <p className="text-white/50 text-[11px] uppercase tracking-widest mb-2">Patient Details and Approval section</p>
-        <DataTable columns={columns} data={recentAppointments as any} />
+          <AdminTable doctors={doctors} data={recentAppointments as any} />
         </div>
       </div>
     </>
