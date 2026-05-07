@@ -3,11 +3,11 @@ import { getDatabases } from "@/lib/appwrite.config"
 import { Query } from "node-appwrite"
 import { NextRequest } from "next/server"
 
-const databases = getDatabases()
 
 export const dynamic = "force-dynamic"
 
 export async function GET(req: NextRequest) {
+  const databases = getDatabases()
   const doctorId = req.nextUrl.searchParams.get("doctorId")
   if (!doctorId) return new Response("Missing doctorId", { status: 400 })
 
