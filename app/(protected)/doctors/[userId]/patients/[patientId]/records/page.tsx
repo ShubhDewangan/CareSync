@@ -3,13 +3,9 @@
 
 import { getDoctorPrescriptions, getDoctorReports } from '@/lib/actions/prescriptions.actions'
 import { getDoctor } from '@/lib/actions/doctor.actions'
-import { DATABASE_ID, getDatabases } from '@/lib/appwrite.config'
 import PatientRecordsClient from '@/components/ui/doctor/PatientRecordsClient'
-import { Doctor } from '@/types/appwrite'
-import { FullUser } from '@/context/UserContext'
 import { getPatientbyId } from '@/lib/actions/patient.actions'
 
-const databases = getDatabases()
 
 interface Props {
   params: Promise<{ userId: string; patientId: string }>
