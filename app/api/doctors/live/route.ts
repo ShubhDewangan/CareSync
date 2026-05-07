@@ -1,7 +1,9 @@
 // app/api/doctors/live/route.ts
-import { databases } from "@/lib/appwrite.config"
+import { getDatabases } from "@/lib/appwrite.config"
 import { Query } from "node-appwrite"
 import { NextRequest } from "next/server"
+
+const databases = getDatabases()
 
 export const dynamic = "force-dynamic"
 
