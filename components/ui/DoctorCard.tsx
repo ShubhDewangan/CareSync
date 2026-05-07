@@ -25,7 +25,7 @@ const DoctorCard = ({doctor, userId, patientId, authUser, fullUser}: {doctor: Do
     }
 
   return (
-    <div key={doctor.name} className='bg-[#EFECE3] w-[32%] rounded-2xl flex-1'>
+    <div key={doctor.name} className='bg-[#EFECE3] w-full lg:w-[32%] rounded-2xl flex-1'>
         <header className='w-full flex gap-5 justify-between items-center border-[1px] border-gray-950 p-5 rounded-t-2xl'>
             <div className='w-full flex gap-5'>
                 <div className='border-[1px] border-gray-950 rounded-full w-fit h-fit'>
