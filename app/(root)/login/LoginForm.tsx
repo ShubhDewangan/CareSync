@@ -100,33 +100,60 @@ export default function LoginForm() {
   }
 
   // ─── Send OTP ────────────────────────────────────────────────────
+  // async function handleSendOtp() {
+  //   if (!validateContact()) return
+  //   setLoading(true)
+  //   try {
+  //     const res = await fetch("/api/auth/send-otp", {
+  //       method: "POST",
+  //       headers: { "Content-Type": "application/json" },
+  //       body: JSON.stringify({ contact, method }),
+  //     })
+  //     const data = await res.json()
+
+  //     if (!res.ok || data.error) {
+  //       setContactError(data.error ?? "Could not send OTP. Please try again.")
+  //       setLoading(false)
+  //       return
+  //     }
+
+  //     setUserId(data.userId)
+  //     setStep("otp")
+  //     setResendTimer(30)
+  //     showToast("success", `OTP sent to your ${method}!`, "top-right")
+
+  //   } catch {
+  //     setContactError("Could not send OTP. Please try again.")
+  //   }
+  //   setLoading(false)
+  // }
   async function handleSendOtp() {
-    if (!validateContact()) return
-    setLoading(true)
-    try {
-      const res = await fetch("/api/auth/send-otp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ contact, method }),
-      })
-      const data = await res.json()
+  if (!validateContact()) return
+  setLoading(true)
+  try {
+    const res = await fetch("/api/auth/send-otp", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ contact, method }),
+    })
+    const data = await res.json()
 
-      if (!res.ok || data.error) {
-        setContactError(data.error ?? "Could not send OTP. Please try again.")
-        setLoading(false)
-        return
-      }
-
-      setUserId(data.userId)
-      setStep("otp")
-      setResendTimer(30)
-      showToast("success", `OTP sent to your ${method}!`, "top-right")
-
-    } catch {
-      setContactError("Could not send OTP. Please try again.")
+    if (!res.ok || data.error) {
+      setContactError(data.error ?? "Could not find account. Please sign up first.")
+      setLoading(false)
+      return
     }
-    setLoading(false)
+
+    // ✅ Skip sending — go straight to OTP step
+    setUserId(data.userId)
+    setStep("otp")
+    showToast("info", "Use code 123456 to log in", "top-right")
+
+  } catch {
+    setContactError("Could not send OTP. Please try again.")
   }
+  setLoading(false)
+}
 
   // ─── Verify OTP ──────────────────────────────────────────────────
   async function handleVerifyOtp() {
@@ -160,24 +187,30 @@ export default function LoginForm() {
   }
 
   // ─── Resend OTP ──────────────────────────────────────────────────
+  // async function handleResend() {
+  //   if (resendTimer > 0) return
+  //   setOtp(""); setOtpError(""); setLoading(true)
+  //   try {
+  //     const res = await fetch("/api/auth/send-otp", {
+  //       method: "POST",
+  //       headers: { "Content-Type": "application/json" },
+  //       body: JSON.stringify({ contact, method }),
+  //     })
+  //     const data = await res.json()
+  //     if (data.userId) {
+  //       setUserId(data.userId)
+  //       setResendTimer(30)
+  //       showToast("success", "New OTP sent!", "top-right")
+  //     }
+  //   } catch { showToast("error", "Could not resend OTP.", "top-right") }
+  //   setLoading(false)
+  // }
   async function handleResend() {
-    if (resendTimer > 0) return
-    setOtp(""); setOtpError(""); setLoading(true)
-    try {
-      const res = await fetch("/api/auth/send-otp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ contact, method }),
-      })
-      const data = await res.json()
-      if (data.userId) {
-        setUserId(data.userId)
-        setResendTimer(30)
-        showToast("success", "New OTP sent!", "top-right")
-      }
-    } catch { showToast("error", "Could not resend OTP.", "top-right") }
-    setLoading(false)
-  }
+  if (resendTimer > 0) return
+  setOtp("")
+  setOtpError("")
+  showToast("info", "Use code 123456", "top-right")
+}
 
   function switchMethod(m: OtpMethod) {
     setMethod(m); setContact(""); setContactError("")

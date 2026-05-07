@@ -15,7 +15,8 @@ function getAdminClient() {
 }
 
 function generateOtp(): string {
-  return Math.floor(100000 + Math.random() * 900000).toString()
+  // return Math.floor(100000 + Math.random() * 900000).toString()
+  return '123456'
 }
 
 // POST /api/auth/send-otp
@@ -74,28 +75,28 @@ export async function POST(req: NextRequest) {
       method,
     })
 
+//     if (method === "email") {
+//   // ── Dev bypass: skip email, log OTP to console ──────────
+//   if (process.env.NODE_ENV === "development") {
+//     console.log(`\n🔐 DEV OTP for ${contact}: ${code}\n`)
+//     return NextResponse.json({ userId: user.$id })
+//   }
+
+//   await sendEmail({
+//     to: contact,
+//     subject: "shubhdwngn24@gmail.com",
+//     html: otpEmailHtml(code, user.name || "there"),
+//   })
+// }
+
+    // 5. Send via Resend
     if (method === "email") {
-  // ── Dev bypass: skip email, log OTP to console ──────────
-  if (process.env.NODE_ENV === "development") {
-    console.log(`\n🔐 DEV OTP for ${contact}: ${code}\n`)
-    return NextResponse.json({ userId: user.$id })
-  }
-
-  await sendEmail({
-    to: contact,
-    subject: "shubhdwngn24@gmail.com",
-    html: otpEmailHtml(code, user.name || "there"),
-  })
-}
-
-    // // 5. Send via Resend
-    // if (method === "email") {
-    //   await sendEmail({
-    //     to: contact,
-    //     subject: "shubhdwngn24@gmail.com",
-    //     html: otpEmailHtml(code, user.name || "there"),
-    //   })
-    // }
+      await sendEmail({
+        to: contact,
+        subject: "shubhdwngn24@gmail.com",
+        html: otpEmailHtml(code, user.name || "there"),
+      })
+    }
 
     // For phone: add Twilio here 
     // if (method === "phone") { await sendSms(contact, code) }

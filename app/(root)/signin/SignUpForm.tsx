@@ -105,48 +105,77 @@ export function SignUpForm() {
   })
 
   // ─── Step 1: create user + send OTP ─────────────────────────────
+  // async function onSubmitDetails({ name, email, phone }: RegisterFormValues) {
+  //   setLoading(true)
+  //   try {
+  //     const user = await createUser({ name, email, phone, userType })
+
+  //     if (user === false) {
+  //       showToast("info", "Account already exists. Please log in.", "top-right")
+  //       router.push("/login")
+  //       return
+  //     }
+
+  //     if (!user || typeof user !== "object") {
+  //       showToast("error", "Something went wrong. Please try again.", "top-right")
+  //       setLoading(false)
+  //       return
+  //     }
+
+  //     const res = await fetch("/api/auth/send-otp", {
+  //       method: "POST",
+  //       headers: { "Content-Type": "application/json" },
+  //       body: JSON.stringify({ contact: email, method: "email" }),
+  //     })
+  //     const data = await res.json()
+
+  //     if (!res.ok || !data.userId) {
+  //       showToast("error", "Account created but could not send OTP. Try logging in.", "top-right")
+  //       setLoading(false)
+  //       return
+  //     }
+
+  //     setUserId(data.userId)
+  //     setSubmittedEmail(email)
+  //     setStep("otp")
+  //     setResendTimer(30)
+  //     showToast("success", `OTP sent to ${email}`, "top-right")
+
+  //   } catch (error) {
+  //     console.log(error)
+  //     showToast("error", "Something went wrong. Please try again.", "top-right")
+  //   }
+  //   setLoading(false)
+  // }
   async function onSubmitDetails({ name, email, phone }: RegisterFormValues) {
-    setLoading(true)
-    try {
-      const user = await createUser({ name, email, phone, userType })
+  setLoading(true)
+  try {
+    const user = await createUser({ name, email, phone, userType })
 
-      if (user === false) {
-        showToast("info", "Account already exists. Please log in.", "top-right")
-        router.push("/login")
-        return
-      }
-
-      if (!user || typeof user !== "object") {
-        showToast("error", "Something went wrong. Please try again.", "top-right")
-        setLoading(false)
-        return
-      }
-
-      const res = await fetch("/api/auth/send-otp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ contact: email, method: "email" }),
-      })
-      const data = await res.json()
-
-      if (!res.ok || !data.userId) {
-        showToast("error", "Account created but could not send OTP. Try logging in.", "top-right")
-        setLoading(false)
-        return
-      }
-
-      setUserId(data.userId)
-      setSubmittedEmail(email)
-      setStep("otp")
-      setResendTimer(30)
-      showToast("success", `OTP sent to ${email}`, "top-right")
-
-    } catch (error) {
-      console.log(error)
-      showToast("error", "Something went wrong. Please try again.", "top-right")
+    if (user === false) {
+      showToast("info", "Account already exists. Please log in.", "top-right")
+      router.push("/login")
+      return
     }
-    setLoading(false)
+
+    if (!user || typeof user !== "object") {
+      showToast("error", "Something went wrong. Please try again.", "top-right")
+      setLoading(false)
+      return
+    }
+
+    // ✅ Skip OTP send — go straight to OTP step with static code
+    setUserId(user.$id)
+    setSubmittedEmail(email)
+    setStep("otp")
+    showToast("info", "Use code 123456 to verify", "top-right")
+
+  } catch (error) {
+    console.log(error)
+    showToast("error", "Something went wrong. Please try again.", "top-right")
   }
+  setLoading(false)
+}
 
   // ─── Step 2: verify OTP ──────────────────────────────────────────
   async function handleVerifyOtp() {
@@ -180,24 +209,30 @@ export function SignUpForm() {
   }
 
   // ─── Resend OTP ──────────────────────────────────────────────────
+  // async function handleResend() {
+  //   if (resendTimer > 0) return
+  //   setOtp(""); setOtpError(""); setLoading(true)
+  //   try {
+  //     const res = await fetch("/api/auth/send-otp", {
+  //       method: "POST",
+  //       headers: { "Content-Type": "application/json" },
+  //       body: JSON.stringify({ contact: submittedEmail, method: "email" }),
+  //     })
+  //     const data = await res.json()
+  //     if (data.userId) {
+  //       setUserId(data.userId)
+  //       setResendTimer(30)
+  //       showToast("success", "New OTP sent!", "top-right")
+  //     }
+  //   } catch { showToast("error", "Could not resend OTP.", "top-right") }
+  //   setLoading(false)
+  // }
   async function handleResend() {
-    if (resendTimer > 0) return
-    setOtp(""); setOtpError(""); setLoading(true)
-    try {
-      const res = await fetch("/api/auth/send-otp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ contact: submittedEmail, method: "email" }),
-      })
-      const data = await res.json()
-      if (data.userId) {
-        setUserId(data.userId)
-        setResendTimer(30)
-        showToast("success", "New OTP sent!", "top-right")
-      }
-    } catch { showToast("error", "Could not resend OTP.", "top-right") }
-    setLoading(false)
-  }
+  if (resendTimer > 0) return
+  setOtp("")
+  setOtpError("")
+  showToast("info", "Use code 123456", "top-right")
+}
 
   function maskEmail(email: string) {
     const [user, domain] = email.split("@")
