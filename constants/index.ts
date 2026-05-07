@@ -74,7 +74,9 @@ export const IdentificationTypes = [
 
 
 export const StatusIcon = {
-  scheduled: "/assets/icons/check.svg",
+  scheduled: "/assets/icons/scheduled.svg",
   pending: "/assets/icons/pending.svg",
   cancelled: "/assets/icons/cancelled.svg",
+  expired: "/assets/icons/expired.svg",
+  completed: "/assets/icons/check.svg",
 };

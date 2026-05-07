@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { StatusIcon } from '@/constants'
 import clsx from 'clsx'
 import Image from 'next/image'
@@ -10,7 +11,7 @@ const StatusBadge = ( { status }: { status: Status } ) => {
         'bg-red-600': status === 'cancelled',
     })}>
       <Image
-        src={StatusIcon[status]}
+        src={StatusIcon[status] as any}
         alt='status'
         width={24}
         height={24}
