@@ -40,7 +40,7 @@ const DoctorCard = ({doctor, userId, patientId, authUser, fullUser}: {doctor: Do
                 <div className='flex flex-col justify-between'>
                     <h2 className='font-heading1'>{doctor.name}</h2>
                     <div className='flex flex-col gap-2'>
-                        <h3 className='text-[12px]'>{`${doctor.specialization} • ${doctor.experience}`}</h3>
+                        <h3 className='text-[12px]'>{`${doctor.specialization?.join(", ")} • ${doctor.experience}`}</h3>
                     <div className='flex text-[12px]'>
                         <span className='px-2  bg-[#8FABD4] border-[1px] border-gray-950 rounded-full'>{doctor.qualification}</span>
                     </div>

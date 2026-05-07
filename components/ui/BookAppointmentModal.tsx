@@ -211,19 +211,27 @@ function handleDateChange(d: Date | undefined) {
   }
 }
   const handleBookingButton = () => {
-    if (!fullUser) {
-      showToast('info', 'Please log in to book an Appointment!', 'top-right')
-    } else {
-      setIsOpen(true)
-      setStep(1)
+  // ── Block: user is a doctor
+  if (authUser?.userType === "doctor") {
+    showToast("info", "Doctors cannot book appointments as patients.", "top-right")
+    return
   }
 
+  // ── Block: doctor trying to book themselves
   if (falseButton) {
-    showToast('info', 'You cannot book an Appointment for yourself!')
-    setIsOpen(false)
+    showToast("info", "You cannot book an appointment for yourself!", "top-right")
+    return
   }
-  // only open modal if user is logged i
-} 
+
+  // ── Block: patient not registered yet
+  if (!fullUser) {
+    showToast("info", "Complete Registration to book an appointment!", "top-right")
+    return
+  }
+
+  setIsOpen(true)
+  setStep(1)
+}
 
   function handleClose() {
     setIsOpen(false)

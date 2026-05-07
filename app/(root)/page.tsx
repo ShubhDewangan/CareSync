@@ -234,7 +234,7 @@ function Home() {
           </button>
 
           {/* Search bar */}
-          <div className="flex bg-white/70 border border-[#203C6730] rounded-full px-3 sm:px-4 py-2 gap-2 items-center flex-1 max-w-[500px]">
+          <div className="flex bg-white/70 border border-[#21262eb0] rounded-full px-3 sm:px-4 py-2 gap-2 items-center flex-1 max-w-[500px]">
             <Image src='/assets/icons/search.svg' alt='search' height={16} width={16} className='opacity-50 flex-shrink-0' />
             <Input
               placeholder='Search doctors, specializations…'
