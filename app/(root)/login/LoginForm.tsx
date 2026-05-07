@@ -128,44 +128,81 @@ export default function LoginForm() {
   //   setLoading(false)
   // }
   async function handleSendOtp() {
-  if (!validateContact()) return
-  setLoading(true)
-  try {
-    const res = await fetch("/api/auth/send-otp", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ contact, method }),
-    })
-    const data = await res.json()
+    if (!validateContact()) return
+    setLoading(true)
+    try {
+      const res = await fetch("/api/auth/send-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ contact, method }),
+      })
+      const data = await res.json()
 
-    if (!res.ok || data.error) {
-      setContactError(data.error ?? "Could not find account. Please sign up first.")
-      setLoading(false)
-      return
+      if (!res.ok || data.error) {
+        setContactError(data.error ?? "Could not find account. Please sign up first.")
+        setLoading(false)
+        return
+      }
+
+      // ✅ Skip sending — go straight to OTP step
+      setUserId(data.userId)
+      setStep("otp")
+      showToast("info", "Use code 123456 to log in", "top-right")
+
+    } catch {
+      setContactError("Could not send OTP. Please try again.")
     }
-
-    // ✅ Skip sending — go straight to OTP step
-    setUserId(data.userId)
-    setStep("otp")
-    showToast("info", "Use code 123456 to log in", "top-right")
-
-  } catch {
-    setContactError("Could not send OTP. Please try again.")
+    setLoading(false)
   }
-  setLoading(false)
-}
 
   // ─── Verify OTP ──────────────────────────────────────────────────
+  // async function handleVerifyOtp() {
+  //   setOtpError("")
+  //   if (otp.length < 6) { setOtpError("Please enter the complete 6-digit OTP."); return }
+  //   setLoading(true)
+
+  //   try {
+  //     const res = await fetch("/api/auth/verify-otp", {
+  //       method: "POST",
+  //       headers: { "Content-Type": "application/json" },
+  //       body: JSON.stringify({ userId, otp }),
+  //     })
+  //     const data = await res.json()
+
+  //     if (!res.ok || data.error) {
+  //       setOtpError(data.error ?? "Invalid or expired OTP. Please try again.")
+  //       setOtp("")
+  //       setLoading(false)
+  //       return
+  //     }
+
+  //     // ✅ JWT cookie set by API — redirect to homepage
+  //     showToast("success", "Welcome back! 👋", "top-right")
+  //     router.push("/")
+
+  //   } catch {
+  //     setOtpError("Something went wrong. Please try again.")
+  //   }
+  //   setLoading(false)
+  // }
   async function handleVerifyOtp() {
     setOtpError("")
     if (otp.length < 6) { setOtpError("Please enter the complete 6-digit OTP."); return }
+
+    // ✅ Static OTP check — no need to hit send-otp API
+    if (otp !== "123456") {
+      setOtpError("Invalid code. Use 123456.")
+      setOtp("")
+      return
+    }
+
     setLoading(true)
 
     try {
       const res = await fetch("/api/auth/verify-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId, otp }),
+        body: JSON.stringify({ userId, otp: "123456" }),
       })
       const data = await res.json()
 
@@ -206,11 +243,11 @@ export default function LoginForm() {
   //   setLoading(false)
   // }
   async function handleResend() {
-  if (resendTimer > 0) return
-  setOtp("")
-  setOtpError("")
-  showToast("info", "Use code 123456", "top-right")
-}
+    if (resendTimer > 0) return
+    setOtp("")
+    setOtpError("")
+    showToast("info", "Use code 123456", "top-right")
+  }
 
   function switchMethod(m: OtpMethod) {
     setMethod(m); setContact(""); setContactError("")

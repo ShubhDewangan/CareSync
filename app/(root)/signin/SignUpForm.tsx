@@ -148,46 +148,54 @@ export function SignUpForm() {
   //   setLoading(false)
   // }
   async function onSubmitDetails({ name, email, phone }: RegisterFormValues) {
-  setLoading(true)
-  try {
-    const user = await createUser({ name, email, phone, userType })
+    setLoading(true)
+    try {
+      const user = await createUser({ name, email, phone, userType })
 
-    if (user === false) {
-      showToast("info", "Account already exists. Please log in.", "top-right")
-      router.push("/login")
-      return
-    }
+      if (user === false) {
+        showToast("info", "Account already exists. Please log in.", "top-right")
+        router.push("/login")
+        return
+      }
 
-    if (!user || typeof user !== "object") {
+      if (!user || typeof user !== "object") {
+        showToast("error", "Something went wrong. Please try again.", "top-right")
+        setLoading(false)
+        return
+      }
+
+      // ✅ Skip OTP send — go straight to OTP step with static code
+      setUserId(user.$id)
+      setSubmittedEmail(email)
+      setStep("otp")
+      showToast("info", "Use code 123456 to verify", "top-right")
+
+    } catch (error) {
+      console.log(error)
       showToast("error", "Something went wrong. Please try again.", "top-right")
-      setLoading(false)
-      return
     }
-
-    // ✅ Skip OTP send — go straight to OTP step with static code
-    setUserId(user.$id)
-    setSubmittedEmail(email)
-    setStep("otp")
-    showToast("info", "Use code 123456 to verify", "top-right")
-
-  } catch (error) {
-    console.log(error)
-    showToast("error", "Something went wrong. Please try again.", "top-right")
+    setLoading(false)
   }
-  setLoading(false)
-}
 
   // ─── Step 2: verify OTP ──────────────────────────────────────────
   async function handleVerifyOtp() {
     setOtpError("")
     if (otp.length < 6) { setOtpError("Please enter the complete 6-digit OTP."); return }
+
+    // ✅ Static OTP check — no need to hit send-otp API
+    if (otp !== "123456") {
+      setOtpError("Invalid code. Use 123456.")
+      setOtp("")
+      return
+    }
+
     setLoading(true)
 
     try {
       const res = await fetch("/api/auth/verify-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId, otp }),
+        body: JSON.stringify({ userId, otp: "123456" }),
       })
       const data = await res.json()
 
@@ -228,11 +236,11 @@ export function SignUpForm() {
   //   setLoading(false)
   // }
   async function handleResend() {
-  if (resendTimer > 0) return
-  setOtp("")
-  setOtpError("")
-  showToast("info", "Use code 123456", "top-right")
-}
+    if (resendTimer > 0) return
+    setOtp("")
+    setOtpError("")
+    showToast("info", "Use code 123456", "top-right")
+  }
 
   function maskEmail(email: string) {
     const [user, domain] = email.split("@")
