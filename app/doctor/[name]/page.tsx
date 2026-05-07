@@ -33,6 +33,7 @@ export async function generateMetadata({
 // ── Static params for constant doctors ────────────────────────────
 export async function generateStaticParams() {
 
+  if (!process.env.NEXT_PUBLIC_ENDPOINT) return []
   const Doctors = await getAllDoctors()
 
   return Doctors?.map((doc: any) => ({
