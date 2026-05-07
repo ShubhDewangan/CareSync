@@ -2,7 +2,7 @@
 // app/api/auth/send-otp/route.ts
 import { NextRequest, NextResponse } from "next/server"
 import { Client, Databases, Users, ID, Query } from "node-appwrite"
-import { sendEmail } from "@/lib/resend"
+// import { sendEmail } from "@/lib/resend"  // 🔒 LOCKED — uncomment when domain is purchased
 
 const OTP_DATABASE_ID = process.env.DATABASE_ID!
 const OTP_COLLECTION_ID = process.env.OTP_COLLECTION_ID!
@@ -15,13 +15,13 @@ function getAdminClient() {
 }
 
 function generateOtp(): string {
-  // return Math.floor(100000 + Math.random() * 900000).toString()
-  return '123456'
+  // return Math.floor(100000 + Math.random() * 900000).toString()  // 🔒 LOCKED — real OTP
+  return process.env.OTP_CODE ?? "123456"  // ✅ Static bypass until domain is purchased
 }
 
 // POST /api/auth/send-otp
 // Body: { contact: string, method: "email" | "phone" }
-// Finds user → generates OTP → stores in DB → sends email → returns userId
+// Finds user → generates OTP → stores in DB → [EMAIL BYPASSED] → returns userId
 
 export async function POST(req: NextRequest) {
   try {
@@ -46,7 +46,6 @@ export async function POST(req: NextRequest) {
     const result = await adminUsers.list([query])
 
     if (result.total === 0) {
-      // Don't reveal whether user exists — generic message
       return NextResponse.json(
         { error: "No account found. Please sign up first." },
         { status: 404 }
@@ -57,7 +56,7 @@ export async function POST(req: NextRequest) {
 
     // 2. Generate OTP + expiry
     const code = generateOtp()
-    const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString() // 10 min
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString()
 
     // 3. Delete any existing OTP for this user
     const existing = await db.listDocuments(OTP_DATABASE_ID, OTP_COLLECTION_ID, [
@@ -67,7 +66,7 @@ export async function POST(req: NextRequest) {
       await db.deleteDocument(OTP_DATABASE_ID, OTP_COLLECTION_ID, doc.$id)
     }
 
-    // 4. Store new OTP
+    // 4. Store OTP in DB (kept so verify-otp route still works unchanged)
     await db.createDocument(OTP_DATABASE_ID, OTP_COLLECTION_ID, ID.unique(), {
       userId: user.$id,
       code,
@@ -75,32 +74,19 @@ export async function POST(req: NextRequest) {
       method,
     })
 
-//     if (method === "email") {
-//   // ── Dev bypass: skip email, log OTP to console ──────────
-//   if (process.env.NODE_ENV === "development") {
-//     console.log(`\n🔐 DEV OTP for ${contact}: ${code}\n`)
-//     return NextResponse.json({ userId: user.$id })
-//   }
+    // 5. ✅ EMAIL BYPASSED — uncomment block below when domain is purchased
+    // if (method === "email") {
+    //   await sendEmail({
+    //     to: contact,
+    //     subject: "Your CareSync Login Code",
+    //     html: otpEmailHtml(code, user.name || "there"),
+    //   })
+    // }
 
-//   await sendEmail({
-//     to: contact,
-//     subject: "shubhdwngn24@gmail.com",
-//     html: otpEmailHtml(code, user.name || "there"),
-//   })
-// }
-
-    // 5. Send via Resend
-    if (method === "email") {
-      await sendEmail({
-        to: contact,
-        subject: "shubhdwngn24@gmail.com",
-        html: otpEmailHtml(code, user.name || "there"),
-      })
-    }
-
-    // For phone: add Twilio here 
+    // For phone: add Twilio here when ready
     // if (method === "phone") { await sendSms(contact, code) }
 
+    console.log(`[DEV] OTP for ${contact}: ${code}`)  // visible in terminal only
     return NextResponse.json({ userId: user.$id })
 
   } catch (error: any) {
@@ -112,7 +98,8 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// ─── Email template ───────────────────────────────────────────────────────────
+// ─── Email template (kept for when email is re-enabled) ──────────────────────
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function otpEmailHtml(otp: string, name: string): string {
   return `
     <!DOCTYPE html>
