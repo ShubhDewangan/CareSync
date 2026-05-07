@@ -2,7 +2,6 @@
 
 import { Resend } from "resend"
 
-const resend = new Resend(process.env.RESEND_API_KEY!)
 
 // ============================
 // 📧 SEND EMAIL
@@ -18,8 +17,9 @@ export const sendEmail = async ({
   html: string
 }) => {
   try {
+    const resend = new Resend(process.env.RESEND_API_KEY!)
     const { data, error } = await resend.emails.send({
-      from: "HealthApp <onboarding@resend.dev>",
+      from: "CareSync <onboarding@resend.dev>",
       to,
       subject,
       html,
