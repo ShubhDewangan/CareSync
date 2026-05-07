@@ -12,7 +12,9 @@ import {
 } from "../appwrite.config"
 import { decryptKey, parseStringify } from "../utils"
 
-const databases = getDatabases()
+function databases () {
+  return getDatabases()
+}
 
 // ============================
 // 📊 QUICK STATS
@@ -45,45 +47,45 @@ export const getAdminStats = async () => {
       newDoctorsToday,
     ] = await Promise.all([
       // Total patients
-      databases.listDocuments(DATABASE_ID!, PATIENT_COLLECTION_ID!, [
+      databases().listDocuments(DATABASE_ID!, PATIENT_COLLECTION_ID!, [
         Query.limit(1),
       ]),
       // Total doctors
-      databases.listDocuments(DATABASE_ID!, DOCTOR_COLLECTION_ID!, [
+      databases().listDocuments(DATABASE_ID!, DOCTOR_COLLECTION_ID!, [
         Query.limit(1),
       ]),
       // Appointments today
-      databases.listDocuments(DATABASE_ID!, APPOINTMENT_COLLECTION_ID!, [
+      databases().listDocuments(DATABASE_ID!, APPOINTMENT_COLLECTION_ID!, [
         Query.greaterThanEqual("schedule", todayISO),
         Query.lessThan("schedule", tomorrowISO),
         Query.limit(1),
       ]),
       // Pending appointments (all time)
-      databases.listDocuments(DATABASE_ID!, APPOINTMENT_COLLECTION_ID!, [
+      databases().listDocuments(DATABASE_ID!, APPOINTMENT_COLLECTION_ID!, [
         Query.equal("status", ["pending"]),
         Query.limit(1),
       ]),
-      databases.listDocuments(DATABASE_ID!, APPOINTMENT_COLLECTION_ID!, [
+      databases().listDocuments(DATABASE_ID!, APPOINTMENT_COLLECTION_ID!, [
         Query.equal('status', ['scheduled']),
         Query.limit(1),
       ]),
-      databases.listDocuments(DATABASE_ID!, APPOINTMENT_COLLECTION_ID!, [
+      databases().listDocuments(DATABASE_ID!, APPOINTMENT_COLLECTION_ID!, [
         Query.equal('status', ['cancelled']),
         Query.limit(1),
       ]),
       // Cancelled this week
-      databases.listDocuments(DATABASE_ID!, APPOINTMENT_COLLECTION_ID!, [
+      databases().listDocuments(DATABASE_ID!, APPOINTMENT_COLLECTION_ID!, [
         Query.equal("status", ["cancelled"]),
         Query.greaterThanEqual("$createdAt", weekAgoISO),
         Query.limit(1),
       ]),
       // New patients today
-      databases.listDocuments(DATABASE_ID!, PATIENT_COLLECTION_ID!, [
+      databases().listDocuments(DATABASE_ID!, PATIENT_COLLECTION_ID!, [
         Query.greaterThanEqual("$createdAt", todayISO),
         Query.limit(1),
       ]),
       // New doctors today
-      databases.listDocuments(DATABASE_ID!, DOCTOR_COLLECTION_ID!, [
+      databases().listDocuments(DATABASE_ID!, DOCTOR_COLLECTION_ID!, [
         Query.greaterThanEqual("$createdAt", todayISO),
         Query.limit(1),
       ]),
@@ -132,7 +134,7 @@ export const getWeeklyAppointments = async () => {
       const next = new Date(day)
       next.setDate(next.getDate() + 1)
 
-      const result = await databases.listDocuments(
+      const result = await databases().listDocuments(
         DATABASE_ID!,
         APPOINTMENT_COLLECTION_ID!,
         [
@@ -163,7 +165,7 @@ export const getWeeklyAppointments = async () => {
 
 export const getRecentPatients = async () => {
   try {
-    const result = await databases.listDocuments(
+    const result = await databases().listDocuments(
       DATABASE_ID!,
       PATIENT_COLLECTION_ID!,
       [
@@ -193,7 +195,7 @@ export const getRecentPatients = async () => {
 
 export const getRecentDoctors = async () => {
   try {
-    const result = await databases.listDocuments(
+    const result = await databases().listDocuments(
       DATABASE_ID!,
       DOCTOR_COLLECTION_ID!,
       [
@@ -232,7 +234,7 @@ export const getAdminDashboardData = async () => {
         getRecentPatients(),
         getRecentDoctors(),
         // recentAppointments already exists in appointment.actions.ts — reuse it
-        databases.listDocuments(
+        databases().listDocuments(
           DATABASE_ID!,
           APPOINTMENT_COLLECTION_ID!,
           [

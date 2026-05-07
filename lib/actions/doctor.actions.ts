@@ -18,8 +18,12 @@ import { parseStringify } from "../utils"
 import { revalidatePath } from "next/cache"
 
 const DOCTOR_COLLECTION_ID = process.env.DOCTOR_COLLECTION_ID!
-const databases = getDatabases()
-const storage = getStorage()
+function databases() {
+  return getDatabases()
+}
+function storage() {
+  return getStorage()
+}
 
 function getAdminClient() {
   return new Client()
@@ -41,7 +45,7 @@ export const registerDoctor = async ({
               const arrayBuffer = await doc.arrayBuffer()
               const buffer = Buffer.from(arrayBuffer)
               const inputFile = InputFile.fromBuffer(buffer, doc.name)
-              file = await storage.createFile(BUCKET_ID!, ID.unique(), inputFile)
+              file = await storage().createFile(BUCKET_ID!, ID.unique(), inputFile)
             }
         
             // ── Profile picture ──────────────────────────────────
@@ -50,21 +54,21 @@ export const registerDoctor = async ({
               const arrayBuffer = await pic.arrayBuffer()
               const buffer = Buffer.from(arrayBuffer)
               const inputFile = InputFile.fromBuffer(buffer, pic.name)
-              profilePicFile = await storage.createFile(BUCKET_ID!, ID.unique(), inputFile)
+              profilePicFile = await storage().createFile(BUCKET_ID!, ID.unique(), inputFile)
             }
         
-            const newDoctor = await databases.createDocument(
+            const newDoctor = await databases().createDocument(
               DATABASE_ID!,
               DOCTOR_COLLECTION_ID!,
               ID.unique(),
               {
                 identificationDocumentationId: file?.$id || null,
                 identificationDocumentUrl: file
-                  ? `${ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${file.$id}/view?project=${PROJECT_ID}`
+                  ? `${ENDPOINT}/storage()/buckets/${BUCKET_ID}/files/${file.$id}/view?project=${PROJECT_ID}`
                   : null,
                 // ── Profile pic URL ────────────────────────────
                 profilePic: profilePicFile
-                  ? `${ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${profilePicFile.$id}/view?project=${PROJECT_ID}`
+                  ? `${ENDPOINT}/storage()/buckets/${BUCKET_ID}/files/${profilePicFile.$id}/view?project=${PROJECT_ID}`
                   : null,
                 ...doctor
               })
@@ -80,7 +84,7 @@ export const getDoctorByName = async (name: string) => {
   try {
     // First check constant doctors list
     // Fallback: query Appwrite DB
-    const result = await databases.listDocuments(
+    const result = await databases().listDocuments(
       DATABASE_ID!,
       DOCTOR_COLLECTION_ID,
       [Query.equal('name', name)]
@@ -97,7 +101,7 @@ export const getDoctorByName = async (name: string) => {
 
 export const getAllDoctors = async () => {
   try {
-    const result = await databases.listDocuments(
+    const result = await databases().listDocuments(
       DATABASE_ID!,
       DOCTOR_COLLECTION_ID,
       [Query.limit(50)]
@@ -111,7 +115,7 @@ export const getAllDoctors = async () => {
 
 export const getDoctor = async (userId: string) => {
   try {
-    const doctors = await databases.listDocuments(
+    const doctors = await databases().listDocuments(
       DATABASE_ID!,
       DOCTOR_COLLECTION_ID,
       [Query.equal('userId', userId)]
@@ -171,14 +175,14 @@ export const updateDoctor = async (
       const arrayBuffer = await doc.arrayBuffer()
       const buffer = Buffer.from(arrayBuffer)
       const inputFile = InputFile.fromBuffer(buffer, doc.name)
-      profilePicFile = await storage.createFile(BUCKET_ID!, ID.unique(), inputFile)
+      profilePicFile = await storage().createFile(BUCKET_ID!, ID.unique(), inputFile)
     }
     if (profilePic && profilePic.length > 0) {
       const pic = profilePic[0]
       const arrayBuffer = await pic.arrayBuffer()
       const buffer = Buffer.from(arrayBuffer)
       const inputFile = InputFile.fromBuffer(buffer, pic.name)
-      profilePicFile = await storage.createFile(BUCKET_ID!, ID.unique(), inputFile)
+      profilePicFile = await storage().createFile(BUCKET_ID!, ID.unique(), inputFile)
     }
 
     const data: any = {
@@ -187,14 +191,14 @@ export const updateDoctor = async (
 
     if (file) {
       data.identificationDocumentationId = file.$id;
-      data.identificationDocumentUrl = `${ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${file.$id}/view?project=${PROJECT_ID}`;
+      data.identificationDocumentUrl = `${ENDPOINT}/storage()/buckets/${BUCKET_ID}/files/${file.$id}/view?project=${PROJECT_ID}`;
     }
 
     if (profilePicFile) {
-      data.profilePic = `${ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${profilePicFile.$id}/view?project=${PROJECT_ID}`;
+      data.profilePic = `${ENDPOINT}/storage()/buckets/${BUCKET_ID}/files/${profilePicFile.$id}/view?project=${PROJECT_ID}`;
     }
 
-    const updatedDoctor = await databases.updateDocument(
+    const updatedDoctor = await databases().updateDocument(
       DATABASE_ID!,
       DOCTOR_COLLECTION_ID!,
       doctorId,
@@ -221,7 +225,7 @@ export const updateDoctorSettings = async (
   }
 ) => {
   try {
-    const updated = await databases.updateDocument(
+    const updated = await databases().updateDocument(
       DATABASE_ID!,
       DOCTOR_COLLECTION_ID!,
       doctorId,
@@ -241,7 +245,7 @@ export const updateDoctorSettings = async (
 }
 
 export async function getDoctorBookedSlots(doctorId: string): Promise<Record<string, string[]>> {
-  const doc = await databases.getDocument(
+  const doc = await databases().getDocument(
     process.env.DATABASE_ID!,
     process.env.DOCTOR_COLLECTION_ID!,
     doctorId
@@ -254,7 +258,7 @@ export async function updateDoctorBookedSlots(
   doctorId: string,
   bookedSlots: Record<string, string[]>
 ) {
-  await databases.updateDocument(
+  await databases().updateDocument(
     process.env.DATABASE_ID!,
     process.env.DOCTOR_COLLECTION_ID!,
     doctorId,
@@ -268,7 +272,7 @@ export const updateBlockedSlots = async (
   blockedSlots: Record<string, string[]> // { "2025-04-22": ["9:00 AM"] }
 ) => {
   try {
-    const updated = await databases.updateDocument(
+    const updated = await databases().updateDocument(
       DATABASE_ID!,
       DOCTOR_COLLECTION_ID!,
       doctorId,
@@ -284,7 +288,7 @@ export const updateBlockedSlots = async (
 
 // lib/actions/doctor.actions.ts
 export async function getDoctorBlockedSlots(doctorId: string): Promise<Record<string, string[]>> {
-  const doc = await databases.getDocument(
+  const doc = await databases().getDocument(
     process.env.DATABASE_ID!,
     process.env.DOCTOR_COLLECTION_ID!,
     doctorId
@@ -315,32 +319,32 @@ export const getDoctorStats = async (doctorName: string) => {
       allAppointments,
     ] = await Promise.all([
       // Today's appointments for this doctor
-      databases.listDocuments(DATABASE_ID!, APPOINTMENT_COLLECTION_ID!, [
+      databases().listDocuments(DATABASE_ID!, APPOINTMENT_COLLECTION_ID!, [
         Query.equal('primaryDoctor', doctorName),
         Query.greaterThanEqual('schedule', todayISO),
         Query.lessThan('schedule', tomorrowISO),
         Query.limit(100),
       ]),
       // All pending
-      databases.listDocuments(DATABASE_ID!, APPOINTMENT_COLLECTION_ID!, [
+      databases().listDocuments(DATABASE_ID!, APPOINTMENT_COLLECTION_ID!, [
         Query.equal('primaryDoctor', doctorName),
         Query.equal('status', 'pending'),
         Query.limit(1),
       ]),
       // All scheduled
-      databases.listDocuments(DATABASE_ID!, APPOINTMENT_COLLECTION_ID!, [
+      databases().listDocuments(DATABASE_ID!, APPOINTMENT_COLLECTION_ID!, [
         Query.equal('primaryDoctor', doctorName),
         Query.equal('status', 'scheduled'),
         Query.limit(1),
       ]),
       // All completed
-      databases.listDocuments(DATABASE_ID!, APPOINTMENT_COLLECTION_ID!, [
+      databases().listDocuments(DATABASE_ID!, APPOINTMENT_COLLECTION_ID!, [
         Query.equal('primaryDoctor', doctorName),
         Query.equal('status', 'completed'),
         Query.limit(1),
       ]),
       // All appointments (for unique patient count + earnings calc)
-      databases.listDocuments(DATABASE_ID!, APPOINTMENT_COLLECTION_ID!, [
+      databases().listDocuments(DATABASE_ID!, APPOINTMENT_COLLECTION_ID!, [
         Query.equal('primaryDoctor', doctorName),
         Query.limit(500),
       ]),
@@ -405,14 +409,14 @@ export const getDoctorEarnings = async (doctorName: string, consultationFee: num
       lastDayNext.setDate(lastDayNext.getDate() + 1)
 
       const [thisWeekRes, lastWeekRes] = await Promise.all([
-        databases.listDocuments(DATABASE_ID!, APPOINTMENT_COLLECTION_ID!, [
+        databases().listDocuments(DATABASE_ID!, APPOINTMENT_COLLECTION_ID!, [
           Query.equal('primaryDoctor', doctorName),
           Query.equal('status', 'completed'),
           Query.greaterThanEqual('schedule', thisDay.toISOString()),
           Query.lessThan('schedule', thisDayNext.toISOString()),
           Query.limit(1),
         ]),
-        databases.listDocuments(DATABASE_ID!, APPOINTMENT_COLLECTION_ID!, [
+        databases().listDocuments(DATABASE_ID!, APPOINTMENT_COLLECTION_ID!, [
           Query.equal('primaryDoctor', doctorName),
           Query.equal('status', 'completed'),
           Query.greaterThanEqual('schedule', lastDay.toISOString()),
@@ -443,7 +447,7 @@ export const getDoctorEarnings = async (doctorName: string, consultationFee: num
 
 export const getDoctorPendingRequests = async (doctorName: string) => {
   try {
-    const res = await databases.listDocuments(DATABASE_ID!, APPOINTMENT_COLLECTION_ID!, [
+    const res = await databases().listDocuments(DATABASE_ID!, APPOINTMENT_COLLECTION_ID!, [
       Query.equal('primaryDoctor', doctorName),
       Query.equal('status', 'pending'),
       Query.orderDesc('$createdAt'),
@@ -464,7 +468,7 @@ export const getDoctorPendingRequests = async (doctorName: string) => {
 
 export const getDoctorRecentActivity = async (doctorName: string) => {
   try {
-    const res = await databases.listDocuments(DATABASE_ID!, APPOINTMENT_COLLECTION_ID!, [
+    const res = await databases().listDocuments(DATABASE_ID!, APPOINTMENT_COLLECTION_ID!, [
       Query.equal('primaryDoctor', doctorName),
       Query.orderDesc('$updatedAt'),
       Query.limit(10),
@@ -528,7 +532,7 @@ function timeAgo(iso: string): string {
 // ============================
 export const getDoctorAppointments = async (doctorName: string) => {
   try {
-    const res = await databases.listDocuments(DATABASE_ID!, APPOINTMENT_COLLECTION_ID!, [
+    const res = await databases().listDocuments(DATABASE_ID!, APPOINTMENT_COLLECTION_ID!, [
       Query.equal('primaryDoctor', doctorName),
       Query.orderDesc('$createdAt'),
       Query.limit(100),
