@@ -15,8 +15,8 @@ import { InputFile } from 'node-appwrite/file'
 // Collection IDs — add these to your .env
 const PRESCRIPTION_COLLECTION_ID = process.env.PRESCRIPTION_COLLECTION_ID!
 const MEDICAL_REPORT_COLLECTION_ID = process.env.RECORD_COLLECTION_ID!
-const databases = getDatabases()
-const storage = getStorage()
+function databases(){return getDatabases()}
+function storage() {return getStorage()}
 
 // ── Replace the TOP section of prescriptions.actions.ts ──────────────────────
 // Delete the old CreatePrescriptionParams interface + createPrescription function
@@ -66,7 +66,7 @@ export async function createPrescription(params: CreatePrescriptionParams) {
     diagnosis, medications, followUpDate,
   } = params
 
-  const doc = await databases.createDocument(
+  const doc = await databases().createDocument(
     DATABASE_ID!,
     PRESCRIPTION_COLLECTION_ID,
     ID.unique(),
@@ -94,7 +94,7 @@ export async function updatePrescription(params: UpdatePrescriptionParams) {
     diagnosis, medications, followUpDate,
   } = params
 
-  const existing = await databases.getDocument(
+  const existing = await databases().getDocument(
     DATABASE_ID!, PRESCRIPTION_COLLECTION_ID!, prescriptionId
   )
   const hoursSince = (Date.now() - new Date(existing.$createdAt as string).getTime()) / (1000 * 60 * 60)
@@ -102,7 +102,7 @@ export async function updatePrescription(params: UpdatePrescriptionParams) {
     throw new Error("Prescription can no longer be edited (24-hour window passed).")
   }
 
-  const doc = await databases.updateDocument(
+  const doc = await databases().updateDocument(
     DATABASE_ID!,
     PRESCRIPTION_COLLECTION_ID!,
     prescriptionId,
@@ -126,7 +126,7 @@ export async function updatePrescription(params: UpdatePrescriptionParams) {
  // prescriptions.actions.ts 
 export async function getPrescriptionByAppointment(appointmentId: string) {
   try {
-    const res = await databases.listDocuments(
+    const res = await databases().listDocuments(
       DATABASE_ID!,
       PRESCRIPTION_COLLECTION_ID!,
       [Query.equal("appointmentId", appointmentId), Query.limit(1)]
@@ -148,14 +148,14 @@ export async function getPrescriptionByAppointment(appointmentId: string) {
 //   const { prescriptionId, content, imageFileId, notes } = params
 
 //   // Enforce 24-hour edit window
-//   const existing = await databases.getDocument(DATABASE_ID!, PRESCRIPTION_COLLECTION_ID!, prescriptionId)
+//   const existing = await databases().getDocument(DATABASE_ID!, PRESCRIPTION_COLLECTION_ID!, prescriptionId)
 //   const createdAt = new Date(existing.$createdAt as string).getTime()
 //   const hoursSince = (Date.now() - createdAt) / (1000 * 60 * 60)
 //   if (hoursSince > 24) {
 //     throw new Error("Prescription can no longer be edited (24-hour window passed).")
 //   }
 
-//   const doc = await databases.updateDocument(
+//   const doc = await databases().updateDocument(
 //     DATABASE_ID!,
 //     PRESCRIPTION_COLLECTION_ID!,
 //     prescriptionId,
@@ -172,7 +172,7 @@ export async function getPrescriptionByAppointment(appointmentId: string) {
 
 // // ── Get all prescriptions for a patient (for patient records page) ────────────
 // export async function getPatientPrescriptions(patientId: string) {
-//   const res = await databases.listDocuments(
+//   const res = await databases().listDocuments(
 //     DATABASE_ID!,
 //     PRESCRIPTION_COLLECTION_ID!,
 //     [
@@ -190,7 +190,7 @@ export async function getPrescriptionByAppointment(appointmentId: string) {
 
 // export const createPrescription = async (params: CreatePrescriptionParams) => {
 //   try {
-//     const doc = await databases.createDocument(
+//     const doc = await databases().createDocument(
 //       DATABASE_ID!,
 //       PRESCRIPTION_COLLECTION_ID,
 //       ID.unique(),
@@ -223,7 +223,7 @@ export const getDoctorPrescriptions = async (doctorId: string, patientId?: strin
     ]
     if (patientId) filters.push(Query.equal('patientId', patientId))
 
-    const res = await databases.listDocuments(DATABASE_ID!, PRESCRIPTION_COLLECTION_ID, filters)
+    const res = await databases().listDocuments(DATABASE_ID!, PRESCRIPTION_COLLECTION_ID, filters)
 
     return res.documents.map((doc: any) => {
       const serialized = JSON.parse(JSON.stringify(doc))
@@ -249,7 +249,7 @@ export const getDoctorPrescriptions = async (doctorId: string, patientId?: strin
 
 // export const getPatientPrescriptions = async (patientId: string) => {
 //   try {
-//     const res = await databases.listDocuments(DATABASE_ID!, PRESCRIPTION_COLLECTION_ID, [
+//     const res = await databases().listDocuments(DATABASE_ID!, PRESCRIPTION_COLLECTION_ID, [
 //       Query.equal('patientId', patientId),
 //       Query.orderDesc('$createdAt'),
 //       Query.limit(50),
@@ -266,7 +266,7 @@ export const getDoctorPrescriptions = async (doctorId: string, patientId?: strin
 
 export const deletePrescription = async (prescriptionId: string, doctorId: string, patientId: string) => {
   try {
-    await databases.deleteDocument(DATABASE_ID!, PRESCRIPTION_COLLECTION_ID, prescriptionId)
+    await databases().deleteDocument(DATABASE_ID!, PRESCRIPTION_COLLECTION_ID, prescriptionId)
     revalidatePath(`/doctors/${doctorId}/patients/${patientId}/records`)
     revalidatePath(`/patients/${patientId}/records`)
     return { success: true }
@@ -302,10 +302,10 @@ export const uploadMedicalReport = async (params: UploadMedicalReportParams) => 
     const buffer = Buffer.from(arrayBuffer)
     const inputFile = InputFile.fromBuffer(buffer, file.name)
 
-    const uploaded = await storage.createFile(BUCKET_ID!, ID.unique(), inputFile)
+    const uploaded = await storage().createFile(BUCKET_ID!, ID.unique(), inputFile)
 
     // Create DB record
-    const doc = await databases.createDocument(
+    const doc = await databases().createDocument(
       DATABASE_ID!,
       MEDICAL_REPORT_COLLECTION_ID,
       ID.unique(),
@@ -341,7 +341,7 @@ export const getDoctorReports = async (doctorId: string, patientId?: string) => 
     ]
     if (patientId) filters.push(Query.equal('patientId', patientId))
       
-      const res = await databases.listDocuments(DATABASE_ID!, MEDICAL_REPORT_COLLECTION_ID, filters)
+      const res = await databases().listDocuments(DATABASE_ID!, MEDICAL_REPORT_COLLECTION_ID, filters)
     return res.documents.map((doc: any) => parseStringify(doc))
   } catch (error) {
     console.error('getDoctorReports error:', error)
@@ -351,7 +351,7 @@ export const getDoctorReports = async (doctorId: string, patientId?: string) => 
 
 export const getPatientReports = async (patientId: string) => {
   try {
-    const res = await databases.listDocuments(DATABASE_ID!, MEDICAL_REPORT_COLLECTION_ID!, [
+    const res = await databases().listDocuments(DATABASE_ID!, MEDICAL_REPORT_COLLECTION_ID!, [
       Query.equal('patientId', patientId),
       Query.orderDesc('$createdAt'),
       Query.limit(50),
@@ -371,8 +371,8 @@ export const deleteMedicalReport = async (
 ) => {
   try {
     await Promise.all([
-      storage.deleteFile(BUCKET_ID!, fileId),
-      databases.deleteDocument(DATABASE_ID!, MEDICAL_REPORT_COLLECTION_ID, reportId),
+      storage().deleteFile(BUCKET_ID!, fileId),
+      databases().deleteDocument(DATABASE_ID!, MEDICAL_REPORT_COLLECTION_ID, reportId),
     ])
     revalidatePath(`/doctors/${doctorId}/patients/${patientId}/records`)
     revalidatePath(`/patients/${patientId}/records`)
@@ -395,7 +395,7 @@ export const deleteMedicalReport = async (
 
 export const getDoctorPatients = async (doctorId: string) => {
   try {
-    const res = await databases.listDocuments(DATABASE_ID!, process.env.APPOINTMENT_COLLECTION_ID!, [
+    const res = await databases().listDocuments(DATABASE_ID!, process.env.APPOINTMENT_COLLECTION_ID!, [
       Query.equal('primaryDoctor', doctorId),
       Query.orderDesc('$createdAt'),
       Query.limit(200),
@@ -422,7 +422,7 @@ export const getDoctorPatients = async (doctorId: string) => {
 
 export const getPatientsPrescriptions = async (patientId: string) => {
   try {
-    const res = await databases.listDocuments(DATABASE_ID!, process.env.PRESCRIPTION_COLLECTION_ID!, [
+    const res = await databases().listDocuments(DATABASE_ID!, process.env.PRESCRIPTION_COLLECTION_ID!, [
       Query.equal('patientId', patientId),
       Query.limit(200)
     ])

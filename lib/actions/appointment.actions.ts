@@ -10,11 +10,11 @@ import { parseStringify } from "../utils";
 import { scheduleToSlotKey } from "@/lib/utils"
 import { getDoctorBookedSlots, updateDoctorBookedSlots } from "@/lib/actions/doctor.actions"
 
-const databases = getDatabases()
+function databases(){return getDatabases()}
 
 export async function createAppointment(appointment: CreateAppointmentParams) {
   // ── 1. Check slot availability FIRST ──────────────────────
-  const doctor = await databases.listDocuments(
+  const doctor = await databases().listDocuments(
     process.env.DATABASE_ID!,
     process.env.DOCTOR_COLLECTION_ID!,
     [Query.equal("name", appointment.primaryDoctor)]
@@ -44,7 +44,7 @@ export async function createAppointment(appointment: CreateAppointmentParams) {
 
   // ── 3. Now create the appointment ─────────────────────────
   try {
-    const newAppointment = await databases.createDocument(
+    const newAppointment = await databases().createDocument(
       process.env.DATABASE_ID!,
       process.env.APPOINTMENT_COLLECTION_ID!,
       ID.unique(),
@@ -68,7 +68,7 @@ export async function createAppointment(appointment: CreateAppointmentParams) {
 export const getAppointment = async (appointmentId: string) => {
     console.log(appointmentId)
     try {
-        const appointment = await databases.getDocument(
+        const appointment = await databases().getDocument(
             DATABASE_ID!,
             APPOINTMENT_COLLECTION_ID!,
             appointmentId
@@ -82,7 +82,7 @@ export const getAppointment = async (appointmentId: string) => {
 
 export const recentAppointments = async () => {
     try {
-        const appointments = await databases.listDocuments(
+        const appointments = await databases().listDocuments(
             DATABASE_ID!,
             APPOINTMENT_COLLECTION_ID!,
             [
@@ -138,7 +138,7 @@ export async function completeAppointment(appointmentId: string) {
     const appt = await getAppointment(appointmentId)
 
     // ── Mark as completed ────────────────────────────────────────
-    const updated = await databases.updateDocument(
+    const updated = await databases().updateDocument(
       process.env.DATABASE_ID!,
       process.env.APPOINTMENT_COLLECTION_ID!,
       appointmentId,
@@ -150,7 +150,7 @@ export async function completeAppointment(appointmentId: string) {
 
     // ── Remove from bookedSlots ──────────────────────────────────
     if (appt.primaryDoctor) {
-      const doctor = await databases.listDocuments(
+      const doctor = await databases().listDocuments(
         process.env.DATABASE_ID!,
         process.env.DOCTOR_COLLECTION_ID!,
         [Query.equal("name", appt.primaryDoctor)]
@@ -180,7 +180,7 @@ export async function completeAppointment(appointmentId: string) {
 }
 
 export async function updateAppointment({ appointmentId, appointment }: UpdateAppointmentParams) {
-  const updated = await databases.updateDocument(
+  const updated = await databases().updateDocument(
     process.env.DATABASE_ID!,
     process.env.APPOINTMENT_COLLECTION_ID!,
     appointmentId,
@@ -192,7 +192,7 @@ export async function updateAppointment({ appointmentId, appointment }: UpdateAp
     
     if (!appointment.primaryDoctor) {
       // fetch it directly from the appointment doc instead
-      const apptDoc = await databases.getDocument(
+      const apptDoc = await databases().getDocument(
         process.env.DATABASE_ID!,
         process.env.APPOINTMENT_COLLECTION_ID!,
         appointmentId
@@ -203,7 +203,7 @@ export async function updateAppointment({ appointmentId, appointment }: UpdateAp
 
     if (appointment.primaryDoctor) {
       try {
-        const doctor = await databases.listDocuments(
+        const doctor = await databases().listDocuments(
           process.env.DATABASE_ID!,
           process.env.DOCTOR_COLLECTION_ID!,
           [Query.equal("name", appointment.primaryDoctor)]
@@ -238,7 +238,7 @@ export const autoExpireAppointments = async () => {
     today.setHours(0, 0, 0, 0) // midnight — start of today
 
     // Fetch all pending appointments
-    const res = await databases.listDocuments(
+    const res = await databases().listDocuments(
       DATABASE_ID!,
       APPOINTMENT_COLLECTION_ID!,
       [Query.equal('status', 'pending')]
@@ -253,7 +253,7 @@ export const autoExpireAppointments = async () => {
     // Update each expired appointment
     await Promise.all(
       expired.map((appt) =>
-        databases.updateDocument(
+        databases().updateDocument(
           DATABASE_ID!,
           APPOINTMENT_COLLECTION_ID!,
           appt.$id,
