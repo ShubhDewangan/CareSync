@@ -74,6 +74,7 @@ function Home() {
   }>({ upcoming: 0 })
   const [Doctors, setDoctors] = useState<Doctor[] | null>(null)
   const [doctorsLoading, setDoctorsLoading] = useState(true)
+  const [searchQuery, setSearchQuery] = useState("")
 
   useEffect(() => { setTimeout(() => setMounted(true), 60) }, [])
 
@@ -238,6 +239,13 @@ function Home() {
             <Image src='/assets/icons/search.svg' alt='search' height={16} width={16} className='opacity-50 flex-shrink-0' />
             <Input
               placeholder='Search doctors, specializations…'
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && searchQuery.trim()) {
+                  router.push(`/alldoctors?q=${encodeURIComponent(searchQuery.trim())}`)
+                }
+              }}
               className='border-none bg-transparent text-[13px] text-gray-600 placeholder:text-gray-400 focus-visible:ring-0 p-0 h-auto min-w-0'
             />
           </div>
@@ -400,27 +408,53 @@ function Home() {
             </span>
           </div>
 
-          <div
-            // className="bg-[#8FABD4]/30 border border-[#203C6720] rounded-2xl p-3 sm:p-5 flex gap-3 sm:gap-4 flex-wrap items-center justify-center min-h-[200px]"
-            className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 w-full'
-          >
-            {doctorsLoading ? (
-              Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="w-[160px] sm:w-[220px] h-[240px] sm:h-[280px] rounded-2xl bg-white/40 animate-pulse border border-[#203C6715]" />
-              ))
-            ) : Doctors && Doctors.length > 0 ? (
-              Doctors.map((doctor, idx) => (
-                <DoctorCard
-                  doctor={doctor as unknown as Doctor}
-                  key={idx}
-                  userId={authUser?.$id as string}
-                  patientId={fullUser?.$id as string}
-                  authUser={authUser as unknown as AuthUser}
-                  fullUser={fullUser as FullUser}
-                />
-              ))
-            ) : (
-              <p className="text-[13px] text-gray-400">No doctors found.</p>
+          {/* ── Doctors grid ── */}
+          <div id="doctors" className="mx-3 sm:mx-5 mt-8">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <h2 className="text-[16px] sm:text-[18px] font-bold text-[#1a2e10]">Our Doctors</h2>
+                <div className="h-px bg-[#203C6715] w-10 sm:w-20" />
+              </div>
+              <span className="text-[11px] sm:text-[12px] text-gray-400">
+                {doctorsLoading ? "Loading..." : `${Doctors?.length ?? 0} verified doctors`}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 w-full">
+              {doctorsLoading ? (
+                Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} className="w-[160px] sm:w-[220px] h-[240px] sm:h-[280px] rounded-2xl bg-white/40 animate-pulse border border-[#203C6715]" />
+                ))
+              ) : Doctors && Doctors.length > 0 ? (
+                Doctors.slice(0, 6).map((doctor, idx) => (
+                  <DoctorCard
+                    doctor={doctor as unknown as Doctor}
+                    key={idx}
+                    userId={authUser?.$id as string}
+                    patientId={fullUser?.$id as string}
+                    authUser={authUser as unknown as AuthUser}
+                    fullUser={fullUser as FullUser}
+                  />
+                ))
+              ) : (
+                <p className="text-[13px] text-gray-400">No doctors found.</p>
+              )}
+            </div>
+
+            {/* See More — only shown when there are more than 5 doctors */}
+            {!doctorsLoading && (Doctors?.length ?? 0) > 5 && (
+              <div className="flex justify-center mt-6">
+                <Link
+                  href="/alldoctors"
+                  className="inline-flex items-center gap-2 px-6 py-2.5 bg-white border-[2px] border-[#203C67] text-[#203C67] text-[13px] font-semibold rounded-xl hover:bg-[#203C67] hover:text-white transition-all duration-200"
+                >
+                  See all {Doctors?.length} doctors
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <line x1="5" y1="12" x2="19" y2="12"/>
+                    <polyline points="12 5 19 12 12 19"/>
+                  </svg>
+                </Link>
+              </div>
             )}
           </div>
         </div>

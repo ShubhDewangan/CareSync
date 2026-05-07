@@ -199,7 +199,7 @@ export default function Sidebar({ authUser, fullUser, fullUserChecked, onLogout,
         </p>
         <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
           {[
-            { label: "Find Doctors",     href: "/Doctors",   icon: "🩺" },
+            { label: "Find Doctors",     href: "/alldoctors",   icon: "🩺" },
             { label: "Hospitals/Clinic", href: "#",          icon: "🏥" },
             { label: "Medical Records",  href: "#",          icon: "📋" },
           ].map(item => (
