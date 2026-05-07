@@ -3,10 +3,10 @@
 
 import { ID, Query } from 'node-appwrite'
 import {
-  databases,
-  storage,
   DATABASE_ID,
   BUCKET_ID,
+  getDatabases,
+  getStorage,
 } from '../appwrite.config'
 import { parseStringify } from '../utils'
 import { revalidatePath } from 'next/cache'
@@ -15,6 +15,8 @@ import { InputFile } from 'node-appwrite/file'
 // Collection IDs — add these to your .env
 const PRESCRIPTION_COLLECTION_ID = process.env.PRESCRIPTION_COLLECTION_ID!
 const MEDICAL_REPORT_COLLECTION_ID = process.env.RECORD_COLLECTION_ID!
+const databases = getDatabases()
+const storage = getStorage()
 
 // ── Replace the TOP section of prescriptions.actions.ts ──────────────────────
 // Delete the old CreatePrescriptionParams interface + createPrescription function
@@ -223,7 +225,7 @@ export const getDoctorPrescriptions = async (doctorId: string, patientId?: strin
 
     const res = await databases.listDocuments(DATABASE_ID!, PRESCRIPTION_COLLECTION_ID, filters)
 
-    return res.documents.map(doc => {
+    return res.documents.map((doc: any) => {
       const serialized = JSON.parse(JSON.stringify(doc))
 
       // medications is string[] — each element is a JSON-stringified Medication object
@@ -340,7 +342,7 @@ export const getDoctorReports = async (doctorId: string, patientId?: string) => 
     if (patientId) filters.push(Query.equal('patientId', patientId))
       
       const res = await databases.listDocuments(DATABASE_ID!, MEDICAL_REPORT_COLLECTION_ID, filters)
-    return res.documents.map(doc => parseStringify(doc))
+    return res.documents.map((doc: any) => parseStringify(doc))
   } catch (error) {
     console.error('getDoctorReports error:', error)
     return []
@@ -354,7 +356,7 @@ export const getPatientReports = async (patientId: string) => {
       Query.orderDesc('$createdAt'),
       Query.limit(50),
     ])
-    return res.documents.map(doc => parseStringify(doc))
+    return res.documents.map((doc: any) => parseStringify(doc))
   } catch (error) {
     console.error('getPatientReports error:', error)
     return []

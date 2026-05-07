@@ -5,19 +5,21 @@ import { Client, Account, ID, Query, Users, Models } from "node-appwrite"
 import { cookies } from "next/headers"
 import {
   DATABASE_ID,
-  databases,
   ENDPOINT,
   PATIENT_COLLECTION_ID,
   PROJECT_ID,
-  storage,
   BUCKET_ID,
-  APPOINTMENT_COLLECTION_ID
+  APPOINTMENT_COLLECTION_ID,
+  getDatabases,
+  getStorage
 } from "../appwrite.config"
 import { InputFile } from 'node-appwrite/file'
 import { parseStringify } from "../utils"
 import { revalidatePath } from "next/cache"
 
 const DOCTOR_COLLECTION_ID = process.env.DOCTOR_COLLECTION_ID!
+const databases = getDatabases()
+const storage = getStorage()
 
 function getAdminClient() {
   return new Client()
@@ -347,8 +349,8 @@ export const getDoctorStats = async (doctorName: string) => {
     // Unique patients served
     const uniquePatientIds = new Set(
       allAppointments.documents
-        .filter(a => a.patient)
-        .map(a => typeof a.patient === 'string' ? a.patient : a.patient?.$id)
+        .filter((a: any) => a.patient)
+        .map((a: any) => typeof a.patient === 'string' ? a.patient : a.patient?.$id)
         .filter(Boolean)
     )
 
@@ -469,7 +471,7 @@ export const getDoctorRecentActivity = async (doctorName: string) => {
       Query.select(['$id', '$updatedAt', 'status', 'patient.*', 'cancellationReason']),
     ])
 
-    return res.documents.map(doc => {
+    return res.documents.map((doc: any) => {
       const patientName = doc.patient?.name ?? 'Unknown Patient'
       const time = timeAgo(doc.$updatedAt)
 
@@ -532,7 +534,7 @@ export const getDoctorAppointments = async (doctorName: string) => {
       Query.limit(100),
     ])
 
-    return res.documents.map(doc => ({
+    return res.documents.map((doc: any) => ({
       $id: doc.$id,
       schedule: doc.schedule,
       status: doc.status,

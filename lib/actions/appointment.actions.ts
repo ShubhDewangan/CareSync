@@ -3,12 +3,14 @@
 
 import { Appointment } from "@/types/appwrite";
 // import { InputFile } from "node-appwrite/file";
-import { APPOINTMENT_COLLECTION_ID, DATABASE_ID, databases } from "../appwrite.config";
+import { APPOINTMENT_COLLECTION_ID, DATABASE_ID, getDatabases } from "../appwrite.config";
 import { ID, Query } from "node-appwrite";
 import { revalidatePath } from "next/cache";
 import { parseStringify } from "../utils";
 import { scheduleToSlotKey } from "@/lib/utils"
 import { getDoctorBookedSlots, updateDoctorBookedSlots } from "@/lib/actions/doctor.actions"
+
+const databases = getDatabases()
 
 export async function createAppointment(appointment: CreateAppointmentParams) {
   // ── 1. Check slot availability FIRST ──────────────────────

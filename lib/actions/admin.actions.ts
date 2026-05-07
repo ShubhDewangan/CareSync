@@ -1,15 +1,18 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // lib/actions/admin.actions.ts
 'use server'
 
 import { Query } from "node-appwrite"
 import {
-  databases,
   DATABASE_ID,
   PATIENT_COLLECTION_ID,
   DOCTOR_COLLECTION_ID,
   APPOINTMENT_COLLECTION_ID,
+  getDatabases,
 } from "../appwrite.config"
 import { decryptKey, parseStringify } from "../utils"
+
+const databases = getDatabases()
 
 // ============================
 // 📊 QUICK STATS
@@ -169,7 +172,7 @@ export const getRecentPatients = async () => {
       ]
     )
 
-    return result.documents.map((doc) => ({
+    return result.documents.map((doc: any) => ({
       $id: doc.$id,
       userId: doc.userId,
       name: doc.name,
@@ -199,7 +202,7 @@ export const getRecentDoctors = async () => {
       ]
     )
 
-    return result.documents.map((doc) => ({
+    return result.documents.map((doc: any) => ({
       $id: doc.$id,
       userId: doc.userId,
       name: doc.name,
@@ -245,7 +248,7 @@ export const getAdminDashboardData = async () => {
       weeklyAppointments,
       recentPatients,
       recentDoctors,
-      recentAppointments: appointments.documents.map((doc) => {
+      recentAppointments: appointments.documents.map((doc: any) => {
         const plainDoc = Object.assign({}, doc)
         if (plainDoc.patient) {
           plainDoc.patient = Object.assign({}, plainDoc.patient)

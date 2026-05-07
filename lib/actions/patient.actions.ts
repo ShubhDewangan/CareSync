@@ -7,18 +7,20 @@ import { Client, Account, ID, Query, Users } from "node-appwrite"
 import { cookies } from "next/headers"
 import {
   DATABASE_ID,
-  databases,
   ENDPOINT,
   PATIENT_COLLECTION_ID,
   PROJECT_ID,
-  storage,
-  BUCKET_ID
+  BUCKET_ID,
+  getDatabases,
+  getStorage
 } from "../appwrite.config"
 import { InputFile } from 'node-appwrite/file'
 import { parseStringify } from "../utils"
 
 const DOCTOR_COLLECTION_ID = process.env.DOCTOR_COLLECTION_ID!
 
+const databases = getDatabases()
+const storage = getStorage()
 
 // ============================
 // 👤 CREATE USER
