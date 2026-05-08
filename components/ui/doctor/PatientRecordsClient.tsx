@@ -881,6 +881,357 @@ export default function PatientRecordsClient({
         </div>
       )}
     </div>
+{/* ───────────────────────── MODALS ───────────────────────── */}
+
+{modal && (
+  <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/40 backdrop-blur-[3px] p-3 sm:p-5">
+    
+    {/* Modal Card */}
+    <div className="w-full max-w-3xl bg-white border border-[#e2ddd4] rounded-[28px] shadow-2xl overflow-hidden max-h-[92vh] flex flex-col animate-in fade-in zoom-in duration-200">
+      
+      {/* Header */}
+      <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-[#ece7de] bg-[#faf8f4]">
+        <div>
+          <p className="text-[10px] font-semibold text-[#a0afc0] uppercase tracking-[0.18em]">
+            {modal === "prescription" ? "Doctor Prescription" : "Medical Report"}
+          </p>
+
+          <h2 className="text-[18px] sm:text-[20px] font-semibold text-[#1a2535] mt-0.5">
+            {modal === "prescription"
+              ? "Create Prescription"
+              : "Upload Report"}
+          </h2>
+        </div>
+
+        <button
+          onClick={() => {
+            setModal(null)
+
+            if (modal === "prescription") resetRxForm()
+            else resetReportForm()
+          }}
+          className="w-10 h-10 rounded-full hover:bg-white border border-transparent hover:border-[#e2ddd4] flex items-center justify-center text-[#7a8fa8] hover:text-[#1a2535] transition-all"
+        >
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.4"
+          >
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+      </div>
+
+      {/* Body */}
+      <div className="overflow-y-auto p-5 sm:p-6">
+
+        {/* ───────── PRESCRIPTION MODAL ───────── */}
+        {modal === "prescription" && (
+          <div className="flex flex-col gap-5">
+
+            {/* Diagnosis */}
+            <div className="flex flex-col gap-2">
+              <label className="text-[11px] font-semibold text-[#7a8fa8] uppercase tracking-wide">
+                Diagnosis
+              </label>
+
+              <input
+                value={diagnosis}
+                onChange={(e) => setDiagnosis(e.target.value)}
+                placeholder="Enter diagnosis..."
+                className={INPUT}
+              />
+            </div>
+
+            {/* Medications */}
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center justify-between">
+                <label className="text-[11px] font-semibold text-[#7a8fa8] uppercase tracking-wide">
+                  Medications
+                </label>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    setMedications(prev => [...prev, { ...EMPTY_MED }])
+                  }
+                  className="text-[11px] font-semibold px-3 py-1.5 rounded-lg bg-[#dde8f5] text-[#203C67] hover:bg-[#cfe0f1] transition-colors"
+                >
+                  + Add Medicine
+                </button>
+              </div>
+
+              {medications.map((med, i) => (
+                <div
+                  key={i}
+                  className="border border-[#e2ddd4] rounded-2xl p-4 bg-[#faf8f4] flex flex-col gap-3"
+                >
+                  <div className="flex items-center justify-between">
+                    <p className="text-[12px] font-semibold text-[#203C67]">
+                      Medicine {i + 1}
+                    </p>
+
+                    {medications.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setMedications(prev =>
+                            prev.filter((_, idx) => idx !== i)
+                          )
+                        }
+                        className="text-[11px] text-red-500 font-medium hover:underline"
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
+
+                  <input
+                    placeholder="Medicine name"
+                    value={med.name}
+                    onChange={(e) => {
+                      const copy = [...medications]
+                      copy[i].name = e.target.value
+                      setMedications(copy)
+                    }}
+                    className={INPUT}
+                  />
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <input
+                      placeholder="Dosage"
+                      value={med.dosage}
+                      onChange={(e) => {
+                        const copy = [...medications]
+                        copy[i].dosage = e.target.value
+                        setMedications(copy)
+                      }}
+                      className={INPUT}
+                    />
+
+                    <input
+                      placeholder="Frequency"
+                      value={med.frequency}
+                      onChange={(e) => {
+                        const copy = [...medications]
+                        copy[i].frequency = e.target.value
+                        setMedications(copy)
+                      }}
+                      className={INPUT}
+                    />
+
+                    <input
+                      placeholder="Duration"
+                      value={med.duration}
+                      onChange={(e) => {
+                        const copy = [...medications]
+                        copy[i].duration = e.target.value
+                        setMedications(copy)
+                      }}
+                      className={INPUT}
+                    />
+                  </div>
+
+                  <textarea
+                    placeholder="Instructions..."
+                    value={med.instructions}
+                    onChange={(e) => {
+                      const copy = [...medications]
+                      copy[i].instructions = e.target.value
+                      setMedications(copy)
+                    }}
+                    className={`${INPUT} min-h-[80px] resize-none`}
+                  />
+                </div>
+              ))}
+            </div>
+
+            {/* Notes */}
+            <div className="flex flex-col gap-2">
+              <label className="text-[11px] font-semibold text-[#7a8fa8] uppercase tracking-wide">
+                Doctor Notes
+              </label>
+
+              <textarea
+                value={rxNotes}
+                onChange={(e) => setRxNotes(e.target.value)}
+                placeholder="Additional notes..."
+                className={`${INPUT} min-h-[120px] resize-none`}
+              />
+            </div>
+
+            {/* Followup */}
+            <div className="flex flex-col gap-2">
+              <label className="text-[11px] font-semibold text-[#7a8fa8] uppercase tracking-wide">
+                Follow-up Date
+              </label>
+
+              <input
+                type="date"
+                value={followUp}
+                onChange={(e) => setFollowUp(e.target.value)}
+                className={INPUT}
+              />
+            </div>
+
+            {/* Error */}
+            {rxError && (
+              <div className="bg-red-50 border border-red-200 text-red-600 text-[12px] rounded-xl px-4 py-3">
+                {rxError}
+              </div>
+            )}
+
+            {/* Footer */}
+            <div className="flex justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setModal(null)
+                  resetRxForm()
+                }}
+                className="px-5 py-2.5 rounded-xl border border-[#d4cfc6] text-[12px] font-semibold text-[#5a6a7e] hover:bg-[#faf8f4]"
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                disabled={isPending}
+                onClick={handleCreatePrescription}
+                className="px-5 py-2.5 rounded-xl bg-[#203C67] text-white text-[12px] font-semibold hover:bg-[#162d50] disabled:opacity-50"
+              >
+                {isPending ? "Saving..." : "Save Prescription"}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ───────── REPORT MODAL ───────── */}
+        {modal === "report" && (
+          <div className="flex flex-col gap-5">
+
+            {/* Title */}
+            <div className="flex flex-col gap-2">
+              <label className="text-[11px] font-semibold text-[#7a8fa8] uppercase tracking-wide">
+                Report Title
+              </label>
+
+              <input
+                value={reportTitle}
+                onChange={(e) => setReportTitle(e.target.value)}
+                placeholder="Enter report title..."
+                className={INPUT}
+              />
+            </div>
+
+            {/* Type */}
+            <div className="flex flex-col gap-2">
+              <label className="text-[11px] font-semibold text-[#7a8fa8] uppercase tracking-wide">
+                Report Type
+              </label>
+
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {REPORT_TYPES.map(rt => (
+                  <button
+                    key={rt.value}
+                    type="button"
+                    onClick={() => setReportType(rt.value)}
+                    className={`rounded-xl border px-3 py-3 text-left transition-all ${
+                      reportType === rt.value
+                        ? "bg-[#203C67] border-[#203C67] text-white"
+                        : "bg-[#faf8f4] border-[#e2ddd4] hover:border-[#8FABD4]"
+                    }`}
+                  >
+                    <p className="text-lg">{rt.icon}</p>
+                    <p className="text-[11px] font-semibold mt-1">
+                      {rt.label}
+                    </p>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Upload */}
+            <div className="flex flex-col gap-2">
+              <label className="text-[11px] font-semibold text-[#7a8fa8] uppercase tracking-wide">
+                Upload File
+              </label>
+
+              <input
+                ref={fileInputRef}
+                type="file"
+                onChange={(e) =>
+                  setReportFile(e.target.files?.[0] || null)
+                }
+                className={INPUT}
+              />
+
+              {reportFile && (
+                <div className="bg-[#faf8f4] border border-[#e2ddd4] rounded-xl px-4 py-3">
+                  <p className="text-[12px] font-semibold text-[#1a2535] truncate">
+                    {reportFile.name}
+                  </p>
+
+                  <p className="text-[10px] text-[#a0afc0] mt-1">
+                    {formatBytes(reportFile.size)}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Notes */}
+            <div className="flex flex-col gap-2">
+              <label className="text-[11px] font-semibold text-[#7a8fa8] uppercase tracking-wide">
+                Notes
+              </label>
+
+              <textarea
+                value={reportNotes}
+                onChange={(e) => setReportNotes(e.target.value)}
+                placeholder="Additional report notes..."
+                className={`${INPUT} min-h-[120px] resize-none`}
+              />
+            </div>
+
+            {/* Error */}
+            {reportError && (
+              <div className="bg-red-50 border border-red-200 text-red-600 text-[12px] rounded-xl px-4 py-3">
+                {reportError}
+              </div>
+            )}
+
+            {/* Footer */}
+            <div className="flex justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setModal(null)
+                  resetReportForm()
+                }}
+                className="px-5 py-2.5 rounded-xl border border-[#d4cfc6] text-[12px] font-semibold text-[#5a6a7e] hover:bg-[#faf8f4]"
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                disabled={isPending}
+                onClick={handleUploadReport}
+                className="px-5 py-2.5 rounded-xl bg-[#203C67] text-white text-[12px] font-semibold hover:bg-[#162d50] disabled:opacity-50"
+              >
+                {isPending ? "Uploading..." : "Upload Report"}
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  </div>
+)}
   </div>
 )
 }
