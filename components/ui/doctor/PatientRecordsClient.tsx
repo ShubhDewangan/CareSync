@@ -543,344 +543,344 @@ export default function PatientRecordsClient({
   const panelOpen    = panel !== null
 
   return (
-    <div className="min-h-screen bg-[#EFECE3] font-sans flex flex-col">
+  <div className="min-h-screen bg-[#EFECE3] font-sans flex flex-col overflow-x-hidden">
 
-      {/* ── Header ── */}
-      <header
-        className="sticky top-0 z-20 flex items-center justify-between px-6 py-3 border-b border-[#d4cfc6] flex-shrink-0"
-        style={{ background: "rgba(239,236,227,0.92)", backdropFilter: "blur(14px)" }}
-      >
-        <div className="flex items-center gap-3">
-          <button onClick={() => router.back()}
-            className="w-8 h-8 rounded-full border border-[#d4cfc6] flex items-center justify-center text-[#7a8fa8] hover:border-[#203C67] hover:text-[#203C67] transition-colors">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M19 12H5M5 12l7 7M5 12l7-7"/>
-            </svg>
-          </button>
-          <div>
-            <h1 className="text-[16px] font-semibold text-[#1a2535]">{patient.name}</h1>
-            <p className="text-[11px] text-[#a0afc0]">Dr. {doctor.name} · {doctor.specialization}</p>
-          </div>
-        </div>
+    {/* ── Header ── */}
+    <header
+      className="sticky top-0 z-20 flex items-center justify-between gap-3 px-3 sm:px-4 md:px-6 py-3 border-b border-[#d4cfc6] flex-shrink-0"
+      style={{ background: "rgba(239,236,227,0.92)", backdropFilter: "blur(14px)" }}
+    >
+      <div className="flex items-center gap-2 sm:gap-3 min-w-0">
         <button
-          onClick={() => setModal(tab === "prescriptions" ? "prescription" : "report")}
-          className="flex items-center gap-2 bg-[#203C67] text-white text-[12px] font-semibold px-4 py-2 rounded-xl hover:bg-[#162d50] transition-colors"
+          onClick={() => router.back()}
+          className="w-8 h-8 rounded-full border border-[#d4cfc6] flex items-center justify-center text-[#7a8fa8] hover:border-[#203C67] hover:text-[#203C67] transition-colors flex-shrink-0"
         >
-          <span className="text-base leading-none">+</span>
-          {tab === "prescriptions" ? "New Prescription" : "Upload Report"}
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M19 12H5M5 12l7 7M5 12l7-7"/>
+          </svg>
         </button>
-      </header>
 
-      {/* ── Body ── */}
-      <div className="flex flex-1 min-h-0">
+        <div className="min-w-0">
+          <h1 className="text-[14px] sm:text-[16px] font-semibold text-[#1a2535] truncate">
+            {patient.name}
+          </h1>
 
-        {/* List column */}
-        <div className={`flex flex-col transition-all duration-300 ${panelOpen ? "w-[380px] min-w-[320px]" : "flex-1"} border-r border-[#d4cfc6] overflow-y-auto`}>
-          <div className="p-4 flex flex-col gap-3">
-
-            {/* Patient strip */}
-            <div className="bg-white border border-[#e2ddd4] rounded-2xl px-4 py-3 flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-[#dde8f5] flex items-center justify-center text-[12px] font-bold text-[#203C67] flex-shrink-0">
-                {getInitials(patient.name)}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-[13px] font-semibold text-[#1a2535] truncate">{patient.name}</p>
-                <p className="text-[10px] text-[#a0afc0]">
-                  {[patient.bloodGroup, patient.allergies ? "⚠ allergies" : null].filter(Boolean).join(" · ")}
-                </p>
-              </div>
-              <div className="flex gap-1.5 flex-shrink-0">
-                <span className="text-[10px] bg-[#dde8f5] text-[#203C67] border border-[#c8d8ea] rounded-full px-2 py-0.5 font-medium">
-                  {prescriptions.length} Rx
-                </span>
-                <span className="text-[10px] bg-[#f7f4ef] text-[#5a6a7e] border border-[#d4cfc6] rounded-full px-2 py-0.5 font-medium">
-                  {reports.length} Reports
-                </span>
-              </div>
-            </div>
-
-            {/* Tabs */}
-            <div className="flex gap-1 bg-white border border-[#e2ddd4] rounded-xl p-1">
-              {(["prescriptions", "reports"] as Tab[]).map(t => (
-                <button key={t} onClick={() => { setTab(t); setPanel(null) }}
-                  className={`flex-1 py-2 rounded-lg text-[12px] font-medium transition-all ${
-                    tab === t ? "bg-[#203C67] text-white shadow-sm" : "text-[#7a8fa8] hover:text-[#203C67]"
-                  }`}
-                >
-                  {t === "prescriptions" ? `💊 Prescriptions (${prescriptions.length})` : `📄 Reports (${reports.length})`}
-                </button>
-              ))}
-            </div>
-
-            {/* Prescriptions list */}
-            {tab === "prescriptions" && (
-              <div className="flex flex-col gap-1">
-                {prescriptions.length === 0 ? (
-                  <EmptyState icon="💊" title="No prescriptions yet" subtitle="Create the first prescription for this patient" action={() => setModal("prescription")} actionLabel="New Prescription" />
-                ) : rxGroups.map(group => (
-                  <div key={group.label} className="flex flex-col gap-1.5 mb-1">
-                    <DateHeading label={group.label} />
-                    {group.items.map(rx => {
-                      const isActive = panel?.type === "rx" && panel.data.$id === rx.$id
-                      return (
-                        <div key={rx.$id} onClick={() => setPanel({ type: "rx", data: rx })}
-                          className={`flex items-center gap-3 px-4 py-3 rounded-xl border cursor-pointer transition-all group ${
-                            isActive ? "bg-[#203C67] border-[#203C67]" : "bg-white border-[#e2ddd4] hover:border-[#8FABD4] hover:bg-[#f7f9fc]"
-                          }`}
-                        >
-                          <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-base flex-shrink-0 ${isActive ? "bg-white/20" : "bg-[#dde8f5]"}`}>💊</div>
-                          <div className="flex-1 min-w-0">
-                            <p className={`text-[13px] font-semibold truncate ${isActive ? "text-white" : "text-[#1a2535]"}`}>{rx.diagnosis}</p>
-                            <p className={`text-[10px] mt-0.5 ${isActive ? "text-white/60" : "text-[#a0afc0]"}`}>
-                              {medCount(rx)} med{medCount(rx) !== 1 ? "s" : ""} · {formatTime(rx.$createdAt)}
-                            </p>
-                          </div>
-                          <button onClick={e => { e.stopPropagation(); handleDeleteRx(rx.$id) }}
-                            className={`w-7 h-7 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all flex-shrink-0 ${
-                              isActive ? "hover:bg-white/20 text-white/70 hover:text-white" : "hover:bg-red-50 text-[#c0b9b0] hover:text-red-400"
-                            }`}
-                          >
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                              <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M9 6V4h6v2"/>
-                            </svg>
-                          </button>
-                        </div>
-                      )
-                    })}
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Reports list */}
-            {tab === "reports" && (
-              <div className="flex flex-col gap-1">
-                {reports.length === 0 ? (
-                  <EmptyState icon="📄" title="No reports uploaded" subtitle="Upload the first medical report for this patient" action={() => setModal("report")} actionLabel="Upload Report" />
-                ) : reportGroups.map(group => (
-                  <div key={group.label} className="flex flex-col gap-1.5 mb-1">
-                    <DateHeading label={group.label} />
-                    {group.items.map(report => {
-                      const isActive = panel?.type === "report" && panel.data.$id === report.$id
-                      const rt = REPORT_TYPES.find(t => t.value === report.reportType)
-                      return (
-                        <div key={report.$id} onClick={() => setPanel({ type: "report", data: report })}
-                          className={`flex items-center gap-3 px-4 py-3 rounded-xl border cursor-pointer transition-all group ${
-                            isActive ? "bg-[#203C67] border-[#203C67]" : "bg-white border-[#e2ddd4] hover:border-[#8FABD4] hover:bg-[#f7f9fc]"
-                          }`}
-                        >
-                          <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-base flex-shrink-0 ${isActive ? "bg-white/20" : "bg-[#f7f4ef]"}`}>
-                            {rt?.icon ?? "📄"}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className={`text-[13px] font-semibold truncate ${isActive ? "text-white" : "text-[#1a2535]"}`}>{report.title}</p>
-                            <p className={`text-[10px] mt-0.5 ${isActive ? "text-white/60" : "text-[#a0afc0]"}`}>
-                              {rt?.label ?? report.reportType} · {formatTime(report.$createdAt)}
-                            </p>
-                          </div>
-                          <button onClick={e => { e.stopPropagation(); handleDeleteReport(report.$id, report.fileId) }}
-                            className={`w-7 h-7 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all flex-shrink-0 ${
-                              isActive ? "hover:bg-white/20 text-white/70 hover:text-white" : "hover:bg-red-50 text-[#c0b9b0] hover:text-red-400"
-                            }`}
-                          >
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                              <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M9 6V4h6v2"/>
-                            </svg>
-                          </button>
-                        </div>
-                      )
-                    })}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+          <p className="text-[10px] sm:text-[11px] text-[#a0afc0] truncate">
+            Dr. {doctor.name} · {doctor.specialization}
+          </p>
         </div>
-
-        {/* Split panel */}
-        {panelOpen && (
-          <div className="flex-1 flex min-h-0 overflow-hidden">
-            <div className="w-[220px] min-w-[200px] flex-shrink-0 border-r border-[#d4cfc6] overflow-y-auto p-4 bg-[#f7f4ef]">
-              <PatientSidePanel patient={patient} />
-            </div>
-            <div className="flex-1 overflow-y-auto p-5 bg-white">
-              <div className="flex items-center justify-between mb-4">
-                <p className="text-[10px] font-semibold text-[#a0afc0] uppercase tracking-wide">
-                  {panel.type === "rx" ? "Prescription Detail" : "Report Detail"}
-                </p>
-                <button onClick={() => setPanel(null)}
-                  className="w-7 h-7 rounded-full hover:bg-[#f7f4ef] flex items-center justify-center text-[#a0afc0] hover:text-[#1a2535] transition-colors">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-                  </svg>
-                </button>
-              </div>
-              {panel.type === "rx"     && <PrescriptionDetail rx={panel.data} />}
-              {panel.type === "report" && <ReportDetail report={panel.data} />}
-            </div>
-          </div>
-        )}
-
-        {/* Nothing selected hint */}
-        {!panelOpen && prescriptions.length + reports.length > 0 && (
-          <div className="hidden lg:flex flex-1 items-center justify-center text-center p-8 bg-[#faf8f4]">
-            <div>
-              <p className="text-[36px] mb-3">👈</p>
-              <p className="text-[14px] font-semibold text-[#1a2535]">Select an item</p>
-              <p className="text-[12px] text-[#a0afc0] mt-1">Click any prescription or report to view details here</p>
-            </div>
-          </div>
-        )}
       </div>
 
-      {/* ── New Prescription Modal ── */}
-      {modal === "prescription" && (
-        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-[#EFECE3] rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-[#d4cfc6] shadow-2xl">
-            <div className="sticky top-0 bg-[#EFECE3] border-b border-[#d4cfc6] px-6 py-4 flex items-center justify-between rounded-t-2xl z-10">
-              <div>
-                <h2 className="text-[16px] font-semibold text-[#1a2535]">New Prescription</h2>
-                <p className="text-[11px] text-[#a0afc0]">For {patient.name}</p>
-              </div>
-              <button onClick={() => { setModal(null); resetRxForm() }} className="w-8 h-8 rounded-full hover:bg-[#e2ddd4] flex items-center justify-center text-[#a0afc0] transition-colors">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-              </button>
+      <button
+        onClick={() => setModal(tab === "prescriptions" ? "prescription" : "report")}
+        className="flex items-center gap-1.5 sm:gap-2 bg-[#203C67] text-white text-[11px] sm:text-[12px] font-semibold px-3 sm:px-4 py-2 rounded-xl hover:bg-[#162d50] transition-colors flex-shrink-0"
+      >
+        <span className="text-base leading-none">+</span>
+        <span className="hidden sm:inline">
+          {tab === "prescriptions" ? "New Prescription" : "Upload Report"}
+        </span>
+      </button>
+    </header>
+
+    {/* ── Body ── */}
+    <div className="flex flex-1 min-h-0 flex-col lg:flex-row">
+
+      {/* List column */}
+      <div
+        className={`flex flex-col transition-all duration-300 ${
+          panelOpen
+            ? "w-full lg:w-[380px] lg:min-w-[320px]"
+            : "flex-1"
+        } border-r border-[#d4cfc6] overflow-y-auto`}
+      >
+        <div className="p-3 sm:p-4 flex flex-col gap-3">
+
+          {/* Patient strip */}
+          <div className="bg-white border border-[#e2ddd4] rounded-2xl px-3 sm:px-4 py-3 flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-[#dde8f5] flex items-center justify-center text-[12px] font-bold text-[#203C67] flex-shrink-0">
+              {getInitials(patient.name)}
             </div>
-            <div className="p-6 flex flex-col gap-4">
-              <div>
-                <label className="text-[11px] font-semibold text-[#7a8fa8] uppercase tracking-wide block mb-1.5">Diagnosis *</label>
-                <input value={diagnosis} onChange={e => setDiagnosis(e.target.value)} placeholder="e.g. Acute pharyngitis…" className={INPUT} />
-              </div>
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <label className="text-[11px] font-semibold text-[#7a8fa8] uppercase tracking-wide">Medications *</label>
-                  <button onClick={() => setMedications(p => [...p, { ...EMPTY_MED }])} className="text-[11px] font-semibold text-[#203C67] hover:underline">+ Add</button>
-                </div>
-                <div className="flex flex-col gap-3">
-                  {medications.map((med, i) => (
-                    <div key={i} className="bg-white border border-[#e2ddd4] rounded-xl p-4">
-                      <div className="flex items-center justify-between mb-3">
-                        <span className="text-[10px] font-bold text-[#203C67] bg-[#dde8f5] px-2 py-0.5 rounded-md">Medication {i + 1}</span>
-                        {medications.length > 1 && (
-                          <button onClick={() => setMedications(p => p.filter((_, idx) => idx !== i))} className="text-[11px] text-red-400 hover:text-red-600">Remove</button>
-                        )}
-                      </div>
-                      <div className="grid grid-cols-2 gap-2.5">
-                        <div>
-                          <label className="text-[10px] text-[#a0afc0] mb-1 block">Medicine Name *</label>
-                          <input value={med.name} onChange={e => setMedications(p => p.map((m, idx) => idx === i ? { ...m, name: e.target.value } : m))} placeholder="Amoxicillin" className={INPUT} />
-                        </div>
-                        <div>
-                          <label className="text-[10px] text-[#a0afc0] mb-1 block">Dosage</label>
-                          <input value={med.dosage} onChange={e => setMedications(p => p.map((m, idx) => idx === i ? { ...m, dosage: e.target.value } : m))} placeholder="500mg" className={INPUT} />
-                        </div>
-                        <div>
-                          <label className="text-[10px] text-[#a0afc0] mb-1 block">Frequency</label>
-                          <input value={med.frequency} onChange={e => setMedications(p => p.map((m, idx) => idx === i ? { ...m, frequency: e.target.value } : m))} placeholder="Twice daily" className={INPUT} />
-                        </div>
-                        <div>
-                          <label className="text-[10px] text-[#a0afc0] mb-1 block">Duration</label>
-                          <input value={med.duration} onChange={e => setMedications(p => p.map((m, idx) => idx === i ? { ...m, duration: e.target.value } : m))} placeholder="7 days" className={INPUT} />
-                        </div>
-                        <div className="col-span-2">
-                          <label className="text-[10px] text-[#a0afc0] mb-1 block">Instructions</label>
-                          <input value={med.instructions} onChange={e => setMedications(p => p.map((m, idx) => idx === i ? { ...m, instructions: e.target.value } : m))} placeholder="After meals, avoid dairy" className={INPUT} />
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <label className="text-[11px] font-semibold text-[#7a8fa8] uppercase tracking-wide block mb-1.5">Doctor&apos;s Notes</label>
-                <textarea value={rxNotes} onChange={e => setRxNotes(e.target.value)} rows={3} placeholder="Dietary advice, lifestyle changes…" className={`${INPUT} resize-none`} />
-              </div>
-              <div>
-                <label className="text-[11px] font-semibold text-[#7a8fa8] uppercase tracking-wide block mb-1.5">Follow-up Date</label>
-                <input type="date" value={followUp} onChange={e => setFollowUp(e.target.value)} className={INPUT} />
-              </div>
-              {rxError && <p className="text-[12px] text-red-500 bg-red-50 border border-red-200 rounded-xl px-3 py-2">{rxError}</p>}
+
+            <div className="flex-1 min-w-0">
+              <p className="text-[12px] sm:text-[13px] font-semibold text-[#1a2535] truncate">
+                {patient.name}
+              </p>
+
+              <p className="text-[9px] sm:text-[10px] text-[#a0afc0] truncate">
+                {[patient.bloodGroup, patient.allergies ? "⚠ allergies" : null]
+                  .filter(Boolean)
+                  .join(" · ")}
+              </p>
             </div>
-            <div className="sticky bottom-0 bg-[#EFECE3] border-t border-[#d4cfc6] px-6 py-4 flex gap-3 rounded-b-2xl">
-              <button onClick={() => { setModal(null); resetRxForm() }} className="flex-1 py-2.5 rounded-xl border border-[#d4cfc6] text-[12px] text-[#7a8fa8] hover:bg-[#e2ddd4] transition-colors">Cancel</button>
-              <button onClick={handleCreatePrescription} disabled={isPending} className="flex-1 py-2.5 rounded-xl bg-[#203C67] text-white text-[12px] font-semibold hover:bg-[#162d50] disabled:opacity-50 transition-colors">
-                {isPending ? "Saving…" : "Save Prescription"}
-              </button>
+
+            <div className="hidden sm:flex gap-1.5 flex-shrink-0">
+              <span className="text-[10px] bg-[#dde8f5] text-[#203C67] border border-[#c8d8ea] rounded-full px-2 py-0.5 font-medium">
+                {prescriptions.length} Rx
+              </span>
+
+              <span className="text-[10px] bg-[#f7f4ef] text-[#5a6a7e] border border-[#d4cfc6] rounded-full px-2 py-0.5 font-medium">
+                {reports.length} Reports
+              </span>
             </div>
           </div>
+
+          {/* Tabs */}
+          <div className="flex gap-1 bg-white border border-[#e2ddd4] rounded-xl p-1 sticky top-0 z-10">
+            {(["prescriptions", "reports"] as Tab[]).map(t => (
+              <button
+                key={t}
+                onClick={() => { setTab(t); setPanel(null) }}
+                className={`flex-1 py-2 rounded-lg text-[11px] sm:text-[12px] font-medium transition-all ${
+                  tab === t
+                    ? "bg-[#203C67] text-white shadow-sm"
+                    : "text-[#7a8fa8] hover:text-[#203C67]"
+                }`}
+              >
+                {t === "prescriptions"
+                  ? `💊 Rx (${prescriptions.length})`
+                  : `📄 Reports (${reports.length})`}
+              </button>
+            ))}
+          </div>
+
+          {/* Prescriptions list */}
+          {tab === "prescriptions" && (
+            <div className="flex flex-col gap-1">
+              {prescriptions.length === 0 ? (
+                <EmptyState
+                  icon="💊"
+                  title="No prescriptions yet"
+                  subtitle="Create the first prescription for this patient"
+                  action={() => setModal("prescription")}
+                  actionLabel="New Prescription"
+                />
+              ) : rxGroups.map(group => (
+                <div key={group.label} className="flex flex-col gap-1.5 mb-1">
+                  <DateHeading label={group.label} />
+
+                  {group.items.map(rx => {
+                    const isActive = panel?.type === "rx" && panel.data.$id === rx.$id
+
+                    return (
+                      <div
+                        key={rx.$id}
+                        onClick={() => setPanel({ type: "rx", data: rx })}
+                        className={`flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-3 rounded-xl border cursor-pointer transition-all group ${
+                          isActive
+                            ? "bg-[#203C67] border-[#203C67]"
+                            : "bg-white border-[#e2ddd4] hover:border-[#8FABD4] hover:bg-[#f7f9fc]"
+                        }`}
+                      >
+                        <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-base flex-shrink-0 ${
+                          isActive ? "bg-white/20" : "bg-[#dde8f5]"
+                        }`}>
+                          💊
+                        </div>
+
+                        <div className="flex-1 min-w-0">
+                          <p className={`text-[12px] sm:text-[13px] font-semibold truncate ${
+                            isActive ? "text-white" : "text-[#1a2535]"
+                          }`}>
+                            {rx.diagnosis}
+                          </p>
+
+                          <p className={`text-[9px] sm:text-[10px] mt-0.5 ${
+                            isActive ? "text-white/60" : "text-[#a0afc0]"
+                          }`}>
+                            {medCount(rx)} med{medCount(rx) !== 1 ? "s" : ""} · {formatTime(rx.$createdAt)}
+                          </p>
+                        </div>
+
+                        <button
+                          onClick={e => { e.stopPropagation(); handleDeleteRx(rx.$id) }}
+                          className={`w-7 h-7 rounded-lg flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all flex-shrink-0 ${
+                            isActive
+                              ? "hover:bg-white/20 text-white/70 hover:text-white"
+                              : "hover:bg-red-50 text-[#c0b9b0] hover:text-red-400"
+                          }`}
+                        >
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <polyline points="3 6 5 6 21 6"/>
+                            <path d="M19 6l-1 14H6L5 6"/>
+                            <path d="M9 6V4h6v2"/>
+                          </svg>
+                        </button>
+                      </div>
+                    )
+                  })}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Reports list */}
+          {tab === "reports" && (
+            <div className="flex flex-col gap-1">
+              {reports.length === 0 ? (
+                <EmptyState
+                  icon="📄"
+                  title="No reports uploaded"
+                  subtitle="Upload the first medical report for this patient"
+                  action={() => setModal("report")}
+                  actionLabel="Upload Report"
+                />
+              ) : reportGroups.map(group => (
+                <div key={group.label} className="flex flex-col gap-1.5 mb-1">
+                  <DateHeading label={group.label} />
+
+                  {group.items.map(report => {
+                    const isActive = panel?.type === "report" && panel.data.$id === report.$id
+                    const rt = REPORT_TYPES.find(t => t.value === report.reportType)
+
+                    return (
+                      <div
+                        key={report.$id}
+                        onClick={() => setPanel({ type: "report", data: report })}
+                        className={`flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-3 rounded-xl border cursor-pointer transition-all group ${
+                          isActive
+                            ? "bg-[#203C67] border-[#203C67]"
+                            : "bg-white border-[#e2ddd4] hover:border-[#8FABD4] hover:bg-[#f7f9fc]"
+                        }`}
+                      >
+                        <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-base flex-shrink-0 ${
+                          isActive ? "bg-white/20" : "bg-[#f7f4ef]"
+                        }`}>
+                          {rt?.icon ?? "📄"}
+                        </div>
+
+                        <div className="flex-1 min-w-0">
+                          <p className={`text-[12px] sm:text-[13px] font-semibold truncate ${
+                            isActive ? "text-white" : "text-[#1a2535]"
+                          }`}>
+                            {report.title}
+                          </p>
+
+                          <p className={`text-[9px] sm:text-[10px] mt-0.5 truncate ${
+                            isActive ? "text-white/60" : "text-[#a0afc0]"
+                          }`}>
+                            {rt?.label ?? report.reportType} · {formatTime(report.$createdAt)}
+                          </p>
+                        </div>
+
+                        <button
+                          onClick={e => { e.stopPropagation(); handleDeleteReport(report.$id, report.fileId) }}
+                          className={`w-7 h-7 rounded-lg flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all flex-shrink-0 ${
+                            isActive
+                              ? "hover:bg-white/20 text-white/70 hover:text-white"
+                              : "hover:bg-red-50 text-[#c0b9b0] hover:text-red-400"
+                          }`}
+                        >
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <polyline points="3 6 5 6 21 6"/>
+                            <path d="M19 6l-1 14H6L5 6"/>
+                            <path d="M9 6V4h6v2"/>
+                          </svg>
+                        </button>
+                      </div>
+                    )
+                  })}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
+      </div>
+
+      {/* Sidebar Detail Panel */}
+<div
+  className={`
+    fixed top-0 right-0 h-screen z-50
+    bg-white border-l border-[#d4cfc6]
+    transition-all duration-300 ease-in-out
+    flex flex-col
+    ${panelOpen
+      ? "translate-x-0 w-full sm:w-[92vw] md:w-[78vw] lg:w-[900px]"
+      : "translate-x-full w-full sm:w-[92vw] md:w-[78vw] lg:w-[900px]"
+    }
+  `}
+>
+  {/* Header */}
+  <div className="flex items-center justify-between px-4 sm:px-5 py-4 border-b border-[#e2ddd4] bg-[#EFECE3] shrink-0">
+    <div>
+      <p className="text-[10px] font-semibold text-[#a0afc0] uppercase tracking-wide">
+        {panel?.type === "rx" ? "Prescription Detail" : "Report Detail"}
+      </p>
+
+      <p className="text-[14px] font-semibold text-[#1a2535] mt-0.5">
+        {panel?.type === "rx"
+          ? panel.data.diagnosis
+          : panel?.data.title}
+      </p>
+    </div>
+
+    <button
+      onClick={() => setPanel(null)}
+      className="w-9 h-9 rounded-full hover:bg-white flex items-center justify-center text-[#7a8fa8] hover:text-[#1a2535] transition-colors"
+    >
+      <svg
+        width="14"
+        height="14"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.5"
+      >
+        <line x1="18" y1="6" x2="6" y2="18" />
+        <line x1="6" y1="6" x2="18" y2="18" />
+      </svg>
+    </button>
+  </div>
+
+  {/* Content */}
+  <div className="flex-1 min-h-0 flex flex-col lg:flex-row overflow-hidden">
+
+    {/* Patient sidebar */}
+    <div className="
+      w-full lg:w-[240px]
+      lg:min-w-[240px]
+      border-b lg:border-b-0 lg:border-r
+      border-[#e2ddd4]
+      bg-[#f7f4ef]
+      overflow-y-auto
+      p-4
+    ">
+      <PatientSidePanel patient={patient} />
+    </div>
+
+    {/* Detail content */}
+    <div className="flex-1 overflow-y-auto p-4 sm:p-6 bg-white">
+      {panel?.type === "rx" && (
+        <PrescriptionDetail rx={panel.data} />
       )}
 
-      {/* ── Upload Report Modal ── */}
-      {modal === "report" && (
-        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-[#EFECE3] rounded-2xl w-full max-w-lg border border-[#d4cfc6] shadow-2xl">
-            <div className="border-b border-[#d4cfc6] px-6 py-4 flex items-center justify-between">
-              <div>
-                <h2 className="text-[16px] font-semibold text-[#1a2535]">Upload Medical Report</h2>
-                <p className="text-[11px] text-[#a0afc0]">For {patient.name}</p>
-              </div>
-              <button onClick={() => { setModal(null); resetReportForm() }} className="w-8 h-8 rounded-full hover:bg-[#e2ddd4] flex items-center justify-center text-[#a0afc0] transition-colors">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-              </button>
-            </div>
-            <div className="p-6 flex flex-col gap-4">
-              <div>
-                <label className="text-[11px] font-semibold text-[#7a8fa8] uppercase tracking-wide block mb-1.5">Report Title *</label>
-                <input value={reportTitle} onChange={e => setReportTitle(e.target.value)} placeholder="e.g. CBC Blood Test, Chest X-Ray…" className={INPUT} />
-              </div>
-              <div>
-                <label className="text-[11px] font-semibold text-[#7a8fa8] uppercase tracking-wide block mb-2">Report Type</label>
-                <div className="grid grid-cols-2 gap-2">
-                  {REPORT_TYPES.map(t => (
-                    <button key={t.value} onClick={() => setReportType(t.value)}
-                      className={`py-2 px-3 rounded-xl border text-[12px] font-medium transition-colors text-left flex items-center gap-2 ${
-                        reportType === t.value ? "bg-[#203C67] text-white border-[#203C67]" : "border-[#d4cfc6] text-[#5a6a7e] bg-white hover:border-[#8FABD4]"
-                      }`}
-                    >
-                      <span>{t.icon}</span>{t.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <label className="text-[11px] font-semibold text-[#7a8fa8] uppercase tracking-wide block mb-1.5">File *</label>
-                <div onClick={() => fileInputRef.current?.click()}
-                  className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-colors ${
-                    reportFile ? "border-[#203C67] bg-[#dde8f5]" : "border-[#d4cfc6] bg-white hover:border-[#8FABD4]"
-                  }`}
-                >
-                  {reportFile ? (
-                    <div>
-                      <p className="text-[13px] font-medium text-[#203C67]">📎 {reportFile.name}</p>
-                      <p className="text-[11px] text-[#a0afc0] mt-1">{formatBytes(reportFile.size)}</p>
-                    </div>
-                  ) : (
-                    <div>
-                      <p className="text-[13px] text-[#7a8fa8]">Click to upload</p>
-                      <p className="text-[11px] text-[#a0afc0] mt-1">PDF, JPG, PNG — max 10MB</p>
-                    </div>
-                  )}
-                </div>
-                <input ref={fileInputRef} type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden"
-                  onChange={e => setReportFile(e.target.files?.[0] ?? null)} />
-              </div>
-              <div>
-                <label className="text-[11px] font-semibold text-[#7a8fa8] uppercase tracking-wide block mb-1.5">Notes (optional)</label>
-                <textarea value={reportNotes} onChange={e => setReportNotes(e.target.value)} rows={2}
-                  placeholder="Summary or context for this report…" className={`${INPUT} resize-none`} />
-              </div>
-              {reportError && <p className="text-[12px] text-red-500 bg-red-50 border border-red-200 rounded-xl px-3 py-2">{reportError}</p>}
-            </div>
-            <div className="border-t border-[#d4cfc6] px-6 py-4 flex gap-3">
-              <button onClick={() => { setModal(null); resetReportForm() }} className="flex-1 py-2.5 rounded-xl border border-[#d4cfc6] text-[12px] text-[#7a8fa8] hover:bg-[#e2ddd4] transition-colors">Cancel</button>
-              <button onClick={handleUploadReport} disabled={isPending} className="flex-1 py-2.5 rounded-xl bg-[#203C67] text-white text-[12px] font-semibold hover:bg-[#162d50] disabled:opacity-50 transition-colors">
-                {isPending ? "Uploading…" : "Upload Report"}
-              </button>
-            </div>
+      {panel?.type === "report" && (
+        <ReportDetail report={panel.data} />
+      )}
+    </div>
+  </div>
+</div>
+
+{/* Backdrop */}
+{panelOpen && (
+  <div
+    onClick={() => setPanel(null)}
+    className="fixed inset-0 bg-black/30 backdrop-blur-[2px] z-40"
+  />
+)}
+
+      {/* Nothing selected hint */}
+      {!panelOpen && prescriptions.length + reports.length > 0 && (
+        <div className="hidden lg:flex flex-1 items-center justify-center text-center p-8 bg-[#faf8f4]">
+          <div>
+            <p className="text-[36px] mb-3">👈</p>
+            <p className="text-[14px] font-semibold text-[#1a2535]">Select an item</p>
+            <p className="text-[12px] text-[#a0afc0] mt-1">
+              Click any prescription or report to view details here
+            </p>
           </div>
         </div>
       )}
     </div>
-  )
+  </div>
+)
 }

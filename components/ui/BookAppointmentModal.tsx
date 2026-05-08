@@ -244,289 +244,431 @@ function handleDateChange(d: Date | undefined) {
   return (
     <>
       {/* Trigger Button */}
-      {variant==='ghost' ? <button
-        onClick={handleBookingButton}
-        className="group inline-flex items-center justify-center gap-1.5 h-8 px-4 rounded-full text-[11px] text-[#34578b] font-medium text-nowrap mt-1 bg-transparent"
-      >
-        <Image
-          src="/assets/icons/edit-profile.svg"
-          alt="edit profile"
-          height={24}
-          width={24}
-          className="h-3.5 w-3.5"
-        />
-        <span>{text || 'Book Appointment'}</span>
-      </button>
-      :<button
-        onClick={handleBookingButton}
-        className="group inline-flex items-center justify-center gap-1.5 border border-gray-300 hover:border-[#4A70A9] hover:text-[#4A70A9] transition-all duration-200 h-8 px-4 rounded-full text-[11px] text-gray-600 font-medium text-nowrap mt-1 bg-[#e1d7bc]"
-      >
-        <Image
-          src="/assets/icons/edit-profile.svg"
-          alt="edit profile"
-          height={24}
-          width={24}
-          className="h-3.5 w-3.5"
-        />
-        <span>{text || 'Book Appointment'}</span>
-      </button>}
+{variant === 'ghost' ? (
+  <button
+    onClick={handleBookingButton}
+    className="group inline-flex items-center justify-center gap-1.5 h-8 px-3 sm:px-4 rounded-full text-[10px] sm:text-[11px] text-[#34578b] font-medium text-nowrap mt-1 bg-transparent"
+  >
+    <Image
+      src="/assets/icons/edit-profile.svg"
+      alt="edit profile"
+      height={24}
+      width={24}
+      className="h-3.5 w-3.5"
+    />
+    <span>{text || 'Book Appointment'}</span>
+  </button>
+) : (
+  <button
+    onClick={handleBookingButton}
+    className="group inline-flex items-center justify-center gap-1.5 border border-gray-300 hover:border-[#4A70A9] hover:text-[#4A70A9] transition-all duration-200 h-8 px-3 sm:px-4 rounded-full text-[10px] sm:text-[11px] text-gray-600 font-medium text-nowrap mt-1 bg-[#e1d7bc]"
+  >
+    <Image
+      src="/assets/icons/edit-profile.svg"
+      alt="edit profile"
+      height={24}
+      width={24}
+      className="h-3.5 w-3.5"
+    />
+    <span>{text || 'Book Appointment'}</span>
+  </button>
+)}
 
-      <Dialog open={isOpen} onOpenChange={handleClose}>
-        <DialogContent className="max-h-[95vh] w-[90vw] max-w-[900px] overflow-hidden p-0 border-[#c8d4de] bg-[#EFECE3] rounded-2xl shadow-2xl">
+<Dialog open={isOpen} onOpenChange={handleClose}>
+  <DialogContent className="max-h-[100dvh] h-[100dvh] sm:h-auto sm:max-h-[95vh] w-screen sm:w-[92vw] max-w-[900px] overflow-hidden p-0 border-[#c8d4de] bg-[#EFECE3] rounded-none sm:rounded-2xl shadow-2xl">
 
-          {/* ── Header ── */}
-          <div className="relative flex items-center justify-between px-7 py-5 border-b border-[#c8d4de]">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-[#CEDBE3] flex items-center justify-center font-semibold text-sm shrink-0">
-                {doctor?.name?.charAt(0) ?? "D"}
+    {/* ── Header ── */}
+    <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 px-4 sm:px-7 py-4 sm:py-5 border-b border-[#c8d4de]">
+      
+      <div className="flex items-center gap-3 min-w-0">
+        <div className="w-10 h-10 rounded-full bg-[#CEDBE3] flex items-center justify-center font-semibold text-sm shrink-0">
+          {doctor?.name?.charAt(0) ?? "D"}
+        </div>
+
+        <div className="min-w-0">
+          <p className="font-semibold text-[14px] sm:text-[15px] leading-none truncate">
+            Dr. {doctor?.name}
+          </p>
+
+          <p className="text-[#8FABD4] text-[11px] sm:text-[12px] mt-1 truncate">
+            {doctor?.specialization ?? "General Physician"}
+          </p>
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-5 pr-8 sm:pr-5">
+        
+        {/* Step indicator */}
+        <div className="flex items-center gap-2">
+          {[1, 2].map((s) => (
+            <React.Fragment key={s}>
+              <div
+                className={cn(
+                  "w-6 h-6 rounded-full text-[11px] font-semibold flex items-center justify-center transition-all",
+                  step === s
+                    ? "bg-[#4A70A9] text-white"
+                    : step > s
+                      ? "bg-[#CEDBE3] text-[#343641]"
+                      : "bg-[#3d4050] text-[#8FABD4]"
+                )}
+              >
+                {step > s ? "✓" : s}
               </div>
-              <div>
-                <p className="font-semibold text-[15px] leading-none">Dr. {doctor?.name}</p>
-                <p className="text-[#8FABD4] text-[12px] mt-1">{doctor?.specialization ?? "General Physician"}</p>
-              </div>
-            </div>
 
-            <div className="flex items-center gap-5 pr-5">
-              {/* Step indicator */}
-              <div className="flex items-center gap-2">
-                {[1, 2].map((s) => (
-                  <React.Fragment key={s}>
-                    <div className={cn(
-                      "w-6 h-6 rounded-full text-[11px] font-semibold flex items-center justify-center transition-all",
-                      step === s
-                        ? "bg-[#4A70A9] text-white"
-                        : step > s
-                          ? "bg-[#CEDBE3] text-[#343641]"
-                          : "bg-[#3d4050] text-[#8FABD4]"
-                    )}>
-                      {step > s ? "✓" : s}
-                    </div>
-                    {s < 2 && <div className={cn("w-8 h-px", step > s ? "bg-[#CEDBE3]" : "bg-[#3d4050]")} />}
-                  </React.Fragment>
+              {s < 2 && (
+                <div
+                  className={cn(
+                    "w-6 sm:w-8 h-px",
+                    step > s ? "bg-[#CEDBE3]" : "bg-[#3d4050]"
+                  )}
+                />
+              )}
+            </React.Fragment>
+          ))}
+        </div>
+
+        <span className="text-[#585858] text-[10px] sm:text-[11px] px-2.5 sm:px-3 py-1 rounded-full border border-[#585858] whitespace-nowrap">
+          {DateToday}
+        </span>
+      </div>
+    </div>
+
+    {/* ── Body ── */}
+    <div className="overflow-y-auto max-h-[calc(100dvh-88px)] sm:max-h-[calc(95vh-80px)]">
+
+      {/* ── Step 1 ── */}
+      {step === 1 && (
+        <div className="p-4 sm:p-6 flex flex-col gap-5 sm:gap-6">
+
+          <div className="grid grid-cols-1 xl:grid-cols-[340px_1fr] gap-5">
+
+              {/* Calendar */}
+            <div className="bg-white/70 backdrop-blur-md border border-[#d8e1ea] rounded-3xl p-3 sm:p-4 shadow-sm flex flex-col lg:flex-row gap-4 lg:gap-5">
+              
+              <div className='flex-col flex w-full lg:w-auto'><p className="text-[11px] font-semibold text-[#7c8da3] uppercase tracking-[0.18em] mb-4">
+                Select Date
+              </p>
+
+              {/* Quick dates */}
+              <div className="flex gap-1 overflow-x-auto pb-1 mb-4 no-scrollbar">
+                {QUICK_DATES.map((qd) => (
+                  <button
+                    key={qd.value}
+                    onClick={() => handleQuickDate(qd.value)}
+                    className="
+                      shrink-0
+                      px-2 py-1
+                      rounded-full
+                      text-[11px]
+                      font-medium
+                      border border-[#d8e1ea]
+                      bg-white
+                      hover:border-[#4A70A9]
+                      hover:text-[#4A70A9]
+                      transition-all
+                    "
+                  >
+                    {qd.label}
+                  </button>
                 ))}
               </div>
-              <span className="text-[#585858] text-[11px] px-3 py-1 rounded-full border border-[#585858]">
-                {DateToday}
-              </span>
+
+              <Card className="w-full lg:w-fit rounded-2xl border border-[#d9e3ec] shadow-sm bg-white overflow-hidden">
+  <CardContent className="p-2 sm:p-3 overflow-x-auto">
+    <Calendar
+      mode="single"
+      selected={date}
+      onSelect={handleDateChange}
+      month={currentMonth}
+      onMonthChange={setCurrentMonth}
+      fixedWeeks
+      disabled={{ before: new Date() }}
+      className="p-0 min-w-[250px]"
+      classNames={{
+        months: "flex flex-col",
+        month: "space-y-2",
+
+        caption:
+          "flex justify-between items-center px-1 mb-2",
+
+        caption_label:
+          "text-[11px] sm:text-[12px] font-semibold text-[#203C67]",
+
+        nav: "flex items-center gap-1",
+
+        nav_button:
+          "h-6 w-6 rounded-lg border border-[#d9e3ec] hover:bg-[#f3f7fb]",
+
+        table: "border-collapse w-full",
+
+        head_row:
+          "grid grid-cols-7",
+
+        head_cell:
+          "flex items-center justify-center text-[8px] sm:text-[9px] font-medium text-[#9db0c7] mb-1",
+
+        row:
+          "grid grid-cols-7 mt-1",
+
+        cell:
+          "flex items-center justify-center p-[2px]",
+
+        day: `
+          h-7 w-12 sm:h-8 sm:w-8
+          rounded-xl
+          text-[9px] sm:text-[10px]
+          font-medium
+          transition-all
+          flex items-center justify-center
+          bg-[#f7f9fc]
+          hover:bg-[#eaf2fc]
+          hover:text-[#4A70A9]
+        `,
+
+        day_selected:
+          "bg-[#4A70A9] text-white hover:bg-[#4A70A9] hover:text-white",
+
+        day_today:
+          "border border-[#4A70A9] text-[#4A70A9] bg-white",
+
+        day_outside:
+          "text-[#d3d3d3] bg-transparent",
+
+        day_disabled:
+          "text-[#dcdcdc] bg-[#f5f5f5] opacity-50",
+      }}
+    />
+  </CardContent>
+</Card></div>
+            {/* Time Slots */}
+            <div className="flex-1 min-w-0">
+              <p className="text-[11px] sm:text-[12px] font-semibold text-[#343641]/60 uppercase tracking-wider mb-10">
+                Select Time
+
+                {date && (
+                  <span className="ml-2 normal-case font-normal text-[#4A70A9] text-[11px] sm:text-[12px]">
+                    — {format(date, "EEE, MMM d")}
+                  </span>
+                )}
+              </p>
+
+              <div className="flex flex-col gap-4">
+                {Object.entries(groupedSlots).map(([period, slots]) => (
+                  <div key={period}>
+                    <p className="text-[10px] sm:text-[11px] text-[#343641]/50 font-medium mb-2">
+                      {period}
+                    </p>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
+                      {slots.map((slot) => {
+                        const blocked = isBlocked(slot)
+                        const booked = isBooked(slot)
+                        const unavailable = blocked || booked
+
+                        return (
+                          <button
+                            key={slot}
+                            disabled={unavailable}
+                            onClick={() => !unavailable && setSelectedTime(slot)}
+                            className={cn(
+                              "py-2 px-2 rounded-lg border text-[11px] sm:text-[12px] font-medium transition-all duration-150 min-h-[42px]",
+                              booked
+                                ? "bg-[#C8D9EE] text-[#203C67] border-[#A6BAD7] cursor-not-allowed opacity-60"
+                                : blocked
+                                  ? "bg-gray-100 text-gray-300 border-gray-200 cursor-not-allowed line-through"
+                                  : selectedTime === slot
+                                    ? "bg-[#4A70A9] text-white border-[#4A70A9] shadow-sm"
+                                    : "bg-white text-[#343641] border-[#c8d4de] hover:border-[#4A70A9] hover:text-[#4A70A9]"
+                            )}
+                            title={
+                              booked
+                                ? "Already booked"
+                                : blocked
+                                  ? "Blocked by doctor"
+                                  : undefined
+                            }
+                          >
+                            {slot}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            </div>
+
+          </div>
+
+          {/* Reason + Note */}
+          <div className="flex flex-col gap-3">
+            <div>
+              <p className="text-[11px] sm:text-[12px] font-semibold text-[#343641]/60 uppercase tracking-wider mb-2">
+                Reason for Visit{" "}
+                <span className="normal-case font-normal">(optional)</span>
+              </p>
+
+              <textarea
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+                rows={2}
+                placeholder="Brief description of symptoms or reason…"
+                className="w-full rounded-xl border border-[#c8d4de] bg-white px-3 sm:px-4 py-3 text-[12px] sm:text-[13px] text-[#343641] placeholder:text-[#bbc3cf] focus:outline-none focus:border-[#4A70A9] resize-none transition-colors"
+              />
+            </div>
+
+            <div>
+              <p className="text-[11px] sm:text-[12px] font-semibold text-[#343641]/60 uppercase tracking-wider mb-2">
+                Additional Notes{" "}
+                <span className="normal-case font-normal">(optional)</span>
+              </p>
+
+              <textarea
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                rows={2}
+                placeholder="Any additional comments or notes…"
+                className="w-full rounded-xl border border-[#c8d4de] bg-white px-3 sm:px-4 py-3 text-[12px] sm:text-[13px] text-[#343641] placeholder:text-[#bbc3cf] focus:outline-none focus:border-[#4A70A9] resize-none transition-colors"
+              />
             </div>
           </div>
 
-          {/* ── Body ── */}
-          <div className="overflow-y-auto max-h-[calc(95vh-80px)]">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-between sm:items-center">
+            <span className="text-[#7c7a7a] text-[11px] sm:text-[12px] leading-relaxed">
+              {`Fill this form to book an appointment with Dr. ${doctor?.name}`}
+            </span>
 
-            {/* ── Step 1: Pick date + time + reason ── */}
-            {step === 1 && (
-              <div className="p-6 flex flex-col gap-6">
+            <Button
+              disabled={!canProceed}
+              onClick={() => setStep(2)}
+              className="w-full sm:w-auto bg-[#343641] hover:bg-[#4A70A9] text-[#EFECE3] px-6 sm:px-8 py-2.5 rounded-xl text-[12px] sm:text-[13px] font-medium transition-all disabled:opacity-40"
+            >
+              Review Booking →
+            </Button>
+          </div>
+        </div>
+      )}
 
-                <div className="flex gap-6 flex-col md:flex-row">
+      {/* ── Step 2 ── */}
+      {step === 2 && (
+        <div className="p-4 sm:p-6 flex flex-col gap-5">
+          <p className="text-[11px] sm:text-[12px] font-semibold text-[#343641]/60 uppercase tracking-wider">
+            Confirm Your Appointment
+          </p>
 
-                  {/* Calendar */}
-                  <div className="flex-shrink-0">
-                    <p className="text-[12px] font-semibold text-[#343641]/60 uppercase tracking-wider mb-3">
-                      Select Date
-                    </p>
-                    <div className="flex flex-wrap gap-1.5 mb-3">
-                      {QUICK_DATES.map((qd) => (
-                        <button
-                          key={qd.value}
-                          onClick={() => handleQuickDate(qd.value)}
-                          className="text-[11px] px-2.5 py-1 rounded-full border border-[#c8d4de] bg-white hover:border-[#4A70A9] hover:text-[#4A70A9] text-[#343641] transition-all"
-                        >
-                          {qd.label}
-                        </button>
-                      ))}
-                    </div>
-                    <Card className="w-fit shadow-sm border-[#c8d4de]">
-                      <CardContent className="p-3">
-                        <Calendar
-                          mode="single"
-                          selected={date}
-                          onSelect={handleDateChange}
-                          month={currentMonth}
-                          onMonthChange={setCurrentMonth}
-                          fixedWeeks
-                          disabled={{ before: new Date() }}
-                          className="p-0 [--cell-size:2.25rem]"
-                        />
-                      </CardContent>
-                    </Card>
-                  </div>
-
-                  {/* Time Slots */}
-                  <div className="flex-1">
-                    <p className="text-[12px] font-semibold text-[#343641]/60 uppercase tracking-wider mb-3">
-                      Select Time
-                      {date && (
-                        <span className="ml-2 normal-case font-normal text-[#4A70A9]">
-                          — {format(date, "EEE, MMM d")}
-                        </span>
-                      )}
-                    </p>
-                    <div className="flex flex-col gap-4">
-                      {Object.entries(groupedSlots).map(([period, slots]) => (
-                        <div key={period}>
-                          <p className="text-[11px] text-[#343641]/50 font-medium mb-2">{period}</p>
-                          <div className="grid grid-cols-3 gap-1.5">
-                            {slots.map((slot) => {
-                              const blocked = isBlocked(slot)
-                              const booked = isBooked(slot)
-                              const unavailable = blocked || booked
-                              return (
-                                <button
-                                  key={slot}
-                                  disabled={unavailable}
-                                  onClick={() => !unavailable && setSelectedTime(slot)}
-                                  className={cn(
-                                    "py-2 px-2 rounded-lg border text-[12px] font-medium transition-all duration-150",
-                                    booked
-                                      ? "bg-[#C8D9EE] text-[#203C67] border-[#A6BAD7] cursor-not-allowed opacity-60"
-                                      : blocked
-                                        ? "bg-gray-100 text-gray-300 border-gray-200 cursor-not-allowed line-through"
-                                        : selectedTime === slot
-                                          ? "bg-[#4A70A9] text-white border-[#4A70A9] shadow-sm"
-                                          : "bg-white text-[#343641] border-[#c8d4de] hover:border-[#4A70A9] hover:text-[#4A70A9]"
-                                  )}
-                                  title={booked ? "Already booked" : blocked ? "Blocked by doctor" : undefined}
-                                >
-                                  {slot}
-                                </button>
-                              )
-                            })}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Reason + Note */}
-                <div className="flex flex-col gap-3">
-                  <div>
-                    <p className="text-[12px] font-semibold text-[#343641]/60 uppercase tracking-wider mb-2">
-                      Reason for Visit <span className="normal-case font-normal">(optional)</span>
-                    </p>
-                    <textarea
-                      value={reason}
-                      onChange={(e) => setReason(e.target.value)}
-                      rows={2}
-                      placeholder="Brief description of symptoms or reason…"
-                      className="w-full rounded-xl border border-[#c8d4de] bg-white px-4 py-3 text-[13px] text-[#343641] placeholder:text-[#bbc3cf] focus:outline-none focus:border-[#4A70A9] resize-none transition-colors"
-                    />
-                  </div>
-                  <div>
-                    <p className="text-[12px] font-semibold text-[#343641]/60 uppercase tracking-wider mb-2">
-                      Additional Notes <span className="normal-case font-normal">(optional)</span>
-                    </p>
-                    <textarea
-                      value={note}
-                      onChange={(e) => setNote(e.target.value)}
-                      rows={2}
-                      placeholder="Any additional comments or notes…"
-                      className="w-full rounded-xl border border-[#c8d4de] bg-white px-4 py-3 text-[13px] text-[#343641] placeholder:text-[#bbc3cf] focus:outline-none focus:border-[#4A70A9] resize-none transition-colors"
-                    />
-                  </div>
-                </div>
-
-                <div className="flex justify-between items-center">
-                  <span className="text-[#7c7a7a] text-[12px]">
-                    {`Fill this form to book an appointment with Dr. ${doctor?.name}`}
-                  </span>
-                  <Button
-                    disabled={!canProceed}
-                    onClick={() => setStep(2)}
-                    className="bg-[#343641] hover:bg-[#4A70A9] text-[#EFECE3] px-8 py-2.5 rounded-xl text-[13px] font-medium transition-all disabled:opacity-40"
-                  >
-                    Review Booking →
-                  </Button>
-                </div>
+          {/* Summary Card */}
+          <div className="bg-white rounded-2xl border border-[#c8d4de] overflow-hidden">
+            
+            <div className="flex items-center gap-4 px-4 sm:px-6 py-5 border-b border-[#e8ecef]">
+              <div className="w-12 h-12 rounded-full bg-[#CEDBE3] flex items-center justify-center text-[#343641] font-bold text-lg shrink-0">
+                {doctor.name?.charAt(0) ?? "D"}
               </div>
-            )}
 
-            {/* ── Step 2: Review + Confirm ── */}
-            {step === 2 && (
-              <div className="p-6 flex flex-col gap-5">
-                <p className="text-[12px] font-semibold text-[#343641]/60 uppercase tracking-wider">
-                  Confirm Your Appointment
+              <div className="min-w-0">
+                <p className="text-[#343641] font-semibold text-[14px] sm:text-[15px] truncate">
+                  Dr. {doctor.name}
                 </p>
 
-                {/* Summary Card */}
-                <div className="bg-white rounded-2xl border border-[#c8d4de] overflow-hidden">
-                  <div className="flex items-center gap-4 px-6 py-5 border-b border-[#e8ecef]">
-                    <div className="w-12 h-12 rounded-full bg-[#CEDBE3] flex items-center justify-center text-[#343641] font-bold text-lg shrink-0">
-                      {doctor.name?.charAt(0) ?? "D"}
-                    </div>
-                    <div>
-                      <p className="text-[#343641] font-semibold text-[15px]">Dr. {doctor.name}</p>
-                      <p className="text-[#8FABD4] text-[12px] mt-0.5">{doctor.specialization ?? "General Physician"}</p>
-                    </div>
-                  </div>
-
-                  {[
-                    { label: "Date", value: date ? format(date, "EEEE, MMMM d, yyyy") : "—" },
-                    { label: "Time", value: selectedTime ?? "—" },
-                    { label: "Duration", value: doctor.appointmentSpan ?? "30 minutes" },
-                    { label: "Status", value: "Pending confirmation" },
-                    ...(reason ? [{ label: "Reason", value: reason }] : []),
-                    ...(note ? [{ label: "Note", value: note }] : []),
-                  ].map((row, i) => (
-                    <div
-                      key={i}
-                      className="flex items-start justify-between px-6 py-3.5 border-b border-[#f0f0ec] last:border-b-0"
-                    >
-                      <span className="text-[13px] text-[#bbc3cf]">{row.label}</span>
-                      <span className="text-[13px] text-[#343641] font-medium text-right max-w-[60%]">{row.value}</span>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="flex gap-2.5 items-center bg-[#ddeaf8] rounded-xl px-4 py-3 border border-[#8FABD4]/30">
-                  <span className="text-[#4A70A9] text-base mt-px">ℹ</span>
-                  <p className="text-[12px] text-[#4A70A9] leading-relaxed">
-                    You&apos;ll receive a confirmation shortly. Please arrive 10 minutes early for in-person visits.
-                  </p>
-                </div>
-
-                <div className="flex gap-3 justify-between">
-                  <button
-                    onClick={() => setStep(1)}
-                    disabled={isLoading}
-                    className="px-5 py-2.5 rounded-xl border border-[#c8d4de] text-[13px] text-[#343641] font-medium hover:border-[#4A70A9] transition-colors disabled:opacity-50"
-                  >
-                    ← Edit
-                  </button>
-                  <Button
-                    onClick={
-                      handleConfirm
-                    }
-                    disabled={isLoading}
-                    className="flex-1 px-5 bg-[#4A70A9] hover:bg-[#3a5c8e] text-white rounded-xl text-[13px] font-medium transition-all disabled:opacity-50 flex items-center justify-center gap-2"
-                  >
-                    {isLoading ? (
-                      <>
-                        <svg className="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                          <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
-                        </svg>
-                        Booking...
-                      </>
-                    ) : "Confirm Appointment"}
-                  </Button>
-                </div>
+                <p className="text-[#8FABD4] text-[11px] sm:text-[12px] mt-0.5 truncate">
+                  {doctor.specialization ?? "General Physician"}
+                </p>
               </div>
-            )}
-            { step === 3 && (<div className='flex flex-col items-center justify-center p-8'>
-              <span className='text-[20px] font-heading1'>Success</span>
-              <Image
-                src='/assets/gifs/success.gif'
-                alt='success'
-                height={1000}
-                width={1000}
-              />
-              <p><i>Be active we&apos;ll be sending you status of your booking in some times </i></p>
-            </div>)}
+            </div>
 
+            {[
+              { label: "Date", value: date ? format(date, "EEEE, MMMM d, yyyy") : "—" },
+              { label: "Time", value: selectedTime ?? "—" },
+              { label: "Duration", value: doctor.appointmentSpan ?? "30 minutes" },
+              { label: "Status", value: "Pending confirmation" },
+              ...(reason ? [{ label: "Reason", value: reason }] : []),
+              ...(note ? [{ label: "Note", value: note }] : []),
+            ].map((row, i) => (
+              <div
+                key={i}
+                className="flex flex-col sm:flex-row gap-1 sm:gap-4 sm:items-start sm:justify-between px-4 sm:px-6 py-3.5 border-b border-[#f0f0ec] last:border-b-0"
+              >
+                <span className="text-[11px] sm:text-[13px] text-[#bbc3cf]">
+                  {row.label}
+                </span>
+
+                <span className="text-[12px] sm:text-[13px] text-[#343641] font-medium sm:text-right break-words sm:max-w-[60%]">
+                  {row.value}
+                </span>
+              </div>
+            ))}
           </div>
-        </DialogContent>
-      </Dialog>
+
+          <div className="flex gap-2.5 items-start bg-[#ddeaf8] rounded-xl px-4 py-3 border border-[#8FABD4]/30">
+            <span className="text-[#4A70A9] text-base mt-px">ℹ</span>
+
+            <p className="text-[11px] sm:text-[12px] text-[#4A70A9] leading-relaxed">
+              You&apos;ll receive a confirmation shortly. Please arrive 10 minutes early for in-person visits.
+            </p>
+          </div>
+
+          <div className="flex flex-col-reverse sm:flex-row gap-3 justify-between">
+            <button
+              onClick={() => setStep(1)}
+              disabled={isLoading}
+              className="w-full sm:w-auto px-5 py-2.5 rounded-xl border border-[#c8d4de] text-[12px] sm:text-[13px] text-[#343641] font-medium hover:border-[#4A70A9] transition-colors disabled:opacity-50"
+            >
+              ← Edit
+            </button>
+
+            <Button
+              onClick={handleConfirm}
+              disabled={isLoading}
+              className="w-full sm:w-auto sm:flex-1 px-5 bg-[#4A70A9] hover:bg-[#3a5c8e] text-white rounded-xl text-[12px] sm:text-[13px] font-medium transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              {isLoading ? (
+                <>
+                  <svg
+                    className="animate-spin"
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                  >
+                    <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+                  </svg>
+
+                  Booking...
+                </>
+              ) : "Confirm Appointment"}
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* ── Step 3 ── */}
+      {step === 3 && (
+        <div className="flex flex-col items-center justify-center p-6 sm:p-8 text-center">
+          <span className="text-[18px] sm:text-[20px] font-heading1">
+            Success
+          </span>
+
+          <Image
+            src='/assets/gifs/success.gif'
+            alt='success'
+            height={1000}
+            width={1000}
+            className="w-[220px] sm:w-[320px] h-auto"
+          />
+
+          <p className="text-[12px] sm:text-[13px] text-center leading-relaxed max-w-[320px]">
+            <i>
+              Be active we&apos;ll be sending you status of your booking in some times
+            </i>
+          </p>
+        </div>
+      )}
+
+    </div>
+  </DialogContent>
+</Dialog>
     </>
   )
 }
