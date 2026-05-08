@@ -204,25 +204,26 @@ export const registerPatient = async ({
 // ✏️ UPDATE PATIENT
 // ============================
 
-export const updateDoctor = async (
-  doctorId: string,
-  { identificationDocument, profilePic, ...doctor }: RegisterDoctorParams
+export const updatePatient = async (
+  patientId: string,
+  { identificationDocument, profilePic, ...patient }: RegisterUserParams
 ) => {
-  const storage = getStorage()
   const databases = getDatabases()
+  const storage = getStorage()
 
   try {
-    let file: Models.File | undefined;
-    let profilePicFile: Models.File | undefined;
+    let file;
+    let profilePicFile;
 
     // ── fetch existing doc to get old file IDs ──
-    const existing = await databases.getDocument(DATABASE_ID!, DOCTOR_COLLECTION_ID!, doctorId)
+    const existing = await databases.getDocument(DATABASE_ID!, PATIENT_COLLECTION_ID!, patientId)
 
-    if (identificationDocument && identificationDocument.length > 0) {
-      const doc = identificationDocument[0]
-      const arrayBuffer = await doc.arrayBuffer()
+    if (identificationDocument) {
+      const blobFile = identificationDocument.get('blobFile') as Blob
+      const fileName = identificationDocument.get('fileName') as string
+      const arrayBuffer = await blobFile.arrayBuffer()
       const buffer = Buffer.from(arrayBuffer)
-      const inputFile = InputFile.fromBuffer(buffer, doc.name)
+      const inputFile = InputFile.fromBuffer(buffer, fileName)
       file = await storage.createFile(BUCKET_ID!, ID.unique(), inputFile)
 
       // delete old identification doc
@@ -247,7 +248,7 @@ export const updateDoctor = async (
       }
     }
 
-    const data: any = { ...doctor }
+    const data: any = { ...patient }
 
     if (file) {
       data.identificationDocumentationId = file.$id
@@ -257,8 +258,8 @@ export const updateDoctor = async (
       data.profilePic = `${ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${profilePicFile.$id}/view?project=${PROJECT_ID}`
     }
 
-    const updatedDoctor = await databases.updateDocument(DATABASE_ID!, DOCTOR_COLLECTION_ID!, doctorId, data)
-    return parseStringify(updatedDoctor)
+    const updatedPatient = await databases.updateDocument(DATABASE_ID!, PATIENT_COLLECTION_ID!, patientId, data)
+    return parseStringify(updatedPatient)
   } catch (error) {
     console.log(error)
     return null
