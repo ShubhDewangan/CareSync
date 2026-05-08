@@ -15,8 +15,6 @@ import { InputFile } from 'node-appwrite/file'
 // Collection IDs — add these to your .env
 const PRESCRIPTION_COLLECTION_ID = process.env.PRESCRIPTION_COLLECTION_ID!
 const MEDICAL_REPORT_COLLECTION_ID = process.env.RECORD_COLLECTION_ID!
-function databases(){return getDatabases()}
-function storage() {return getStorage()}
 
 // ── Replace the TOP section of prescriptions.actions.ts ──────────────────────
 // Delete the old CreatePrescriptionParams interface + createPrescription function
@@ -65,8 +63,10 @@ export async function createPrescription(params: CreatePrescriptionParams) {
     content, imageFileId, notes,
     diagnosis, medications, followUpDate,
   } = params
+  const databases = getDatabases()
 
-  const doc = await databases().createDocument(
+
+  const doc = await databases.createDocument(
     DATABASE_ID!,
     PRESCRIPTION_COLLECTION_ID,
     ID.unique(),
@@ -94,7 +94,10 @@ export async function updatePrescription(params: UpdatePrescriptionParams) {
     diagnosis, medications, followUpDate,
   } = params
 
-  const existing = await databases().getDocument(
+  const databases = getDatabases()
+
+
+  const existing = await databases.getDocument(
     DATABASE_ID!, PRESCRIPTION_COLLECTION_ID!, prescriptionId
   )
   const hoursSince = (Date.now() - new Date(existing.$createdAt as string).getTime()) / (1000 * 60 * 60)
@@ -102,7 +105,7 @@ export async function updatePrescription(params: UpdatePrescriptionParams) {
     throw new Error("Prescription can no longer be edited (24-hour window passed).")
   }
 
-  const doc = await databases().updateDocument(
+  const doc = await databases.updateDocument(
     DATABASE_ID!,
     PRESCRIPTION_COLLECTION_ID!,
     prescriptionId,
@@ -125,8 +128,10 @@ export async function updatePrescription(params: UpdatePrescriptionParams) {
  // ── Get single (by appointmentId) ──────────────────────────────────────────── 
  // prescriptions.actions.ts 
 export async function getPrescriptionByAppointment(appointmentId: string) {
+    const databases = getDatabases()
+  
   try {
-    const res = await databases().listDocuments(
+    const res = await databases.listDocuments(
       DATABASE_ID!,
       PRESCRIPTION_COLLECTION_ID!,
       [Query.equal("appointmentId", appointmentId), Query.limit(1)]
@@ -215,6 +220,8 @@ export async function getPrescriptionByAppointment(appointmentId: string) {
 // }
 
 export const getDoctorPrescriptions = async (doctorId: string, patientId?: string) => {
+  const databases = getDatabases()
+
   try {
     const filters = [
       Query.equal('doctorId', doctorId),
@@ -223,7 +230,7 @@ export const getDoctorPrescriptions = async (doctorId: string, patientId?: strin
     ]
     if (patientId) filters.push(Query.equal('patientId', patientId))
 
-    const res = await databases().listDocuments(DATABASE_ID!, PRESCRIPTION_COLLECTION_ID, filters)
+    const res = await databases.listDocuments(DATABASE_ID!, PRESCRIPTION_COLLECTION_ID, filters)
 
     return res.documents.map((doc: any) => {
       const serialized = JSON.parse(JSON.stringify(doc))
@@ -265,8 +272,10 @@ export const getDoctorPrescriptions = async (doctorId: string, patientId?: strin
 // }
 
 export const deletePrescription = async (prescriptionId: string, doctorId: string, patientId: string) => {
+  const databases = getDatabases()
+
   try {
-    await databases().deleteDocument(DATABASE_ID!, PRESCRIPTION_COLLECTION_ID, prescriptionId)
+    await databases.deleteDocument(DATABASE_ID!, PRESCRIPTION_COLLECTION_ID, prescriptionId)
     revalidatePath(`/doctors/${doctorId}/patients/${patientId}/records`)
     revalidatePath(`/patients/${patientId}/records`)
     return { success: true }
@@ -291,6 +300,8 @@ export interface UploadMedicalReportParams {
 }
 
 export const uploadMedicalReport = async (params: UploadMedicalReportParams) => {
+    const databases = getDatabases()
+  const storage = getStorage()
   try {
     const formData = params.file
     const file = formData.get('file') as File
@@ -302,10 +313,10 @@ export const uploadMedicalReport = async (params: UploadMedicalReportParams) => 
     const buffer = Buffer.from(arrayBuffer)
     const inputFile = InputFile.fromBuffer(buffer, file.name)
 
-    const uploaded = await storage().createFile(BUCKET_ID!, ID.unique(), inputFile)
+    const uploaded = await storage.createFile(BUCKET_ID!, ID.unique(), inputFile)
 
     // Create DB record
-    const doc = await databases().createDocument(
+    const doc = await databases.createDocument(
       DATABASE_ID!,
       MEDICAL_REPORT_COLLECTION_ID,
       ID.unique(),
@@ -333,6 +344,8 @@ export const uploadMedicalReport = async (params: UploadMedicalReportParams) => 
 }
 
 export const getDoctorReports = async (doctorId: string, patientId?: string) => {
+    const databases = getDatabases()
+  
   try {
     const filters = [
       Query.equal('doctorId', doctorId),
@@ -341,7 +354,7 @@ export const getDoctorReports = async (doctorId: string, patientId?: string) => 
     ]
     if (patientId) filters.push(Query.equal('patientId', patientId))
       
-      const res = await databases().listDocuments(DATABASE_ID!, MEDICAL_REPORT_COLLECTION_ID, filters)
+      const res = await databases.listDocuments(DATABASE_ID!, MEDICAL_REPORT_COLLECTION_ID, filters)
     return res.documents.map((doc: any) => parseStringify(doc))
   } catch (error) {
     console.error('getDoctorReports error:', error)
@@ -350,8 +363,10 @@ export const getDoctorReports = async (doctorId: string, patientId?: string) => 
 }
 
 export const getPatientReports = async (patientId: string) => {
+    const databases = getDatabases()
+  
   try {
-    const res = await databases().listDocuments(DATABASE_ID!, MEDICAL_REPORT_COLLECTION_ID!, [
+    const res = await databases.listDocuments(DATABASE_ID!, MEDICAL_REPORT_COLLECTION_ID!, [
       Query.equal('patientId', patientId),
       Query.orderDesc('$createdAt'),
       Query.limit(50),
@@ -369,10 +384,12 @@ export const deleteMedicalReport = async (
   doctorId: string,
   patientId: string
 ) => {
+  const databases = getDatabases()
+const storage = getStorage()
   try {
     await Promise.all([
-      storage().deleteFile(BUCKET_ID!, fileId),
-      databases().deleteDocument(DATABASE_ID!, MEDICAL_REPORT_COLLECTION_ID, reportId),
+      storage.deleteFile(BUCKET_ID!, fileId),
+      databases.deleteDocument(DATABASE_ID!, MEDICAL_REPORT_COLLECTION_ID, reportId),
     ])
     revalidatePath(`/doctors/${doctorId}/patients/${patientId}/records`)
     revalidatePath(`/patients/${patientId}/records`)
@@ -394,8 +411,10 @@ export const deleteMedicalReport = async (
 // Distinct patients who have had appointments with this doctor
 
 export const getDoctorPatients = async (doctorId: string) => {
+  const databases = getDatabases()
+
   try {
-    const res = await databases().listDocuments(DATABASE_ID!, process.env.APPOINTMENT_COLLECTION_ID!, [
+    const res = await databases.listDocuments(DATABASE_ID!, process.env.APPOINTMENT_COLLECTION_ID!, [
       Query.equal('primaryDoctor', doctorId),
       Query.orderDesc('$createdAt'),
       Query.limit(200),
@@ -421,8 +440,9 @@ export const getDoctorPatients = async (doctorId: string) => {
 }
 
 export const getPatientsPrescriptions = async (patientId: string) => {
+  const databases = getDatabases()
   try {
-    const res = await databases().listDocuments(DATABASE_ID!, process.env.PRESCRIPTION_COLLECTION_ID!, [
+    const res = await databases.listDocuments(DATABASE_ID!, process.env.PRESCRIPTION_COLLECTION_ID!, [
       Query.equal('patientId', patientId),
       Query.limit(200)
     ])

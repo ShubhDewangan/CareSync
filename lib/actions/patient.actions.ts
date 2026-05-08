@@ -3,7 +3,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use server'
 
-import { Client, Account, ID, Query, Users } from "node-appwrite"
+import { Client, Account, ID, Query, Users, Models } from "node-appwrite"
 import { cookies } from "next/headers"
 import {
   DATABASE_ID,
@@ -19,9 +19,6 @@ import { parseStringify } from "../utils"
 
 const DOCTOR_COLLECTION_ID = process.env.DOCTOR_COLLECTION_ID!
 
-function databases(){return getDatabases()}
-function storage(){return getStorage()}
-
 // ============================
 // 👤 CREATE USER
 // ============================
@@ -32,8 +29,9 @@ function storage(){return getStorage()}
 // ============================
 
 export const getPatient = async (userId: string) => {
+  const databases = getDatabases()
   try {
-    const patients = await databases().listDocuments(
+    const patients = await databases.listDocuments(
       DATABASE_ID!,
       PATIENT_COLLECTION_ID!,
       [Query.equal('userId', userId)]
@@ -84,8 +82,9 @@ export const getPatient = async (userId: string) => {
   }
 }
 export const getPatientbyId = async (id: string) => {
+  const databases = getDatabases()
   try {
-    const patients = await databases().listDocuments(
+    const patients = await databases.listDocuments(
       DATABASE_ID!,
       PATIENT_COLLECTION_ID!,
       [Query.equal('$id', id)]
@@ -151,6 +150,9 @@ export const registerPatient = async ({
   profilePic,        // ← add this
   ...patient
 }: RegisterUserParams) => {
+  const storage = getStorage()
+  const databases = getDatabases()
+
   try {
     let file
     let profilePicFile
@@ -162,7 +164,7 @@ export const registerPatient = async ({
       const arrayBuffer = await blobFile.arrayBuffer()
       const buffer = Buffer.from(arrayBuffer)
       const inputFile = InputFile.fromBuffer(buffer, fileName)
-      file = await storage().createFile(BUCKET_ID!, ID.unique(), inputFile)
+      file = await storage.createFile(BUCKET_ID!, ID.unique(), inputFile)
     }
 
     // ── Profile picture ──────────────────────────────────
@@ -171,21 +173,21 @@ export const registerPatient = async ({
       const arrayBuffer = await pic.arrayBuffer()
       const buffer = Buffer.from(arrayBuffer)
       const inputFile = InputFile.fromBuffer(buffer, pic.name)
-      profilePicFile = await storage().createFile(BUCKET_ID!, ID.unique(), inputFile)
+      profilePicFile = await storage.createFile(BUCKET_ID!, ID.unique(), inputFile)
     }
 
-    const newPatient = await databases().createDocument(
+    const newPatient = await databases.createDocument(
       DATABASE_ID!,
       PATIENT_COLLECTION_ID!,
       ID.unique(),
       {
         identificationDocumentationId: file?.$id || null,
         identificationDocumentUrl: file
-          ? `${ENDPOINT}/storage()/buckets/${BUCKET_ID}/files/${file.$id}/view?project=${PROJECT_ID}`
+          ? `${ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${file.$id}/view?project=${PROJECT_ID}`
           : null,
         // ── Profile pic URL ────────────────────────────
         profilePic: profilePicFile
-          ? `${ENDPOINT}/storage()/buckets/${BUCKET_ID}/files/${profilePicFile.$id}/view?project=${PROJECT_ID}`
+          ? `${ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${profilePicFile.$id}/view?project=${PROJECT_ID}`
           : null,
         ...patient
       }
@@ -202,21 +204,31 @@ export const registerPatient = async ({
 // ✏️ UPDATE PATIENT
 // ============================
 
-export const updatePatient = async (
-  patientId: string,     // ← add this
-  { identificationDocument, profilePic, ...patient }: RegisterUserParams
+export const updateDoctor = async (
+  doctorId: string,
+  { identificationDocument, profilePic, ...doctor }: RegisterDoctorParams
 ) => {
-  try {
-    let file;
-    let profilePicFile;
+  const storage = getStorage()
+  const databases = getDatabases()
 
-    if (identificationDocument) {
-      const blobFile = identificationDocument.get('blobFile') as Blob
-      const fileName = identificationDocument.get('fileName') as string
-      const arrayBuffer = await blobFile.arrayBuffer()
+  try {
+    let file: Models.File | undefined;
+    let profilePicFile: Models.File | undefined;
+
+    // ── fetch existing doc to get old file IDs ──
+    const existing = await databases.getDocument(DATABASE_ID!, DOCTOR_COLLECTION_ID!, doctorId)
+
+    if (identificationDocument && identificationDocument.length > 0) {
+      const doc = identificationDocument[0]
+      const arrayBuffer = await doc.arrayBuffer()
       const buffer = Buffer.from(arrayBuffer)
-      const inputFile = InputFile.fromBuffer(buffer, fileName)
-      file = await storage().createFile(BUCKET_ID!, ID.unique(), inputFile)
+      const inputFile = InputFile.fromBuffer(buffer, doc.name)
+      file = await storage.createFile(BUCKET_ID!, ID.unique(), inputFile)
+
+      // delete old identification doc
+      if (existing.identificationDocumentationId) {
+        try { await storage.deleteFile(BUCKET_ID!, existing.identificationDocumentationId) } catch {}
+      }
     }
 
     if (profilePic && profilePic.length > 0) {
@@ -224,30 +236,29 @@ export const updatePatient = async (
       const arrayBuffer = await pic.arrayBuffer()
       const buffer = Buffer.from(arrayBuffer)
       const inputFile = InputFile.fromBuffer(buffer, pic.name)
-      profilePicFile = await storage().createFile(BUCKET_ID!, ID.unique(), inputFile)
+      profilePicFile = await storage.createFile(BUCKET_ID!, ID.unique(), inputFile)
+
+      // delete old profile pic — extract file ID from old URL
+      if (existing.profilePic) {
+        const oldFileId = existing.profilePic.split('/files/')[1]?.split('/view')[0]
+        if (oldFileId) {
+          try { await storage.deleteFile(BUCKET_ID!, oldFileId) } catch {}
+        }
+      }
     }
 
-    const data: any = {
-      ...patient,
-    };
+    const data: any = { ...doctor }
 
     if (file) {
-      data.identificationDocumentationId = file.$id;
-      data.identificationDocumentUrl = `${ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${file.$id}/view?project=${PROJECT_ID}`;
+      data.identificationDocumentationId = file.$id
+      data.identificationDocumentUrl = `${ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${file.$id}/view?project=${PROJECT_ID}`
     }
-
     if (profilePicFile) {
-      data.profilePic = `${ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${profilePicFile.$id}/view?project=${PROJECT_ID}`;
+      data.profilePic = `${ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${profilePicFile.$id}/view?project=${PROJECT_ID}`
     }
 
-    const updatedPatient = await databases().updateDocument(
-      DATABASE_ID!,
-      PATIENT_COLLECTION_ID!,
-      patientId,
-      data
-    );
-    
-    return parseStringify(updatedPatient)
+    const updatedDoctor = await databases.updateDocument(DATABASE_ID!, DOCTOR_COLLECTION_ID!, doctorId, data)
+    return parseStringify(updatedDoctor)
   } catch (error) {
     console.log(error)
     return null

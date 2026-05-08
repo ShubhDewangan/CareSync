@@ -7,6 +7,15 @@ import { redirect } from "next/navigation"
 import DoctorDashboardClient from "@/components/ui/doctor/DoctorDashboardPage"
 import { Appointment } from "@/types/appwrite"
 
+function withTimeout<T>(promise: Promise<T>, ms = 10000): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error(`Timed out after ${ms}ms`)), ms)
+    ),
+  ])
+}
+
 export default async function DashboardPage({
   params,
 }: {
@@ -14,9 +23,10 @@ export default async function DashboardPage({
 }) {
   const { userId } = await params
 
-  const user = await getLoggedInUser()
-  const doctor = await getDoctor(userId)
-  const appointmentData = await recentAppointments()
+
+  const user = await withTimeout(getLoggedInUser())
+  const doctor = await withTimeout(getDoctor(userId))
+  const appointmentData = await withTimeout(recentAppointments())
 
   if (!doctor) redirect("/")
 

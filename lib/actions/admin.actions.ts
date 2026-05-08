@@ -12,7 +12,7 @@ import {
 } from "../appwrite.config"
 import { decryptKey, parseStringify } from "../utils"
 
-function databases () {
+function Databases () {
   return getDatabases()
 }
 
@@ -21,6 +21,7 @@ function databases () {
 // ============================
 // Returns all numbers needed for the admin stat cards in one call
 export const getAdminStats = async () => {
+  const databases = Databases()
   try {
     const today = new Date()
     today.setHours(0, 0, 0, 0)
@@ -47,45 +48,45 @@ export const getAdminStats = async () => {
       newDoctorsToday,
     ] = await Promise.all([
       // Total patients
-      databases().listDocuments(DATABASE_ID!, PATIENT_COLLECTION_ID!, [
+      databases.listDocuments(DATABASE_ID!, PATIENT_COLLECTION_ID!, [
         Query.limit(1),
       ]),
       // Total doctors
-      databases().listDocuments(DATABASE_ID!, DOCTOR_COLLECTION_ID!, [
+      databases.listDocuments(DATABASE_ID!, DOCTOR_COLLECTION_ID!, [
         Query.limit(1),
       ]),
       // Appointments today
-      databases().listDocuments(DATABASE_ID!, APPOINTMENT_COLLECTION_ID!, [
+      databases.listDocuments(DATABASE_ID!, APPOINTMENT_COLLECTION_ID!, [
         Query.greaterThanEqual("schedule", todayISO),
         Query.lessThan("schedule", tomorrowISO),
         Query.limit(1),
       ]),
       // Pending appointments (all time)
-      databases().listDocuments(DATABASE_ID!, APPOINTMENT_COLLECTION_ID!, [
+      databases.listDocuments(DATABASE_ID!, APPOINTMENT_COLLECTION_ID!, [
         Query.equal("status", ["pending"]),
         Query.limit(1),
       ]),
-      databases().listDocuments(DATABASE_ID!, APPOINTMENT_COLLECTION_ID!, [
+      databases.listDocuments(DATABASE_ID!, APPOINTMENT_COLLECTION_ID!, [
         Query.equal('status', ['scheduled']),
         Query.limit(1),
       ]),
-      databases().listDocuments(DATABASE_ID!, APPOINTMENT_COLLECTION_ID!, [
+      databases.listDocuments(DATABASE_ID!, APPOINTMENT_COLLECTION_ID!, [
         Query.equal('status', ['cancelled']),
         Query.limit(1),
       ]),
       // Cancelled this week
-      databases().listDocuments(DATABASE_ID!, APPOINTMENT_COLLECTION_ID!, [
+      databases.listDocuments(DATABASE_ID!, APPOINTMENT_COLLECTION_ID!, [
         Query.equal("status", ["cancelled"]),
         Query.greaterThanEqual("$createdAt", weekAgoISO),
         Query.limit(1),
       ]),
       // New patients today
-      databases().listDocuments(DATABASE_ID!, PATIENT_COLLECTION_ID!, [
+      databases.listDocuments(DATABASE_ID!, PATIENT_COLLECTION_ID!, [
         Query.greaterThanEqual("$createdAt", todayISO),
         Query.limit(1),
       ]),
       // New doctors today
-      databases().listDocuments(DATABASE_ID!, DOCTOR_COLLECTION_ID!, [
+      databases.listDocuments(DATABASE_ID!, DOCTOR_COLLECTION_ID!, [
         Query.greaterThanEqual("$createdAt", todayISO),
         Query.limit(1),
       ]),
@@ -124,6 +125,7 @@ export const getAdminStats = async () => {
 // Returns count per day for the bar chart (last 7 days)
 
 export const getWeeklyAppointments = async () => {
+  const databases = Databases()
   try {
     const days = []
     for (let i = 6; i >= 0; i--) {
@@ -134,7 +136,7 @@ export const getWeeklyAppointments = async () => {
       const next = new Date(day)
       next.setDate(next.getDate() + 1)
 
-      const result = await databases().listDocuments(
+      const result = await databases.listDocuments(
         DATABASE_ID!,
         APPOINTMENT_COLLECTION_ID!,
         [
@@ -164,8 +166,9 @@ export const getWeeklyAppointments = async () => {
 // Latest 10 registered patients for the registrations table
 
 export const getRecentPatients = async () => {
+  const databases = Databases()
   try {
-    const result = await databases().listDocuments(
+    const result = await databases.listDocuments(
       DATABASE_ID!,
       PATIENT_COLLECTION_ID!,
       [
@@ -194,8 +197,9 @@ export const getRecentPatients = async () => {
 // Latest 10 registered doctors
 
 export const getRecentDoctors = async () => {
+  const databases = Databases()
   try {
-    const result = await databases().listDocuments(
+    const result = await databases.listDocuments(
       DATABASE_ID!,
       DOCTOR_COLLECTION_ID!,
       [
@@ -226,6 +230,7 @@ export const getRecentDoctors = async () => {
 // Fetches everything in parallel
 
 export const getAdminDashboardData = async () => {
+  const databases = Databases()
   try {
     const [stats, weeklyAppointments, recentPatients, recentDoctors, appointments] =
       await Promise.all([
@@ -234,7 +239,7 @@ export const getAdminDashboardData = async () => {
         getRecentPatients(),
         getRecentDoctors(),
         // recentAppointments already exists in appointment.actions.ts — reuse it
-        databases().listDocuments(
+        databases.listDocuments(
           DATABASE_ID!,
           APPOINTMENT_COLLECTION_ID!,
           [
