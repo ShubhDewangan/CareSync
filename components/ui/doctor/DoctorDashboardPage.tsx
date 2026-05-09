@@ -47,11 +47,11 @@ export default function DoctorDashboardClient({
   const [activeTab, setActiveTab] = useState<Tab>("dashboard")
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
-  const tabs: { key: Tab; label: string; icon: string }[] = [
-    { key: "dashboard", label: "Dashboard", icon: "📊" },
-    { key: "schedule",  label: "Schedule",  icon: "📅" },
-    { key: "patients",  label: "Patients",  icon: "👥" },
-    { key: "settings",  label: "Settings",  icon: "⚙️" },
+  const tabs: { key: Tab; label: string; }[] = [
+    { key: "dashboard", label: "Dashboard" },
+    { key: "schedule",  label: "Schedule" },
+    { key: "patients",  label: "Patients" },
+    { key: "settings",  label: "Settings" },
   ]
 
   const initials = doctor.name
@@ -75,7 +75,7 @@ export default function DoctorDashboardClient({
         <div className="h-16 w-16 lg:h-20 lg:w-20 rounded-full border-2 border-[#203C67] p-[2px] mb-3">
           {doctor.profilePic ? (
             <Image
-              src={doctor.profilePic}
+              src={doctor.profilePic || '/assets/images/user_default.webp'}
               alt="profile"
               height={200}
               width={200}
@@ -204,8 +204,7 @@ export default function DoctorDashboardClient({
                       : "bg-[#93abcf] text-[#203C67] hover:bg-[#7f9dcc]"
                   }`}
                 >
-                  <span className="sm:hidden">{t.icon}</span>
-                  <span className="hidden sm:inline">{t.label}</span>
+                  <span className="sm:inline">{t.label}</span>
                   <span className="sm:hidden text-[9px] hidden">{t.label}</span>
                 </button>
               ))}

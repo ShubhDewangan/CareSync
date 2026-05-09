@@ -148,7 +148,7 @@ export default async function DoctorProfilePage({ params }: { params: Promise<{ 
             <div className="flex items-center gap-4 mb-4">
               <div className="h-[58px] w-[58px] rounded-[14px] overflow-hidden bg-[#C8D8EA] flex-shrink-0 flex items-center justify-center text-[#203C67] text-lg font-bold">
                 {doctor.profilePic
-                  ? <Image src={doctor.profilePic} alt={doctor.name} height={200} width={200} className="h-full w-full object-cover" />
+                  ? <Image src={doctor.profilePic || '/assets/images/user_default.webp'} alt={doctor.name} height={200} width={200} className="h-full w-full object-cover" />
                   : initials}
               </div>
               <div className="flex-1 min-w-0">

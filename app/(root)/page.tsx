@@ -243,7 +243,7 @@ function Home() {
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === "Enter" && searchQuery.trim()) {
-                  router.push(`/alldoctors?q=${encodeURIComponent(searchQuery.trim())}`)
+                  router.push(`/doctors?q=${encodeURIComponent(searchQuery.trim())}`)
                 }
               }}
               className='border-none bg-transparent text-[13px] text-gray-600 placeholder:text-gray-400 focus-visible:ring-0 p-0 h-auto min-w-0'
@@ -445,7 +445,7 @@ function Home() {
             {!doctorsLoading && (Doctors?.length ?? 0) > 5 && (
               <div className="flex justify-center mt-6">
                 <Link
-                  href="/alldoctors"
+                  href="/doctors"
                   className="inline-flex items-center gap-2 px-6 py-2.5 bg-white border-[2px] border-[#203C67] text-[#203C67] text-[13px] font-semibold rounded-xl hover:bg-[#203C67] hover:text-white transition-all duration-200"
                 >
                   See all {Doctors?.length} doctors

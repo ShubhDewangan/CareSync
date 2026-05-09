@@ -83,7 +83,7 @@ export default function Sidebar({ authUser, fullUser, fullUserChecked, onLogout,
             <div style={{ position: "relative" }}>
               {fullUser?.profilePic ? (
                 <Image
-                  src={profilePic}
+                  src={profilePic || '/assets/images/user_default.webp'}
                   alt="profile"
                   height={200} width={200}
                   style={{ width: 64, height: 64, borderRadius: "50%", objectFit: "cover", border: "2px solid rgba(32,60,103,0.2)" }}
@@ -193,31 +193,57 @@ export default function Sidebar({ authUser, fullUser, fullUserChecked, onLogout,
       </div>
 
       {/* ── Menu ── */}
-      <div style={{ padding: "12px 12px 8px" }}>
-        <p style={{ fontSize: 10, fontWeight: 700, color: "#9a9690", letterSpacing: "0.1em", textTransform: "uppercase", margin: "0 4px 8px" }}>
-          Menu
-        </p>
-        <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
-          {[
-            { label: "Find Doctors",     href: "/alldoctors",   icon: "🩺" },
-            { label: "Hospitals/Clinic", href: "#",          icon: "🏥" },
-            { label: "Medical Records",  href: "#",          icon: "📋" },
-          ].map(item => (
-            <Link key={item.label} href={item.href} style={{
-              display: "flex", alignItems: "center", gap: 10,
-              padding: "9px 12px", borderRadius: 10, fontSize: 13, fontWeight: 500,
-              color: "#3a4a2a", textDecoration: "none", background: "rgba(32,60,103,0.05)",
-              transition: "background 0.15s",
-            }}
-            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(32,60,103,0.1)" }}
-            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "rgba(32,60,103,0.05)" }}
-            >
-              <span style={{ fontSize: 15 }}>{item.icon}</span>
-              {item.label}
-            </Link>
-          ))}
-        </div>
-      </div>
+          <div className="mb-3 p-5">
+            <p className="text-[9px] font-semibold text-[#a0afc0] uppercase tracking-widest px-1 mb-2">Menu</p>
+            <div className="flex flex-col gap-1">
+              {[
+                {
+                  icon: (
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                      <circle cx="9" cy="7" r="4"/>
+                      <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                      <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                    </svg>
+                  ),
+                  label: "Find Doctors",
+                  href: "/doctors",
+                },
+                {
+                  icon: (
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                      <rect x="3" y="3" width="18" height="18" rx="2"/>
+                      <path d="M3 9h18M9 21V9"/>
+                    </svg>
+                  ),
+                  label: "Hospitals/Clinic",
+                  href: "/hospitals",
+                },
+                {
+                  icon: (
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                      <polyline points="14 2 14 8 20 8"/>
+                      <line x1="16" y1="13" x2="8" y2="13"/>
+                      <line x1="16" y1="17" x2="8" y2="17"/>
+                      <polyline points="10 9 9 9 8 9"/>
+                    </svg>
+                  ),
+                  label: "Medical Records",
+                  href: `/patients/${authUser?.$id}/records`,
+                },
+              ].map((item) => (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-[#f0ede6] hover:bg-[#e8e4dc] border border-transparent hover:border-[#d8d4c8] text-[#1a2535] transition-all group"
+                >
+                  <span className="text-[#5a6a7e] group-hover:text-[#203C67] transition-colors">{item.icon}</span>
+                  <span className="text-[13px] font-medium">{item.label}</span>
+                </Link>
+              ))}
+            </div>
+          </div>
 
       {/* ── Quick Stats ── */}
       {authUser && (

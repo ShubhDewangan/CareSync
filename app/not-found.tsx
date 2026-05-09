@@ -5,7 +5,7 @@ import Link from "next/link"
 export default function NotFound() {
   const navLinks = [
     { href: "/", label: "Home", icon: "🏠" },
-    { href: "/doctors", label: "Find Doctors", icon: "🩺" },
+    { href: "/alldoctors", label: "Find Doctors", icon: "🩺" },
     { href: "/appointments", label: "Appointments", icon: "📅" },
   ]
 

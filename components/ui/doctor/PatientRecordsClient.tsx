@@ -7,7 +7,7 @@ import {
   uploadMedicalReport,
   deletePrescription,
   deleteMedicalReport,
-} from "@/lib/actions/prescriptions.actions"
+} from "@/lib/actions/records.actions"
 import { useRouter } from "next/navigation"
 import { getFileViewUrl } from "@/lib/utils";
 
@@ -511,7 +511,7 @@ export default function PatientRecordsClient({
           reportType: reportType as any, notes: reportNotes, file: formData,
         })
         setReports(prev => [doc, ...prev]); setModal(null); resetReportForm()
-      } catch { setReportError("Upload failed. Please try again.") }
+      } catch (error) { setReportError(`Upload failed. Please try again. error: ${error}`) }
     })
   }
 

@@ -3,7 +3,7 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { getDoctorPatients } from "@/lib/actions/prescriptions.actions"
+import { getDoctorPatients } from "@/lib/actions/records.actions"
 
 interface Patient {
   $id: string

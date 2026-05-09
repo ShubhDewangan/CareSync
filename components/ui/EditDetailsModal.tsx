@@ -360,7 +360,7 @@ const EditProfileModal = ({ patientId, user, patient }: Props) => {
                                     {Doctors && Doctors.map((doctor) => (
                                         <SelectItem key={doctor.name} value={doctor.name} className="w-full">
                                             <div className="flex cursor-pointer items-center gap-3 ml-2">
-                                                <Image src={doctor.profilePic as any} width={28} height={28} alt={doctor.name} className="rounded-full border border-dark-500" />
+                                                <Image src={doctor.profilePic as any || '/assets/images/user_default.webp'} width={28} height={28} alt={doctor.name} className="rounded-full border border-dark-500" />
                                                 <p>{doctor.name}</p>
                                             </div>
                                         </SelectItem>

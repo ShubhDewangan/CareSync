@@ -63,7 +63,7 @@ export const getColumns = (doctors: Doctor[]): ColumnDef<Appointment>[] => [
         <div className="flex items-center gap-3">
           {doctor.profilePic && (
             <Image
-              src={doctor.profilePic}
+              src={doctor.profilePic || '/assets/images/user_default.webp'}
               alt={doctor.name}
               width={100}
               height={100}

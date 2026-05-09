@@ -14,42 +14,47 @@ export default function DashboardBookButton({
   doctorName,
   dateToday,
   authUser,
-  fullUser
+  fullUser,
 }: {
   variant: string
   text: string
   userId: string
   patientId: string
-  doctorName: string
+  doctorName?: string | null
   dateToday: string
   authUser: any
   fullUser: any
 }) {
-  const [Doctors, setDoctors] = useState<Doctor[] | null>(null)
+  const [doctor, setDoctor] = useState<Doctor | undefined>(undefined)
+  const [ready, setReady] = useState(false)
 
   useEffect(() => {
-    async function loadDoctors() {
-      try {
-        const doctors = await getAllDoctors()
-        setDoctors(doctors)
-      } catch {
-        setDoctors([])
-      }
+    if (!doctorName) {
+      // No doctor name given — open modal in doctor-picker mode (step 0)
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setReady(true)
+      return
     }
-    loadDoctors()
-  }, [])
+    getAllDoctors()
+      .then((docs: Doctor[]) => {
+        const match = docs?.find((d) => d.name === doctorName)
+        setDoctor(match ?? undefined)
+      })
+      .catch(() => {})
+      .finally(() => setReady(true))
+  }, [doctorName])
 
-  if (!Doctors) return <div className="text-[12px] text-[#a0afc0]">Loading…</div>
-
-  const doctor = Doctors.find((d) => d.name === doctorName)
-  if (!doctor) return null
+  // Always render once ready — if no doctor found, modal opens at step 0 (picker)
+  if (!ready) return (
+    <span className="text-[11px] text-[#a0afc0] px-2">Loading…</span>
+  )
 
   return (
     <BookAppointmentModal
       variant={variant}
       text={text}
       DateToday={dateToday}
-      doctor={doctor}
+      doctor={doctor}          // undefined → step 0 (doctor picker)
       userId={userId}
       patientId={patientId}
       authUser={authUser}

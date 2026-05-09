@@ -1,4 +1,4 @@
-// app/(root)/alldoctors/DoctorsPageClient.tsx
+// app/(root)/doctors/DoctorsPageClient.tsx
 "use client"
 
 import { useState, useRef } from "react"
@@ -45,13 +45,13 @@ export default function DoctorsPageClient({
     e.preventDefault()
     const trimmed = inputVal.trim()
     setQuery(trimmed)
-    router.replace(trimmed ? `/alldoctors?q=${encodeURIComponent(trimmed)}` : "/alldoctors")
+    router.replace(trimmed ? `/doctors?q=${encodeURIComponent(trimmed)}` : "/doctors")
   }
 
   function handleClear() {
     setInputVal("")
     setQuery("")
-    router.replace("/alldoctors")
+    router.replace("/doctors")
     inputRef.current?.focus()
   }
 

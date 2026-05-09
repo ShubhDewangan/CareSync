@@ -3,7 +3,7 @@
 import { getLoggedInUser } from "@/lib/actions/auth.actions"
 import { getPatient } from "@/lib/actions/patient.actions"
 import { redirect } from "next/navigation"
-import { getPatientsPrescriptions, getPatientReports } from "@/lib/actions/prescriptions.actions"
+import { getPatientsPrescriptions, getPatientReports } from "@/lib/actions/records.actions"
 import PatientRecordsView from "./PatientRecordsView"
 
 export default async function PatientRecordsPage({
@@ -30,7 +30,6 @@ export default async function PatientRecordsPage({
       userId={userId}
       patient={JSON.parse(JSON.stringify(patient))}
       prescriptions={prescriptions as any}
-      reports={reports}
-    />
+      reports={reports} authUser={authUser}    />
   )
 }

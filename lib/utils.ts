@@ -101,12 +101,13 @@ export function scheduleToSlotKey(schedule: Date | string): { dateStr: string; t
 }
 
 // Add this helper in the component (or in utils.ts):
-export function toLocalDateStr(d: Date): string {
-  const year = d.getFullYear()
-  const month = String(d.getMonth() + 1).padStart(2, "0")
-  const day = String(d.getDate()).padStart(2, "0")
-  return `${year}-${month}-${day}` // "2026-04-26" in local timezone
+export function toLocalDateStr(date: Date): string {
+  // Force the date into IST (Asia/Kolkata = UTC+5:30) before extracting
+  // the YYYY-MM-DD string. This matches what the server stores.
+  return date.toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" })
+  // en-CA locale gives YYYY-MM-DD format natively — no split needed.
 }
+ 
 
 export function getFileViewUrl(fileId: string): string {
   const endpoint = process.env.NEXT_PUBLIC_ENDPOINT

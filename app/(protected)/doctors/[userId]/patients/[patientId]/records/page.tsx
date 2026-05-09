@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-// app/(protected)/doctors/[userId]/patients/[patientId]/records/page.tsx
+// app/(protected)/alldoctors/[userId]/patients/[patientId]/records/page.tsx
 
-import { getDoctorPrescriptions, getDoctorReports } from '@/lib/actions/prescriptions.actions'
+import { getDoctorPrescriptions, getDoctorReports } from '@/lib/actions/records.actions'
 import { getDoctor } from '@/lib/actions/doctor.actions'
 import PatientRecordsClient from '@/components/ui/doctor/PatientRecordsClient'
 import { getPatientbyId } from '@/lib/actions/patient.actions'

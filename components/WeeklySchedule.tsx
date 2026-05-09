@@ -141,11 +141,15 @@ export default function WeeklyScheduleTable({
   const todayIndex   = today.getDay()
 
   // ── Slot state ─────────────────────────────────────────────────────────────
-  const [blocked, setBlocked] = useState<Record<string, string[]>>(() => parseSlots(blockedSlotsProp))
-  const [bookedSlots]         = useState<Record<string, string[]>>(() => parseSlots(bookedSlotsProp))
-
-  // Keep in sync if parent pushes new props (e.g. live updates)
-  useEffect(() => { setBlocked(parseSlots(blockedSlotsProp)) }, [blockedSlotsProp])
+  const [blocked,     setBlocked]     = useState<Record<string, string[]>>(() => parseSlots(blockedSlotsProp))
+  const [bookedSlots, setBookedSlots] = useState<Record<string, string[]>>(() => parseSlots(bookedSlotsProp))
+ 
+  // Keep BOTH in sync when parent pushes new props (live updates / post-booking)
+  // Previously only blocked had this effect — bookedSlots was const and never updated,
+  // so newly booked slots never turned blue after the initial mount.
+  useEffect(() => { setBlocked(parseSlots(blockedSlotsProp))    }, [blockedSlotsProp])
+  useEffect(() => { setBookedSlots(parseSlots(bookedSlotsProp)) }, [bookedSlotsProp])
+ 
 
   // Close picker on outside click
   useEffect(() => {

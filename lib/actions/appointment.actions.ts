@@ -3,7 +3,7 @@
 
 import { Appointment } from "@/types/appwrite";
 // import { InputFile } from "node-appwrite/file";
-import { APPOINTMENT_COLLECTION_ID, DATABASE_ID, getDatabases } from "../appwrite.config";
+import { APPOINTMENT_COLLECTION_ID, DATABASE_ID, DOCTOR_COLLECTION_ID, getDatabases } from "../appwrite.config";
 import { ID, Query } from "node-appwrite";
 import { revalidatePath } from "next/cache";
 import { parseStringify } from "../utils";
@@ -11,57 +11,101 @@ import { scheduleToSlotKey } from "@/lib/utils"
 import { getDoctorBookedSlots, updateDoctorBookedSlots } from "@/lib/actions/doctor.actions"
 
 
-export async function createAppointment(appointment: CreateAppointmentParams) {
+// lib/actions/appointment.actions.ts
+// Replace your createAppointment with this pattern to fix the race condition
+// and the SLOT_TAKEN check not working.
+
+// lib/actions/appointment.actions.ts
+// Replace your createAppointment with this pattern to fix the race condition
+// and the SLOT_TAKEN check not working.
+
+export const createAppointment = async (data: CreateAppointmentParams) => {
   const databases = getDatabases()
-  // ── 1. Check slot availability FIRST ──────────────────────
-  const doctor = await databases.listDocuments(
-    process.env.DATABASE_ID!,
-    process.env.DOCTOR_COLLECTION_ID!,
-    [Query.equal("name", appointment.primaryDoctor)]
-  )
 
-  if (doctor.documents.length === 0) throw new Error("Doctor not found")
+  // Keep a reference to whatever bookedSlots we managed to read,
+  // so the catch block can always return it and never wipe client state.
+  let lastKnownBookedSlots: Record<string, string[]> = {}
 
-  const doctorId = doctor.documents[0].$id
-  const { dateStr, timeStr } = scheduleToSlotKey(appointment.schedule)
-  const current = await getDoctorBookedSlots(doctorId)
-  const existing = current[dateStr] ?? []
-
-  if (existing.includes(timeStr)) {
-    return {
-      success: false,
-      error: "SLOT_TAKEN",
-      bookedSlots: current, // ← full updated slots map for UI
-    }
-  }
-
-  // ── 2. Mark slot as booked immediately ────────────────────
-  const updatedSlots = {
-    ...current,
-    [dateStr]: [...existing, timeStr],
-  }
-  await updateDoctorBookedSlots(doctorId, updatedSlots)
-
-  // ── 3. Now create the appointment ─────────────────────────
   try {
-    const newAppointment = await databases.createDocument(
-      process.env.DATABASE_ID!,
-      process.env.APPOINTMENT_COLLECTION_ID!,
-      ID.unique(),
-      appointment
+    // 1. Find the doctor document by name to get their $id
+    const doctorRes = await databases.listDocuments(
+      DATABASE_ID!,
+      DOCTOR_COLLECTION_ID!,
+      [Query.equal("name", data.primaryDoctor), Query.limit(1)]
     )
-    return {
-      success: true,
-      appointment: parseStringify(newAppointment),
-      bookedSlots: updatedSlots, // ← updated slots including this new booking
+    const doctorDoc = doctorRes.documents[0]
+    if (!doctorDoc) throw new Error("Doctor not found")
+
+    // 2. Read the LATEST bookedSlots fresh from DB (not from client cache)
+    const fresh = doctorDoc.bookedSlots
+    const bookedSlots: Record<string, string[]> = fresh
+      ? (() => { try { return JSON.parse(fresh) } catch { return {} } })()
+      : {}
+
+    lastKnownBookedSlots = bookedSlots  // save for catch
+
+    // 3. Build the date key in IST — must match toLocalDateStr on client
+    const scheduleDate = new Date(data.schedule)
+    const dateKey = scheduleDate.toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" })
+
+    // 4. Build the time string — must match the slot label exactly e.g. "11:00 AM"
+    //    en-IN gives "11:00 am" → uppercase + strip dots → "11:00 AM"
+    const timeKey = scheduleDate
+      .toLocaleTimeString("en-IN", {
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+        timeZone: "Asia/Kolkata",
+      })
+      .toUpperCase()
+      .replace(/\./g, "")
+      .trim()
+
+    // 5. SLOT_TAKEN guard — re-checked fresh from DB, not client cache
+    const slotsOnDay = bookedSlots[dateKey] ?? []
+    if (slotsOnDay.includes(timeKey)) {
+      return { success: false, error: "SLOT_TAKEN", bookedSlots }
     }
-  } catch (err) {
-    // ── 4. Rollback slot if appointment creation fails ───────
-    await updateDoctorBookedSlots(doctorId, {
-      ...current,
-      [dateStr]: existing.filter((t: string) => t !== timeStr),
-    })
-    throw err
+
+    // 6. Create the appointment document
+    const appointment = await databases.createDocument(
+      DATABASE_ID!,
+      APPOINTMENT_COLLECTION_ID!,
+      ID.unique(),
+      {
+        userId:        data.userId,
+        patient:       data.patient,
+        primaryDoctor: data.primaryDoctor,
+        schedule:      data.schedule,
+        reason:        data.reason,
+        note:          data.note,
+        status:        data.status,
+      }
+    )
+
+    // 7. Write the updated bookedSlots back atomically
+    const updatedSlots = {
+      ...bookedSlots,
+      [dateKey]: [...slotsOnDay, timeKey],
+    }
+    await databases.updateDocument(
+      DATABASE_ID!,
+      DOCTOR_COLLECTION_ID!,
+      doctorDoc.$id,
+      { bookedSlots: JSON.stringify(updatedSlots) }
+    )
+
+    revalidatePath(`/patients/${data.userId}/dashboard`)
+    revalidatePath(`/doctors/${doctorDoc.userId}/dashboard`)
+
+    // Always return bookedSlots so the modal can update its local state
+    return { success: true, appointment: parseStringify(appointment), bookedSlots: updatedSlots }
+
+  } catch (error) {
+    console.error("createAppointment error:", error)
+    // Return lastKnownBookedSlots (not undefined!) so setBookedSlots(result.bookedSlots)
+    // in the modal doesn't wipe out the displayed state and make all slots look free.
+    return { success: false, error: "UNKNOWN", bookedSlots: lastKnownBookedSlots }
   }
 }
 

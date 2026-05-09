@@ -1,4 +1,4 @@
-// app/(protected)/doctors/[userId]/register/RegisterFormDoctor.tsx
+// app/(protected)/alldoctors/[userId]/register/RegisterFormDoctor.tsx
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
@@ -139,7 +139,7 @@ export const RegisterFormDoctor = ({ user, doctor }: {
       }
       const result = await registerDoctor(doctorData as unknown as RegisterDoctorParams)
       if (result) {
-        router.push(`/doctors/${user?.$id}/work-space`)
+        router.push(`/alldoctors/${user?.$id}/work-space`)
       } else {
         throw new Error('Doctor registration failed')
       }

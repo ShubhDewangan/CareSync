@@ -7,7 +7,7 @@ import {
   getPrescriptionByAppointment,
   updatePrescription,
   uploadMedicalReport,
-} from "@/lib/actions/prescriptions.actions"
+} from "@/lib/actions/records.actions"
 import Image from "next/image"
 import Link from "next/link"
 

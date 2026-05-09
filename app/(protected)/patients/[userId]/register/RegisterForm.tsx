@@ -322,7 +322,7 @@ export const RegisterForm = ({ user, patient, doctors }: {
                   <SelectItem key={doctor.name} value={doctor.name} className="w-full">
                     <div className="flex cursor-pointer items-center gap-5 ml-2">
                       <Image
-                        src={doctor.profilePic}
+                        src={doctor.profilePic || '/assets/images/user_default.webp'}
                         width={32}
                         height={32}
                         alt={doctor.name}
