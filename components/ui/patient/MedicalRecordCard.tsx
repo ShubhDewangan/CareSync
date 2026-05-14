@@ -1,5 +1,6 @@
 "use client"
 
+import Image from "next/image"
 import { useState } from "react"
 
 interface MedicalRecordCardProps {
@@ -114,7 +115,7 @@ export default function MedicalRecordCard({
             />
           ) : type === "image" && imageUrl ? (
             <div className="flex flex-col items-center gap-3">
-              <img
+              <Image
                 src={imageUrl}
                 alt="Prescription"
                 className="max-w-full rounded-lg border border-gray-200 object-contain"

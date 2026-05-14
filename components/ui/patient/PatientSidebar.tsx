@@ -7,6 +7,7 @@ import Image from "next/image"
 import Link from "next/link"
 import EditDetailsModal from "@/components/ui/EditDetailsModal"
 import BookAppointmentModal from "@/components/ui/BookAppointmentModal"
+import DashboardBookButton from "../DashboardBookButton"
 
 interface PatientSidebarProps {
   patient: any
@@ -57,17 +58,17 @@ export default function PatientSidebar({
       href: `/patients/${userId}/dashboard`,
       key: "overview",
     },
-    {
-      icon: (
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-          <rect x="3" y="4" width="18" height="18" rx="2"/>
-          <path d="M16 2v4M8 2v4M3 10h18"/>
-        </svg>
-      ),
-      label: "Appointments",
-      href: `/patients/${userId}/appointments`,
-      key: "appointments",
-    },
+    // {
+    //   icon: (
+    //     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+    //       <rect x="3" y="4" width="18" height="18" rx="2"/>
+    //       <path d="M16 2v4M8 2v4M3 10h18"/>
+    //     </svg>
+    //   ),
+    //   label: "Appointments",
+    //   href: `/patients/${userId}/appointments`,
+    //   key: "appointments",
+    // },
     {
       icon: (
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
@@ -165,18 +166,18 @@ export default function PatientSidebar({
       </div>
 
       {/* ── Book Appointment — uses BookAppointmentModal directly, no doctor required ── */}
-      <div className="mb-3 shrink-0" onClick={() => onClose?.()}>
-        <BookAppointmentModal
+      {/* <div className="mb-3 shrink-0" onClick={() => onClose?.()}>
+        <DashboardBookButton
           variant="sidebar"
           text="Book Appointment"
-          DateToday={new Date().toLocaleDateString(undefined, { timeZone: "Asia/Kolkata" })}
+          dateToday={new Date().toLocaleDateString(undefined, { timeZone: "Asia/Kolkata" }) as string}
           userId={userId}
           patientId={patient.$id}
           authUser={authUser}
           fullUser={patient}
           // no doctor prop → modal opens at step 0 (doctor picker)
         />
-      </div>
+      </div> */}
 
       {/* ── Quick Stats ── */}
       <div className="grid grid-cols-2 gap-2 mb-3 shrink-0">
@@ -268,7 +269,7 @@ export default function PatientSidebar({
       {/* ── Hamburger — mobile only ── */}
       <button
         onClick={() => setOpen(true)}
-        className="lg:hidden w-8 h-8 flex items-center justify-center rounded-xl bg-[#e2ddd3] hover:bg-[#d8d3c9] text-[#1a2535] transition-colors shrink-0"
+        className="lg:hidden w-8 h-8 flex items-center justify-center rounded-xl bg-[#e2ddd375] hover:bg-[#d8d3c9] text-[#1a2535] transition-colors shrink-0"
         aria-label="Open menu"
       >
         <Image src='/assets/icons/hamburger.svg' alt='sidebar' width={40} height={40} className="h-6 w-6" />
@@ -291,7 +292,7 @@ export default function PatientSidebar({
       </div>
 
       {/* ── Desktop fixed sidebar ── */}
-      <aside className="hidden lg:flex flex-col fixed left-4 top-[69px] bottom-4 w-[248px] xl:w-[260px] z-20 bg-[#EFECE3] rounded-2xl border border-[#d8d4c8] shadow-lg p-4">
+      <aside className="hidden lg:flex flex-col fixed flex-1 left-4 w-[248px] xl:w-[260px] z-20 bg-[#EFECE3] rounded-2xl border border-[#d8d4c8] shadow-lg p-4">
         <SidebarInner />
       </aside>
     </>

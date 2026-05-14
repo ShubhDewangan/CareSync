@@ -1,66 +1,66 @@
-/* eslint-disable react-hooks/rules-of-hooks */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-// app/not-found.tsx
 'use client'
 
-import { AuthUser, FullUser } from "@/context/UserContext"
+import { AuthUser } from "@/context/UserContext"
 import { getPatient } from "@/lib/actions/patient.actions"
+import { Patient } from "@/types/appwrite"
 import Image from "next/image"
 import Link from "next/link"
 import { useEffect, useState } from "react"
 
-
-
 export default function NotFound() {
-  const navLinksPatient = [
-    { href: "/alldoctors", label: "Find Doctors" },
-    { href: "/appointments", label: "Appointments" },
-  ]
-  
   const [authUser, setAuthUser] = useState<AuthUser | null>(null)
-  const [patient, setPatient] = useState<FullUser>(null)
-  
-  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const [patient, setPatient] = useState<Patient | null>(null)
+
   useEffect(() => {
-  async function checkSession() {
-    try {
-      const controller = new AbortController()
+    async function checkSession() {
+      try {
+        const controller = new AbortController()
         const timeout = setTimeout(() => controller.abort(), 5000)
-      const res = await fetch('/api/user', { signal: controller.signal })
+        const res = await fetch('/api/user', { signal: controller.signal })
         clearTimeout(timeout)
 
-      const data = await res.json()
-      setAuthUser(data ?? null)
-      const p = await getPatient(authUser?.$id as string)
-      setPatient(p as any)
-    } catch {
-      setAuthUser(null)
-    }
-  }
-  checkSession()
-})
+        const data = await res.json()
+        setAuthUser(data ?? null)
 
+        // ✅ Use `data` directly, not stale `authUser` state
+        if (data?.$id) {
+          const p = await getPatient(data.$id)
+          setPatient(p as Patient)
+        }
+      } catch {
+        setAuthUser(null)
+      }
+    }
+    checkSession()
+  }, []) // ✅ Empty array — run once on mount
+
+  const navLinksPatient = patient
+    ? [
+        { href: "/alldoctors", label: "Find Doctors" },
+        { href: `/patients/${patient.userId}/Dashboard`, label: "Dashboard" },
+      ]
+    : []
 
   const navLinksDoctor = [
-    { href: `/patients/${authUser?.$id}/work-space`, label: 'Work Space' }
+    { href: `/doctors/${authUser?.$id}/work-space`, label: "Work Space" },
   ]
 
+  const mobileLinks =
+    authUser?.userType === "patient" ? navLinksPatient : navLinksDoctor
 
   return (
     <div className="flex h-screen w-screen bg-[#EFECE3] overflow-hidden">
 
-      {/* ── Sidebar ── */}
+      {/* Sidebar */}
       <aside className="hidden lg:flex py-5 px-4 w-[260px] min-w-[260px] flex-col flex-shrink-0">
         <div className="rounded-2xl flex flex-col border border-[#203C67] bg-[#EFECE3] shadow-md overflow-hidden h-full">
 
-          {/* Logo */}
           <div className="w-full flex justify-center pt-4 pb-3 border-b border-[#203C6720]">
             <Link href="/">
               <Image src="/logo.png" alt="CareSync" height={1000} width={1000} className="h-14 w-fit" />
             </Link>
           </div>
 
-          {/* Message */}
           <div className="px-5 pt-6 pb-4 border-b border-[#203C6720]">
             <p className="text-[11px] uppercase tracking-widest text-gray-400 mb-2">Navigation</p>
             <p className="text-[13px] text-[#203C67]/70 leading-relaxed">
@@ -68,7 +68,6 @@ export default function NotFound() {
             </p>
           </div>
 
-          {/* Nav links */}
           <div className="px-4 py-4 flex flex-col gap-2">
             {navLinksPatient.map((link) => (
               <Link
@@ -81,7 +80,6 @@ export default function NotFound() {
             ))}
           </div>
 
-          {/* Go back button */}
           <div className="px-4 pb-4 mt-auto">
             <Link
               href="/"
@@ -93,11 +91,10 @@ export default function NotFound() {
         </div>
       </aside>
 
-      {/* ── Main content ── */}
+      {/* Main content */}
       <main className="flex-1 flex flex-col items-center justify-center px-6 py-10 overflow-hidden relative">
-
-        {/* Dot matrix 404 */}
         <div className="w-full max-w-2xl">
+          {/* SVG 404 — unchanged */}
           <svg
             viewBox="0 0 680 280"
             width="100%"
@@ -148,7 +145,6 @@ export default function NotFound() {
             ))}
           </svg>
 
-          {/* Text */}
           <div className="flex flex-col gap-4">
             <h1 className="text-[28px] sm:text-[36px] font-semibold text-[#203C67] leading-tight">
               We couldn&apos;t find the page<br className="hidden sm:block" /> you were looking for.
@@ -157,17 +153,10 @@ export default function NotFound() {
               The page may have been moved, deleted, or the URL might be incorrect.
             </p>
 
-            {/* Mobile nav links */}
+            {/* Mobile links */}
             <div className="flex flex-wrap gap-3 mt-2 lg:hidden">
-              {patient?.userType === 'patient' ? navLinksPatient.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#D8E4F0] hover:bg-[#c3d4e8] text-[#203C67] text-[13px] font-medium transition-colors"
-                >
-                  {link.label}
-                </Link>
-              )): navLinksDoctor.map((link) => (
+              {/* ✅ Always an array now, no null crash */}
+              {mobileLinks.map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}

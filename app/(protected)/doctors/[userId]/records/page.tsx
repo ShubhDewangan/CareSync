@@ -1,30 +1,39 @@
-// /* eslint-disable @typescript-eslint/no-explicit-any */
-// // app/(protected)/alldoctors/[userId]/records/page.tsx
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { getDoctorPrescriptions, getDoctorReports } from '@/lib/actions/records.actions'
+import { getDoctor, getDoctorById } from '@/lib/actions/doctor.actions'
+import PatientRecordsClient from '@/components/ui/doctor/PatientRecordsClient'
 
-// import { getDoctorPrescriptions, getDoctorReports } from '@/lib/actions/records.actions'
-// import { getDoctor } from '@/lib/actions/doctor.actions'
-// import PatientRecordsClient from '@/components/ui/doctor/PatientRecordsClient'
+interface Props {
+  params: Promise<{ userId: string }>
+}
 
-// interface Props {
-//   params: Promise<{ userId: string }>
-// }
+export default async function PatientRecordsPage({ params }: Props) {
+  const { userId } = await params
+  console.log(userId)
 
-// export default async function PatientRecordsPage({ params }: Props) {
-//   const { userId } = await params
+  // userId in URL = doctor document $id
+  const doctor = await getDoctor(userId)
 
-//   const doctor = await getDoctor(userId)
-//   const doctorId = doctor?.$id
+  if (!doctor) {
+    return (
+      <div className="min-h-screen bg-[#EFECE3] flex items-center justify-center">
+        <p className="text-red-500 text-[14px] font-medium">Doctor not found.</p>
+      </div>
+    )
+  }
 
-//   const prescriptions = await getDoctorPrescriptions(doctorId as string)
-//   const reports = await getDoctorReports(doctorId as string)
+  const doctorId = doctor.$id
+    
+  const prescriptions = await getDoctorPrescriptions(doctorId)
+  const reports = await getDoctorReports(doctorId)
 
-//   return (
-//     <PatientRecordsClient
-//       doctor={doctor as any}
-//       doctorId={doctorId as string}
-//       userId={userId}
-//       prescriptions={prescriptions as any}
-//       reports={reports as any}
-//     />
-//   )
-// }
+  return (
+    <PatientRecordsClient
+      doctor={doctor as any}
+      doctorId={doctorId}
+      userId={userId}
+      prescriptions={prescriptions as any}
+      reports={reports as any}
+    />
+  )
+}

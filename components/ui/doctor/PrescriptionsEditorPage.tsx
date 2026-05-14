@@ -277,7 +277,7 @@ export default function PrescriptionEditorPage(props: PrescriptionPageProps) {
             </span>
           )}
           <Link
-            href={`/doctors/${doctorId}/patients/${patientId}/records`}
+            href={`/doctors/${doctorId}/records`}
             className="flex items-center gap-1.5 text-[12px] font-medium px-3 py-1.5 rounded-xl border border-[#d4cfc6] text-[#5a6a7e] hover:border-[#8FABD4] hover:text-[#203C67] bg-white transition-colors"
           >
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

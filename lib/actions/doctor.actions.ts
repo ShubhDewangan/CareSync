@@ -119,11 +119,12 @@ export const getDoctor = async (userId: string) => {
   try {
     const doctors = await databases.listDocuments(
       DATABASE_ID!,
-      DOCTOR_COLLECTION_ID,
+      DOCTOR_COLLECTION_ID!,
       [Query.equal('userId', userId)]
     )
 
     const d = doctors.documents[0]
+    console.log(userId, doctors)
     if (!d) return null
 
     return {
@@ -160,6 +161,21 @@ export const getDoctor = async (userId: string) => {
     }
   } catch (error) {
     console.log("getDoctor error:", error)
+    return null
+  }
+}
+
+export const getDoctorById = async (doctorId: string) => {
+  const databases = getDatabases()
+  try {
+    const doc = await databases.getDocument(
+      DATABASE_ID!,
+      DOCTOR_COLLECTION_ID!,
+      doctorId
+    )
+    return doc ? JSON.parse(JSON.stringify(doc)) : null
+  } catch (error) {
+    console.error('getDoctorById error:', error)
     return null
   }
 }

@@ -71,6 +71,14 @@ function reportTypeIcon(type: string) {
   }
 }
 
+const STATUS_PRIORITY: Record<string, number> = {
+  "scheduled":           0,
+  "pending":             1,
+  "Completed":           2,
+  "cancelled":           3,
+  "Appointment Expired": 4,
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default async function PatientDashboardPage({
@@ -87,11 +95,9 @@ export default async function PatientDashboardPage({
   const patient = await getPatient(userId)
   if (!patient) redirect(`/patients/${userId}/register`)
 
-  const [appointmentData, rawPrescriptions, medicalReports] = await Promise.all([
-    recentAppointments(),
-    getPatientsPrescriptions(patient.$id),
-    getPatientReports(patient.$id),
-  ])
+  const appointmentData = await recentAppointments()
+  const rawPrescriptions = await getPatientsPrescriptions(patient.$id)
+  const medicalReports = await getPatientReports(patient.$id)
 
   const appointments: Appointment[] =
     ((appointmentData?.documents as unknown as Appointment[]) ?? [])
@@ -99,6 +105,8 @@ export default async function PatientDashboardPage({
       .sort((a, b) => new Date(a.schedule).getTime() - new Date(b.schedule).getTime())
 
   const now = new Date()
+
+  const allAppointmentsSorted = sortAppointments(appointments)
 
   const upcomingAppointments = appointments.filter(
     (a) => a.status === "scheduled" || a.status === "pending"
@@ -108,9 +116,16 @@ export default async function PatientDashboardPage({
     new Map(appointments.map((a) => [a.primaryDoctor, a.primaryDoctor])).values()
   )
 
-  const recentActivity = [...appointments]
-    .sort((a, b) => new Date(b.schedule).getTime() - new Date(a.schedule).getTime())
-    .slice(0, 5)
+  function sortAppointments(list: Appointment[]) {
+  return [...list].sort((a, b) => {
+    const pa = STATUS_PRIORITY[a.status] ?? 5
+    const pb = STATUS_PRIORITY[b.status] ?? 5
+    if (pa !== pb) return pa - pb
+    return new Date(a.schedule).getTime() - new Date(b.schedule).getTime()
+  })
+}
+
+  const recentActivity = sortAppointments(appointments).slice(0, 5)
 
   const stats = {
     upcoming:       upcomingAppointments.length,
@@ -148,8 +163,8 @@ export default async function PatientDashboardPage({
   const greeting = getGreeting()
 
   return (
-    <div className="min-h-screen bg-[#EFECE3] flex flex-col">
-      <div className='p-4 fixed z-50'>
+    <div className="h-screen bg-[#EFECE3] flex flex-col remove-scrollbar">
+      <div className='right-0 p-4 fixed z-50'>
         <PatientSidebar
         patient={patient}
         userId={userId}
@@ -162,14 +177,13 @@ export default async function PatientDashboardPage({
       </div>
 
       {/* ── Top Nav ── */}
-      <header className="sticky top-0 z-30 bg-[#EFECE3]/90 backdrop-blur-md border-b border-[#d8d4c8] px-4 py-3 flex items-center justify-center gap-3">
+      {/* <header className="sticky top-0 z-30 bg-[#EFECE3]/90 backdrop-blur-md border-b border-[#d8d4c8] px-4 py-3 flex items-center justify-center gap-3">
         
 
         <nav className="flex items-center gap-1 bg-[#e2ddd3] rounded-xl p-1">
           {[
             { label: "Dashboard",    href: `/patients/${userId}/dashboard`, active: true },
             { label: "Appointments", href: `/patients/${userId}/appointments` },
-            { label: "Doctors",      href: "/doctors" },
             { label: "Records",      href: `/patients/${userId}/records` },
           ].map((item) => (
             <Link
@@ -185,7 +199,7 @@ export default async function PatientDashboardPage({
             </Link>
           ))}
         </nav>
-      </header>
+      </header> */}
 
       {/* ── PatientSidebar — handles both mobile drawer & desktop fixed panel ── */}
       
@@ -194,10 +208,10 @@ export default async function PatientDashboardPage({
       <div className="flex flex-1">
 
         {/* Desktop spacer — matches sidebar width so main content doesn't go under it */}
-        <div className="hidden lg:block w-[264px] xl:w-[276px] shrink-0" />
+        <div className="hidden lg:block w-[264px] xl:w-[276px] shrink-0 bg-[#EFECE3]" />
 
         {/* ── Main Content ── */}
-        <main className="flex-1 min-w-0 p-4 sm:p-6 flex flex-col gap-5">
+        <main className="flex-1 bg-[#EFECE3] min-w-0 p-4 sm:p-6 flex flex-col gap-5 overflow-y-auto remove-scrollbar">
 
           {/* Greeting */}
           <div>
@@ -233,25 +247,24 @@ export default async function PatientDashboardPage({
             <div className="lg:col-span-3 bg-white rounded-2xl border border-[#e8e4da] shadow-sm p-5">
               <div className="flex justify-between items-center mb-4">
                 <div>
-                  <h3 className="font-semibold text-[15px] text-gray-800">Upcoming Appointments</h3>
-                  <p className="text-[11px] text-gray-400 mt-0.5">confirmed &amp; pending</p>
+                  <h3 className="font-semibold text-[15px] text-gray-800">All Appointments</h3>
+                  <p className="text-[11px] text-gray-400 mt-0.5">scheduled · pending · completed · cancelled · expired</p>
                 </div>
-                <Link href={`/patients/${userId}/appointments`} className="text-[12px] text-[#185FA5] hover:underline">
-                  View all
-                </Link>
+
+                <span className='text-[9px] text-gray-500'>scroll to see through</span>
               </div>
 
-              {upcomingAppointments.length === 0 ? (
+              {allAppointmentsSorted.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-10 gap-2">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-gray-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
-                  <p className="text-[13px] text-gray-400">No upcoming appointments</p>
+                  <p className="text-[13px] text-gray-400">No appointments yet</p>
                   <DashboardBookButton variant='ghost' text='Book one now →' userId={userId} patientId={patient.$id} doctorName={patient.primaryDoctor} dateToday={new Date().toLocaleDateString(undefined, { timeZone: "Asia/Kolkata" })} authUser={authUser} fullUser={patient} />
                 </div>
               ) : (
-                <div className="flex flex-col gap-2.5">
-                  {upcomingAppointments.slice(0, 5).map((a, i) => {
+                <div className="flex flex-col gap-2.5 max-h-[340px] overflow-y-auto pr-1 remove-scrollbar">
+                  {allAppointmentsSorted.map((a, i) => {
                     const initials = a.primaryDoctor
                       .replace(/^Dr\.?\s*/i, '')
                       .split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase()
@@ -315,12 +328,13 @@ export default async function PatientDashboardPage({
                             {lastStatus || '—'}
                           </span>
                         </div>
-                        <div className="pl-10">
+                        <div className="flex gap-2 justify-between items-center px-10">
                           <DashboardBookButton
                             userId={userId} patientId={patient.$id} doctorName={doctorName}
                             dateToday={new Date().toLocaleDateString(undefined, { timeZone: "Asia/Kolkata" })}
                             variant='ghost' text='Book appointment →' authUser={authUser} fullUser={patient}
                           />
+                          <Link className='text-[10px] text-gray-700' href={`/doctor/${doctorName}`}>view {doctorName}&apos;s profile</Link>
                         </div>
                       </div>
                     )

@@ -276,7 +276,7 @@ export const deletePrescription = async (prescriptionId: string, doctorId: strin
 
   try {
     await databases.deleteDocument(DATABASE_ID!, PRESCRIPTION_COLLECTION_ID, prescriptionId)
-    revalidatePath(`/doctors/${doctorId}/patients/${patientId}/records`)
+    revalidatePath(`/doctors/${doctorId}/records`)
     revalidatePath(`/patients/${patientId}/records`)
     return { success: true }
   } catch (error) {
@@ -371,7 +371,7 @@ export const getPatientReports = async (patientId: string) => {
       Query.orderDesc('$createdAt'),
       Query.limit(50),
     ])
-    return res.documents.map((doc: any) => parseStringify(doc))
+    return res.documents.map((doc) => parseStringify(doc))
   } catch (error) {
     console.error('getPatientReports error:', error)
     return []
@@ -391,7 +391,7 @@ const storage = getStorage()
       storage.deleteFile(BUCKET_ID!, fileId),
       databases.deleteDocument(DATABASE_ID!, MEDICAL_REPORT_COLLECTION_ID, reportId),
     ])
-    revalidatePath(`/doctors/${doctorId}/patients/${patientId}/records`)
+    revalidatePath(`/doctors/${doctorId}/records`)
     revalidatePath(`/patients/${patientId}/records`)
     return { success: true }
   } catch (error) {

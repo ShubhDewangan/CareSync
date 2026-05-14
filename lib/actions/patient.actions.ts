@@ -81,60 +81,23 @@ export const getPatient = async (userId: string) => {
     return null
   }
 }
-export const getPatientbyId = async (id: string) => {
+// ── Add this to doctor.actions.ts ─────────────────────────────────────────────
+// Fetches a doctor directly by their Appwrite document $id (used when $id is
+// the URL param, e.g. /doctors/[userId]/records)
+export const getPatientById = async (patientId: string) => {
   const databases = getDatabases()
   try {
-    const patients = await databases.listDocuments(
+    const p = await databases.getDocument(
       DATABASE_ID!,
       PATIENT_COLLECTION_ID!,
-      [Query.equal('$id', id)]
+      patientId
     )
-
-    const p = patients.documents[0]
-    if (!p) return null
-
-    // console.log(p.profilePic)
-    // console.log(p.identificationDocumentUrl)
-    // console.log(p)
-
-    return {
-      $id: p.$id,
-      userId: p.userId,
-      name: p.name,
-      email: p.email,
-      phone: p.phone,
-      profilePic: p.profilePic,
-      primaryDoctor: p?.primaryDoctor,
-      birthDate: p?.birthDate,
-      gender: p?.gender,
-      address: p?.address,
-      occupation: p?.occupation,
-      insuranceProvider: p?.insuranceProvider,
-      insurancePolicyNumber: p?.insurancePolicyNumber,
-      emergencyContactName: p?.emergencyContactName,
-      emergencyContactNumber: p?.emergencyContactNumber,
-      bloodGroup: p?.bloodGroup,
-      height: p?.height,
-      weight: p?.weight,
-      privacyConsent: p?.privacyConsent,
-      treatmentConsent: p?.treatmentConsent,
-      disclosureConsent: p?.disclosureConsent,
-      pastMedicalHistory: p?.pastMedicalHistory,
-      familyMedicalHistory: p?.familyMedicalHistory,
-      identificationType: p?.identificationType,
-      identificationDocumentationId: p?.identificationDocumentationId,
-      identificationDocument: p?.identificationDocument,
-      allergies: p?.allergies,
-      currentMedication: p?.currentMedication,
-      registrationComplete: true,
-    }
+    return p ? JSON.parse(JSON.stringify(p)) : null
   } catch (error) {
-    console.log("getPatient error:", error)
-    // console.log('nothing')
+    console.error('getPatientbyId error:', error)
     return null
   }
 }
-
 // ============================
 // 🩺 GET DOCTOR
 // ============================
