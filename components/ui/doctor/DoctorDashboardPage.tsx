@@ -9,7 +9,6 @@ import DashboardTab from "./DashboardTab"
 import ScheduleTab from "./ScheduleTab"
 import SettingsTab from "./SettingTab"
 import { Doctor } from "@/types/appwrite"
-import PatientsTab from "./PatientsTab"
 
 type Tab = "dashboard" | "schedule" | "patients" | "settings"
 
@@ -50,7 +49,6 @@ export default function DoctorDashboardClient({
   const tabs: { key: Tab; label: string; }[] = [
     { key: "dashboard", label: "Dashboard" },
     { key: "schedule",  label: "Schedule" },
-    { key: "patients",  label: "Patients" },
     { key: "settings",  label: "Settings" },
   ]
 
@@ -214,9 +212,6 @@ export default function DoctorDashboardClient({
 
         {/* Tab content */}
         <div className="flex-1 flex flex-col gap-4 min-h-0 overflow-hidden">
-          {activeTab === "patients" && (
-            <PatientsTab doctorId={doctor.$id} userId={user.$id} doctorName={doctor.name} />
-          )}
           {activeTab === "dashboard" && (
             <DashboardTab
               doctor={doctor as any}

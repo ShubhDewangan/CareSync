@@ -1,13 +1,50 @@
+/* eslint-disable react-hooks/rules-of-hooks */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // app/not-found.tsx
+'use client'
+
+import { AuthUser, FullUser } from "@/context/UserContext"
+import { getPatient } from "@/lib/actions/patient.actions"
 import Image from "next/image"
 import Link from "next/link"
+import { useEffect, useState } from "react"
+
+
 
 export default function NotFound() {
-  const navLinks = [
-    { href: "/", label: "Home", icon: "🏠" },
-    { href: "/alldoctors", label: "Find Doctors", icon: "🩺" },
-    { href: "/appointments", label: "Appointments", icon: "📅" },
+  const navLinksPatient = [
+    { href: "/alldoctors", label: "Find Doctors" },
+    { href: "/appointments", label: "Appointments" },
   ]
+  
+  const [authUser, setAuthUser] = useState<AuthUser | null>(null)
+  const [patient, setPatient] = useState<FullUser>(null)
+  
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  useEffect(() => {
+  async function checkSession() {
+    try {
+      const controller = new AbortController()
+        const timeout = setTimeout(() => controller.abort(), 5000)
+      const res = await fetch('/api/user', { signal: controller.signal })
+        clearTimeout(timeout)
+
+      const data = await res.json()
+      setAuthUser(data ?? null)
+      const p = await getPatient(authUser?.$id as string)
+      setPatient(p as any)
+    } catch {
+      setAuthUser(null)
+    }
+  }
+  checkSession()
+})
+
+
+  const navLinksDoctor = [
+    { href: `/patients/${authUser?.$id}/work-space`, label: 'Work Space' }
+  ]
+
 
   return (
     <div className="flex h-screen w-screen bg-[#EFECE3] overflow-hidden">
@@ -33,13 +70,12 @@ export default function NotFound() {
 
           {/* Nav links */}
           <div className="px-4 py-4 flex flex-col gap-2">
-            {navLinks.map((link) => (
+            {navLinksPatient.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
                 className="flex items-center gap-3 px-4 py-3 rounded-xl bg-[#D8E4F0] hover:bg-[#c3d4e8] text-[#203C67] text-[13px] font-medium transition-colors"
               >
-                <span>{link.icon}</span>
                 {link.label}
               </Link>
             ))}
@@ -123,13 +159,20 @@ export default function NotFound() {
 
             {/* Mobile nav links */}
             <div className="flex flex-wrap gap-3 mt-2 lg:hidden">
-              {navLinks.map((link) => (
+              {patient?.userType === 'patient' ? navLinksPatient.map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}
                   className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#D8E4F0] hover:bg-[#c3d4e8] text-[#203C67] text-[13px] font-medium transition-colors"
                 >
-                  <span>{link.icon}</span>
+                  {link.label}
+                </Link>
+              )): navLinksDoctor.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#D8E4F0] hover:bg-[#c3d4e8] text-[#203C67] text-[13px] font-medium transition-colors"
+                >
                   {link.label}
                 </Link>
               ))}
