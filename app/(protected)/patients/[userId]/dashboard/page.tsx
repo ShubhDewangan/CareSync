@@ -328,7 +328,7 @@ export default async function PatientDashboardPage({
                             {lastStatus || '—'}
                           </span>
                         </div>
-                        <div className="flex gap-2 justify-between items-center px-10">
+                        <div className="flex gap-2 justify-between items-center px-5">
                           <DashboardBookButton
                             userId={userId} patientId={patient.$id} doctorName={doctorName}
                             dateToday={new Date().toLocaleDateString(undefined, { timeZone: "Asia/Kolkata" })}
