@@ -1,4 +1,5 @@
 // app/(protected)/patients/[userId]/dashboard/page.tsx
+// Navigation moved to top nav bar (Records-page style). Sidebar no longer contains nav.
 import { getLoggedInUser } from "@/lib/actions/auth.actions"
 import { getPatient } from "@/lib/actions/patient.actions"
 import { redirect } from "next/navigation"
@@ -8,7 +9,6 @@ import { recentAppointments } from "@/lib/actions/appointment.actions"
 import { getPatientsPrescriptions, getPatientReports } from "@/lib/actions/records.actions"
 import { Appointment } from "@/types/appwrite"
 import PatientSidebar from "@/components/ui/patient/PatientSidebar"
-import Image from 'next/image'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -51,32 +51,12 @@ function statusStyle(status: string) {
   }
 }
 
-function reportTypeStyle(type: string) {
-  switch (type) {
-    case "lab":       return "bg-[#dde8f5] text-[#203C67] border border-[#c8d8ea]"
-    case "imaging":   return "bg-[#e6f4ea] text-[#2d6b3f] border border-[#b8d4c0]"
-    case "discharge": return "bg-[#fef6e4] text-[#92400e] border border-[#fcd89a]"
-    case "referral":  return "bg-[#f3e8ff] text-[#7e22ce] border border-[#d8b4fe]"
-    default:          return "bg-[#f7f4ef] text-[#5a6a7e] border border-[#d4cfc6]"
-  }
-}
-
-function reportTypeIcon(type: string) {
-  switch (type) {
-    case "lab":       return "🧪"
-    case "imaging":   return "🩻"
-    case "discharge": return "🏥"
-    case "referral":  return "📋"
-    default:          return "📄"
-  }
-}
-
 const STATUS_PRIORITY: Record<string, number> = {
   "scheduled":           0,
   "pending":             1,
-  "Completed":           2,
+  "completed":           2,
   "cancelled":           3,
-  "Appointment Expired": 4,
+  "expired":             4,
 }
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
@@ -106,26 +86,27 @@ export default async function PatientDashboardPage({
 
   const now = new Date()
 
-  const allAppointmentsSorted = sortAppointments(appointments)
+  function sortAppointments(list: Appointment[]) {
+    return [...list].sort((a, b) => {
+      const pa = STATUS_PRIORITY[a.status] ?? 5
+      const pb = STATUS_PRIORITY[b.status] ?? 5
+      if (pa !== pb) return pa - pb
+      return new Date(a.schedule).getTime() - new Date(b.schedule).getTime()
+    })
+  }
 
+  const allAppointmentsSorted = sortAppointments(appointments)
   const upcomingAppointments = appointments.filter(
     (a) => a.status === "scheduled" || a.status === "pending"
   )
-
   const myDoctors = Array.from(
     new Map(appointments.map((a) => [a.primaryDoctor, a.primaryDoctor])).values()
   )
-
-  function sortAppointments(list: Appointment[]) {
-  return [...list].sort((a, b) => {
-    const pa = STATUS_PRIORITY[a.status] ?? 5
-    const pb = STATUS_PRIORITY[b.status] ?? 5
-    if (pa !== pb) return pa - pb
-    return new Date(a.schedule).getTime() - new Date(b.schedule).getTime()
-  })
-}
-
-  const recentActivity = sortAppointments(appointments).slice(0, 5)
+  const recentActivity = sortAppointments(appointments).slice(0, 5).map((a) => ({
+    text: `${a.primaryDoctor} — ${a.status}`,
+    time: `${new Date(a.schedule).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', timeZone: 'Asia/Kolkata' })}`,
+    color: a.status === "scheduled" ? "bg-green-400" : a.status === "cancelled" ? "bg-red-400" : a.status === "completed" ? "bg-blue-400" : "bg-yellow-400",
+  }))
 
   const stats = {
     upcoming:       upcomingAppointments.length,
@@ -156,16 +137,13 @@ export default async function PatientDashboardPage({
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const reports: any[] = medicalReports ?? []
-  const recentReports = [...reports]
-    .sort((a, b) => new Date(b.$createdAt).getTime() - new Date(a.$createdAt).getTime())
-    .slice(0, 3)
-
   const greeting = getGreeting()
 
   return (
-    <div className="h-screen bg-[#EFECE3] flex flex-col remove-scrollbar">
-      <div className='right-0 p-4 fixed z-50'>
-        <PatientSidebar
+    <div className="h-screen bg-[#EFECE3] flex flex-col overflow-hidden">
+
+      {/* ── PatientSidebar (fixed desktop, drawer mobile) ── */}
+      <PatientSidebar
         patient={patient}
         userId={userId}
         authUser={authUser}
@@ -174,49 +152,44 @@ export default async function PatientDashboardPage({
         recentActivity={recentActivity}
         activeNav="overview"
       />
-      </div>
 
-      {/* ── Top Nav ── */}
-      {/* <header className="sticky top-0 z-30 bg-[#EFECE3]/90 backdrop-blur-md border-b border-[#d8d4c8] px-4 py-3 flex items-center justify-center gap-3">
-        
+      {/* ── Main area (offset by sidebar on desktop) ── */}
+      <div className="flex flex-col flex-1 lg:pl-[264px] xl:pl-[276px] overflow-hidden">
 
-        <nav className="flex items-center gap-1 bg-[#e2ddd3] rounded-xl p-1">
-          {[
-            { label: "Dashboard",    href: `/patients/${userId}/dashboard`, active: true },
-            { label: "Appointments", href: `/patients/${userId}/appointments` },
-            { label: "Records",      href: `/patients/${userId}/records` },
-          ].map((item) => (
-            <Link
-              key={item.label}
-              href={item.href}
-              className={`px-3 sm:px-5 py-1.5 rounded-lg text-[13px] font-medium transition-all whitespace-nowrap
-                ${item.active
-                  ? "bg-[#203C67] text-white shadow-sm"
-                  : "text-gray-600 hover:bg-[#d0ccc2]"
+        {/* ── Top Nav Bar (like Records page) ── */}
+        <header className="sticky top-0 z-30 bg-[#EFECE3]/90 backdrop-blur-md border-b border-[#d8d4c8] px-4 py-3 flex items-center justify-center">
+          {/* mobile left spacer for hamburger button */}
+          <div className="lg:hidden absolute left-14" />
+
+          <nav className="flex items-center gap-1 bg-[#e2ddd3] rounded-xl p-1">
+            {[
+              { label: "Homepage",     href: `/`,                             active: false },
+              { label: "Dashboard",    href: `/patients/${userId}/dashboard`, active: true  },
+              { label: "Records",      href: `/patients/${userId}/records`,   active: false },
+              { label: "Find Doctors", href: `/alldoctors`,                   active: false },
+            ].map((item) => (
+              <Link
+                key={item.label}
+                href={item.href}
+                className={`px-3 sm:px-4 py-1.5 rounded-lg text-[12px] sm:text-[13px] font-medium transition-all whitespace-nowrap ${
+                  item.active
+                    ? "bg-[#203C67] text-white shadow-sm"
+                    : "text-gray-600 hover:bg-[#d0ccc2]"
                 }`}
-            >
-              {item.label}
-            </Link>
-          ))}
-        </nav>
-      </header> */}
+              >
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+        </header>
 
-      {/* ── PatientSidebar — handles both mobile drawer & desktop fixed panel ── */}
-      
-
-      {/* ── Body ── */}
-      <div className="flex flex-1">
-
-        {/* Desktop spacer — matches sidebar width so main content doesn't go under it */}
-        <div className="hidden lg:block w-[264px] xl:w-[276px] shrink-0 bg-[#EFECE3]" />
-
-        {/* ── Main Content ── */}
-        <main className="flex-1 bg-[#EFECE3] min-w-0 p-4 sm:p-6 flex flex-col gap-5 overflow-y-auto remove-scrollbar">
+        {/* ── Scrollable Body ── */}
+        <main className="flex-1 overflow-y-auto remove-scrollbar p-4 sm:p-6 flex flex-col gap-5">
 
           {/* Greeting */}
           <div>
             <h1 className="text-[20px] sm:text-[24px] font-semibold text-gray-800">
-              {greeting}, {patient.name.split(" ")[0]} 
+              {greeting}, {patient.name.split(" ")[0]}
             </h1>
             <p className="text-[13px] text-gray-400 mt-0.5">Here&apos;s your health summary for today</p>
           </div>
@@ -243,15 +216,14 @@ export default async function PatientDashboardPage({
           {/* ── Appointments + My Doctors ── */}
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 sm:gap-5">
 
-            {/* Upcoming Appointments */}
+            {/* All Appointments */}
             <div className="lg:col-span-3 bg-white rounded-2xl border border-[#e8e4da] shadow-sm p-5">
               <div className="flex justify-between items-center mb-4">
                 <div>
                   <h3 className="font-semibold text-[15px] text-gray-800">All Appointments</h3>
                   <p className="text-[11px] text-gray-400 mt-0.5">scheduled · pending · completed · cancelled · expired</p>
                 </div>
-
-                <span className='text-[9px] text-gray-500'>scroll to see through</span>
+                <span className="text-[9px] text-gray-500">scroll to see through</span>
               </div>
 
               {allAppointmentsSorted.length === 0 ? (
@@ -302,7 +274,7 @@ export default async function PatientDashboardPage({
                 {myDoctors.length === 0 ? (
                   <div className="flex-1 flex flex-col items-center justify-center gap-2">
                     <p className="text-[13px] text-gray-400">No doctors yet</p>
-                    <Link href="/doctors" className="text-[12px] text-[#185FA5]">Find a doctor →</Link>
+                    <Link href="/alldoctors" className="text-[12px] text-[#185FA5]">Find a doctor →</Link>
                   </div>
                 ) : (
                   myDoctors.slice(0, 4).map((doctorName, i) => {
@@ -334,7 +306,7 @@ export default async function PatientDashboardPage({
                             dateToday={new Date().toLocaleDateString(undefined, { timeZone: "Asia/Kolkata" })}
                             variant='ghost' text='Book appointment →' authUser={authUser} fullUser={patient}
                           />
-                          <Link className='text-[10px] text-gray-700' href={`/doctor/${doctorName}`}>view {doctorName}&apos;s profile</Link>
+                          <Link className='text-[10px] text-gray-700' href={`/doctor/${doctorName}`}>view profile</Link>
                         </div>
                       </div>
                     )
@@ -344,8 +316,7 @@ export default async function PatientDashboardPage({
             </div>
           </div>
 
-          {/* ── Records: Prescriptions + Reports as tabs ── */}
-          {/* Link to the full records page which already has tab UI */}
+          {/* ── Recent Records ── */}
           <div className="bg-white rounded-2xl border border-[#e8e4da] shadow-sm overflow-hidden">
             <div className="flex items-center justify-between px-5 pt-5 pb-0">
               <div>
@@ -357,7 +328,6 @@ export default async function PatientDashboardPage({
               </Link>
             </div>
 
-            {/* Tab strip */}
             <div className="flex gap-1 px-5 pt-3 pb-0">
               <div className="flex gap-1 bg-[#f7f4ef] border border-[#e8e4da] rounded-xl p-1">
                 <span className="px-4 py-1.5 rounded-lg text-[12px] font-medium bg-[#203C67] text-white shadow-sm">
@@ -372,21 +342,17 @@ export default async function PatientDashboardPage({
               </div>
             </div>
 
-            {/* Prescriptions list */}
             <div className="p-5">
               {recentPrescriptions.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-8 gap-2">
                   <p className="text-[13px] text-gray-400">No prescriptions yet</p>
-                  <p className="text-[11px] text-gray-300">Prescriptions from your doctors will appear here</p>
                 </div>
               ) : (
                 <div className="flex flex-col gap-2.5">
                   {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                   {recentPrescriptions.map((rx: any, i: number) => (
                     <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-[#f7f4ef] border border-[#ede9e0]">
-                      <div className="w-9 h-9 rounded-xl bg-[#dde8f5] flex items-center justify-center text-base shrink-0">
-                        💊
-                      </div>
+                      <div className="w-9 h-9 rounded-xl bg-[#dde8f5] flex items-center justify-center text-base shrink-0">💊</div>
                       <div className="flex-1 min-w-0">
                         <p className="text-[13px] font-semibold truncate text-[#1a2535]">
                           {rx.diagnosis || "General Prescription"}
@@ -399,7 +365,7 @@ export default async function PatientDashboardPage({
                         </p>
                         {rx.medications?.length > 0 && (
                           <p className="text-[10px] text-gray-400 mt-0.5">
-                            {rx.medications.length} medication{rx.medications.length !== 1 ? 's' : ''}
+                            {rx.medications.length} med{rx.medications.length !== 1 ? 's' : ''}
                             {rx.medications[0]?.name && ` · ${rx.medications[0].name}`}
                             {rx.medications.length > 1 && ` +${rx.medications.length - 1} more`}
                           </p>
@@ -412,12 +378,8 @@ export default async function PatientDashboardPage({
                       </span>
                     </div>
                   ))}
-
                   {prescriptions.length > 3 && (
-                    <Link
-                      href={`/patients/${userId}/records`}
-                      className="text-center text-[12px] text-[#185FA5] hover:underline py-1"
-                    >
+                    <Link href={`/patients/${userId}/records`} className="text-center text-[12px] text-[#185FA5] hover:underline py-1">
                       View all {prescriptions.length} prescriptions →
                     </Link>
                   )}
@@ -428,8 +390,6 @@ export default async function PatientDashboardPage({
 
           {/* ── Health Vitals + Primary Doctor ── */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5">
-
-            {/* Health Vitals */}
             <div className="bg-white rounded-2xl border border-[#e8e4da] shadow-sm p-5">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="font-semibold text-[15px] text-gray-800">Health Vitals</h3>
@@ -455,15 +415,12 @@ export default async function PatientDashboardPage({
               </div>
             </div>
 
-            {/* Primary Doctor */}
             {patient.primaryDoctor ? (
               <div className="bg-white rounded-2xl border border-[#e8e4da] shadow-sm p-5 flex flex-col justify-between">
                 <h3 className="font-semibold text-[15px] text-gray-800 mb-4">Primary Doctor</h3>
                 <div className="flex items-center gap-3 flex-wrap">
                   <div className="w-12 h-12 rounded-full bg-[#dde8f5] flex items-center justify-center text-[14px] font-semibold text-[#203C67] shrink-0">
-                    {patient.primaryDoctor
-                      .replace(/^Dr\.?\s*/i, '')
-                      .split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase()}
+                    {patient.primaryDoctor.replace(/^Dr\.?\s*/i, '').split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase()}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-[15px] text-[#1a2535]">{patient.primaryDoctor}</p>
@@ -483,12 +440,12 @@ export default async function PatientDashboardPage({
             ) : (
               <div className="bg-white rounded-2xl border border-[#e8e4da] shadow-sm p-5 flex flex-col items-center justify-center gap-3 py-8">
                 <p className="text-[13px] text-gray-400">No primary doctor set</p>
-                <Link href="/doctors" className="text-[12px] text-[#185FA5] hover:underline">Find a doctor →</Link>
+                <Link href="/alldoctors" className="text-[12px] text-[#185FA5] hover:underline">Find a doctor →</Link>
               </div>
             )}
           </div>
 
-          {/* Mobile extra nav */}
+          {/* Mobile nav links */}
           <div className="lg:hidden flex flex-wrap gap-2 pb-4">
             {[
               { label: "Records",  href: `/patients/${userId}/records` },

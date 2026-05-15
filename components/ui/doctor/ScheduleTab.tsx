@@ -54,6 +54,18 @@ function parseSlots(raw?: string): Record<string, string[]> {
   try { return JSON.parse(raw) } catch { return {} }
 }
 
+// ── Status pill helper ────────────────────────────────────────────────────────
+function statusPill(status: string) {
+  switch (status) {
+    case "scheduled": return "bg-[#e6f4ea] text-[#2d6b3f] border border-[#b8d4c0]"
+    case "completed": return "bg-[#dde8f5] text-[#203C67] border border-[#c8d8ea]"
+    case "cancelled": return "bg-[#fdecea] text-[#991b1b] border border-[#f5c6c2]"
+    case "expired":   return "bg-[#f7f4ef] text-gray-500 border border-[#d4cfc6]"
+    case "pending":   return "bg-[#fef6e4] text-[#92400e] border border-[#fcd89a]"
+    default:          return "bg-[#f7f4ef] text-gray-500 border border-[#d4cfc6]"
+  }
+}
+
 interface PatientCardProps {
   appt: Appointment
   userId: string
@@ -87,13 +99,13 @@ function PatientAppointmentCard({ appt, userId, onCompleted, onOpenPrescription 
 
   return (
     <div className={`rounded-xl border p-3 transition-all ${
-      isCompleted ? "border-green-200 bg-green-50/60"
-      : isCancelled ? "border-gray-200 bg-gray-50/60 opacity-50"
-      : "border-[#203C6730] bg-white/60 hover:bg-white/80"
+      isCompleted ? "border-[#b8d4c0] bg-[#f0faf2]"
+      : isCancelled ? "border-[#ede9e0] bg-[#f7f4ef] opacity-50"
+      : "border-[#ede9e0] bg-[#f7f4ef] hover:bg-white"
     }`}>
       <div className="flex items-center gap-2 mb-2">
         <div className={`h-8 w-8 rounded-full flex items-center justify-center text-[10px] font-semibold flex-shrink-0 ${
-          isCompleted ? "bg-green-200 text-green-800" : "bg-[#A6BAD7] text-[#203C67]"
+          isCompleted ? "bg-[#e6f4ea] text-[#2d6b3f]" : "bg-[#dde8f5] text-[#203C67]"
         }`}>
           {initials(appt.patientName)}
         </div>
@@ -107,11 +119,11 @@ function PatientAppointmentCard({ appt, userId, onCompleted, onOpenPrescription 
           <p className="text-[10px] text-gray-400 truncate">{formatApptTime(appt.schedule)} · {appt.reason}</p>
         </div>
         <div className="flex-shrink-0">
-          {isExpired   && <span className="text-[9px] bg-gray-100 text-gray-500 border border-gray-200 rounded-full px-1.5 py-0.5">expired</span>}
-          {isCompleted && <span className="text-[9px] bg-green-100 text-green-700 border border-green-200 rounded-full px-1.5 py-0.5">done ✓</span>}
-          {isCancelled && <span className="text-[9px] bg-red-100 text-red-600 border border-red-200 rounded-full px-1.5 py-0.5">cancelled</span>}
-          {isScheduled && <span className="text-[9px] bg-blue-100 text-blue-700 border border-blue-200 rounded-full px-1.5 py-0.5">confirmed</span>}
-          {isPending   && <span className="text-[9px] bg-yellow-100 text-yellow-700 border border-yellow-200 rounded-full px-1.5 py-0.5">pending</span>}
+          {isExpired   && <span className={`text-[9px] rounded-full px-1.5 py-0.5 font-semibold ${statusPill("expired")}`}>expired</span>}
+          {isCompleted && <span className={`text-[9px] rounded-full px-1.5 py-0.5 font-semibold ${statusPill("completed")}`}>done ✓</span>}
+          {isCancelled && <span className={`text-[9px] rounded-full px-1.5 py-0.5 font-semibold ${statusPill("cancelled")}`}>cancelled</span>}
+          {isScheduled && <span className={`text-[9px] rounded-full px-1.5 py-0.5 font-semibold ${statusPill("scheduled")}`}>confirmed</span>}
+          {isPending   && <span className={`text-[9px] rounded-full px-1.5 py-0.5 font-semibold ${statusPill("pending")}`}>pending</span>}
         </div>
       </div>
 
@@ -119,21 +131,21 @@ function PatientAppointmentCard({ appt, userId, onCompleted, onOpenPrescription 
         <div className="pl-10 flex flex-col gap-1.5">
           <button
             onClick={() => onOpenPrescription(appt)}
-            className="w-full text-[10px] py-1.5 rounded-md border border-[#203C67] text-[#203C67] hover:bg-[#203C67] hover:text-white transition-colors font-medium"
+            className="w-full text-[10px] py-1.5 rounded-lg border border-[#203C6730] text-[#203C67] hover:bg-[#203C67] hover:text-white transition-colors font-medium"
           >
             {hasPrescription ? "✏️ Edit Prescription" : "📋 Write Prescription"}
           </button>
           {hasPrescription === null && (
-            <div className="w-full text-[10px] py-1.5 rounded-md bg-gray-100 text-gray-400 text-center">Checking…</div>
+            <div className="w-full text-[10px] py-1.5 rounded-lg bg-[#f7f4ef] text-gray-400 text-center">Checking…</div>
           )}
           {hasPrescription === true && (
             <button onClick={handleComplete} disabled={completing}
-              className="w-full text-[10px] py-1.5 rounded-md bg-green-600 text-white hover:bg-green-700 transition-colors font-medium disabled:opacity-50">
+              className="w-full text-[10px] py-1.5 rounded-lg bg-green-600 text-white hover:bg-green-700 transition-colors font-semibold disabled:opacity-50">
               {completing ? "…" : "✓ Mark Complete"}
             </button>
           )}
           {hasPrescription === false && (
-            <p className="text-[10px] text-amber-600 text-center py-1">⚠ Write prescription first</p>
+            <p className="text-[10px] text-[#92400e] text-center py-1 bg-[#fef6e4] rounded-lg">⚠ Write prescription first</p>
           )}
         </div>
       )}
@@ -142,7 +154,7 @@ function PatientAppointmentCard({ appt, userId, onCompleted, onOpenPrescription 
         <div className="pl-10">
           <button
             onClick={() => router.push(`/doctors/${userId}/patients/${appt.patientId}/records`)}
-            className="text-[10px] text-[#203C67] hover:underline"
+            className="text-[10px] text-[#203C67] hover:underline font-medium"
           >
             📋 View Prescription
           </button>
@@ -158,7 +170,7 @@ function Section({ label, count, color, defaultOpen, children }: {
   const [open, setOpen] = useState(defaultOpen)
   return (
     <div>
-      <button onClick={() => setOpen(o => !o)} className="w-full flex items-center justify-between mb-1.5">
+      <button onClick={() => setOpen(o => !o)} className="w-full flex items-center justify-between mb-1.5 py-1">
         <span className={`text-[10px] font-semibold uppercase tracking-wider ${color}`}>{label} ({count})</span>
         <span className={`text-[10px] text-gray-400 transition-transform duration-200 ${open ? "rotate-180" : ""}`}>▾</span>
       </button>
@@ -177,7 +189,7 @@ export default function ScheduleTab({ doctorId, user, doctor, appointments }: Do
   const [bookedSlots,  setBookedSlots]          = useState(() => doctor.bookedSlots  ?? "{}")
   const [savingState, setSavingState]           = useState<"idle" | "pending" | "saved">("idle")
   const [selectedDate, setSelectedDate]         = useState<Date>(today)
-  const [showAppointments, setShowAppointments] = useState(false) // mobile toggle
+  const [showAppointments, setShowAppointments] = useState(false)
   const [prescriptionModal, setPrescriptionModal] = useState<{
     appointmentId: string; patientName: string; patientId: string
     appointmentDate?: string; appointmentReason: string; appointmentStatus: string
@@ -267,7 +279,7 @@ export default function ScheduleTab({ doctorId, user, doctor, appointments }: Do
     <div className="flex flex-col lg:flex-row gap-3 sm:gap-4 flex-1 min-h-0 overflow-y-auto lg:overflow-hidden">
 
       {/* ── Weekly Calendar ── */}
-      <div className="flex-1 min-w-0 overflow-x-auto">
+      <div className="flex-1 min-w-0 overflow-x-auto bg-white rounded-2xl border border-[#e8e4da] shadow-sm p-4">
         <WeeklyScheduleTable
           slotsAvailable={doctor.slotsAvailable}
           availableDays={doctor.availableDays}
@@ -288,7 +300,7 @@ export default function ScheduleTab({ doctorId, user, doctor, appointments }: Do
         {/* Mobile toggle button */}
         <button
           onClick={() => setShowAppointments(v => !v)}
-          className="lg:hidden flex items-center justify-between w-full px-4 py-3 bg-white/60 border border-[#203C6730] rounded-xl text-[13px] font-semibold text-[#203C67]"
+          className="lg:hidden flex items-center justify-between w-full px-4 py-3 bg-white border border-[#e8e4da] rounded-2xl text-[13px] font-semibold text-[#203C67] shadow-sm"
         >
           <span>
             {isSelectedToday ? "Today's Appointments" : `Appointments · ${selectedDate.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`}
@@ -297,24 +309,24 @@ export default function ScheduleTab({ doctorId, user, doctor, appointments }: Do
           <span className={`transition-transform duration-200 ${showAppointments ? "rotate-180" : ""}`}>▾</span>
         </button>
 
-        {/* Appointments panel — always visible on lg, toggle on mobile */}
-        <div className={`${showAppointments ? "flex" : "hidden"} lg:flex border border-[#203C67] rounded-xl p-4 bg-white/40 backdrop-blur-sm flex-col flex-1 min-h-0`}>
+        {/* Appointments panel */}
+        <div className={`${showAppointments ? "flex" : "hidden"} lg:flex bg-white rounded-2xl border border-[#e8e4da] shadow-sm p-4 flex-col flex-1 min-h-0`}>
           <div className="flex items-center justify-between mb-3">
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-[#203C67] font-semibold text-[14px] sm:text-[15px]">
+                <h2 className="text-gray-800 font-semibold text-[14px] sm:text-[15px]">
                   {isSelectedToday ? "Today's List" : "Appointments"}
                 </h2>
                 {!isSelectedToday && (
                   <button
                     onClick={() => setSelectedDate(today)}
-                    className="text-[9px] text-[#203C67] border border-[#203C6730] rounded-full px-2 py-0.5 hover:bg-[#203C6710] transition-colors"
+                    className="text-[9px] text-[#203C67] border border-[#203C6730] rounded-full px-2 py-0.5 hover:bg-[#dde8f5] transition-colors"
                   >
                     Back to today
                   </button>
                 )}
               </div>
-              <p className="text-[11px] text-gray-500">
+              <p className="text-[11px] text-gray-400">
                 {selectedDate.toLocaleDateString("en-US", {
                   weekday: "short", month: "short", day: "numeric",
                   year: isSelectedToday ? undefined : "numeric",
@@ -322,12 +334,13 @@ export default function ScheduleTab({ doctorId, user, doctor, appointments }: Do
                 })}
               </p>
             </div>
-            <span className="text-[11px] bg-[#A6BAD7] text-[#203C67] rounded-full px-2 py-0.5 font-medium">
+            <span className="text-[11px] bg-[#dde8f5] text-[#203C67] rounded-full px-2.5 py-1 font-semibold">
               {completedCount}/{selectedAppointments.length} done
             </span>
           </div>
 
-          <div className="h-1.5 bg-gray-200 rounded-full mb-3 overflow-hidden">
+          {/* Progress bar */}
+          <div className="h-1.5 bg-[#f7f4ef] rounded-full mb-3 overflow-hidden">
             <div
               className="h-full bg-[#203C67] rounded-full transition-all duration-500"
               style={{ width: selectedAppointments.length ? `${(completedCount / selectedAppointments.length) * 100}%` : "0%" }}
@@ -336,9 +349,12 @@ export default function ScheduleTab({ doctorId, user, doctor, appointments }: Do
 
           <div className="flex flex-col gap-3 overflow-y-auto custom-scroll flex-1 max-h-[50vh] lg:max-h-none">
             {selectedAppointments.length === 0 ? (
-              <p className="text-[12px] text-gray-400 text-center mt-4">
-                No appointments on {isSelectedToday ? "today" : selectedDate.toLocaleDateString("en-US", { month: "short", day: "numeric" })}.
-              </p>
+              <div className="flex flex-col items-center justify-center flex-1 gap-2 py-8">
+                <p className="text-[28px]">📅</p>
+                <p className="text-[12px] text-gray-400 text-center">
+                  No appointments on {isSelectedToday ? "today" : selectedDate.toLocaleDateString("en-US", { month: "short", day: "numeric" })}.
+                </p>
+              </div>
             ) : (
               <>
                 {activeAppointments.length > 0 && (
@@ -368,17 +384,22 @@ export default function ScheduleTab({ doctorId, user, doctor, appointments }: Do
         </div>
 
         {/* Slot info + Edit Profile */}
-        <div className="border border-[#203C67] rounded-xl p-4 bg-[#203C6710] flex flex-col gap-3">
+        <div className="bg-white rounded-2xl border border-[#e8e4da] shadow-sm p-4 flex flex-col gap-3">
           <div>
-            <h3 className="text-[12px] font-semibold text-[#203C67] mb-1 flex items-center gap-1.5">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <h3 className="text-[12px] font-semibold text-gray-800 mb-1.5 flex items-center gap-1.5">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#203C67" strokeWidth="2">
                 <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
               </svg>
-              Slot info
+              Slot legend
             </h3>
-            <p className="text-[11px] text-gray-500 leading-relaxed">
-              Green ○ → block. Red ✕ → unblock. Blue ● = booked. Grey ✕ = saved block.
-            </p>
+            <div className="bg-[#f7f4ef] rounded-xl px-3 py-2.5">
+              <p className="text-[11px] text-gray-500 leading-relaxed">
+                <span className="text-green-600 font-medium">○ Green</span> → block &nbsp;·&nbsp;
+                <span className="text-red-500 font-medium">✕ Red</span> → unblock &nbsp;·&nbsp;
+                <span className="text-[#203C67] font-medium">● Blue</span> = booked &nbsp;·&nbsp;
+                <span className="text-gray-400 font-medium">✕ Grey</span> = saved block
+              </p>
+            </div>
           </div>
           <DoctorEditProfileModal doctorId={doctorId} user={user} doctor={doctor} />
         </div>

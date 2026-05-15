@@ -156,43 +156,44 @@ export default function DashboardTab({
     { tag: "TODAY",          value: stats.todayCount,     mention: "appointments", dot: "bg-blue-400",   textColor: "text-blue-700"   },
     { tag: "PENDING",        value: stats.pendingCount,   mention: "needs action", dot: "bg-yellow-400", textColor: "text-yellow-600" },
     { tag: "SCHEDULED",      value: stats.scheduledCount, mention: "confirmed",    dot: "bg-green-500",  textColor: "text-green-700"  },
-    { tag: "TOTAL PATIENTS", value: stats.totalPatients,  mention: "all time",     dot: "bg-gray-500",   textColor: "text-gray-600"   },
+    { tag: "TOTAL PATIENTS", value: stats.totalPatients,  mention: "all time",     dot: "bg-gray-400",   textColor: "text-gray-600"   },
   ]
 
   return (
-    <div className="flex flex-col gap-3 sm:gap-4 flex-1 overflow-y-auto min-h-0">
+    <div className="flex flex-col gap-4 flex-1 overflow-y-auto min-h-0 remove-scrollbar">
 
-      {/* ── Stat cards: 2-col on mobile, 4-col on lg ── */}
-      <section className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 flex-shrink-0">
+      {/* ── Stat cards — white rounded-2xl like patient dashboard ── */}
+      <section className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 flex-shrink-0">
         {STAT_CARDS.map(stat => (
           <div
             key={stat.tag}
-            className="flex flex-col border border-[#203C67] rounded-xl p-3 sm:p-5 bg-white/40 backdrop-blur-sm hover:bg-white/60 transition-colors"
+            className="bg-white rounded-2xl p-4 border border-[#e8e4da] shadow-sm hover:shadow-md transition-shadow"
           >
-            <span className="flex gap-2 items-center text-[10px] sm:text-[11px] font-medium tracking-widest text-gray-500 mb-2">
-              <span className={`h-2 w-2 rounded-full flex-shrink-0 ${stat.dot}`} />
-              {stat.tag}
-            </span>
-            <span className={`text-2xl sm:text-3xl font-semibold ${stat.textColor}`}>{stat.value}</span>
-            <span className="text-[11px] text-gray-500 mt-1">{stat.mention}</span>
+            <div className="flex items-center gap-1.5 mb-2">
+              <span className={`w-2 h-2 rounded-full ${stat.dot}`} />
+              <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">{stat.tag}</p>
+            </div>
+            <p className={`text-[28px] sm:text-[32px] font-semibold leading-none ${stat.textColor}`}>{stat.value}</p>
+            <p className="text-[11px] text-gray-400 mt-1.5">{stat.mention}</p>
           </div>
         ))}
       </section>
 
-      {/* ── Bottom row: stacks on mobile, side-by-side on lg ── */}
+      {/* ── Bottom row: earnings + requests ── */}
       <section className="flex flex-col lg:flex-row gap-3 sm:gap-4 flex-1 min-h-0">
 
         {/* Earnings chart */}
-        <div className="flex-1 border border-[#203C67] rounded-xl p-4 sm:p-5 bg-white/40 backdrop-blur-sm flex flex-col min-h-[220px]">
+        <div className="flex-1 bg-white rounded-2xl border border-[#e8e4da] shadow-sm p-5 flex flex-col min-h-[220px]">
+                  <span className='text-[9px] text-red-600 mb-2 flex items-center justify-center'>This might show wrong data...for now it is only for representation</span>
           <div className="flex items-start justify-between mb-1">
             <div>
-              <h2 className="text-[#203C67] font-semibold text-[15px] sm:text-[16px]">Earnings</h2>
-              <span className="text-gray-500 text-[11px] sm:text-[12px]">this week <span className="text-gray-400">vs</span> last week</span>
+              <h2 className="text-gray-800 font-semibold text-[15px]">Earnings</h2>
+              <span className="text-gray-400 text-[11px]">this week <span className="text-gray-300">vs</span> last week</span>
             </div>
             <div className="text-right">
-              <p className="text-[12px] sm:text-[13px] font-semibold text-[#203C67]">₹{thisWeekTotal.toLocaleString("en-IN")}</p>
+              <p className="text-[13px] font-semibold text-[#203C67]">₹{thisWeekTotal.toLocaleString("en-IN")}</p>
               {lastWeekTotal > 0 && (
-                <p className={`text-[10px] sm:text-[11px] font-medium ${diff >= 0 ? "text-green-600" : "text-red-500"}`}>
+                <p className={`text-[11px] font-medium ${diff >= 0 ? "text-green-600" : "text-red-500"}`}>
                   {diff >= 0 ? "▲" : "▼"} {Math.abs(diffPct)}% vs last week
                 </p>
               )}
@@ -207,38 +208,55 @@ export default function DashboardTab({
               const lwH = Math.round((d.lastWeek / maxEarning) * MAX_BAR_HEIGHT)
               const twH = Math.round((d.thisWeek / maxEarning) * MAX_BAR_HEIGHT)
               return (
-                <div key={d.day} className="flex-1 flex flex-col items-center gap-1">
+                <><div key={d.day} className="flex-1 flex flex-col items-center gap-1">
                   <div className="flex items-end gap-[2px] sm:gap-[3px] w-full" style={{ height: `${MAX_BAR_HEIGHT}px` }}>
-                    <div className="flex-1 rounded-t-sm bg-[#C8D9EE] hover:bg-[#a8c2e0] transition-colors cursor-pointer" style={{ height: `${lwH}%` }} title={`Last week: ₹${d.lastWeek.toLocaleString("en-IN")}`} />
-                    <div className="flex-1 rounded-t-sm bg-[#203C67] hover:bg-[#2d5494] transition-colors cursor-pointer" style={{ height: `${twH}%` }} title={`This week: ₹${d.thisWeek.toLocaleString("en-IN")}`} />
+                    <div
+                      className="flex-1 rounded-t-sm bg-[#C8D9EE] hover:bg-[#a8c2e0] transition-colors cursor-pointer"
+                      style={{ height: `${lwH}%` }}
+                      title={`Last week: ₹${d.lastWeek.toLocaleString("en-IN")}`}
+                    />
+                    <div
+                      className="flex-1 rounded-t-sm bg-[#203C67] hover:bg-[#2d5494] transition-colors cursor-pointer"
+                      style={{ height: `${twH}%` }}
+                      title={`This week: ₹${d.thisWeek.toLocaleString("en-IN")}`}
+                    />
                   </div>
                   <span className="text-[9px] sm:text-[10px] text-gray-400">{d.day}</span>
-                </div>
+                </div></>
               )
             })}
           </div>
 
-          <div className="flex gap-3 sm:gap-4 mt-3">
-            <div className="flex items-center gap-1.5"><div className="h-2.5 w-2.5 rounded-sm bg-[#C8D9EE]" /><span className="text-[10px] sm:text-[11px] text-gray-500">Last week</span></div>
-            <div className="flex items-center gap-1.5"><div className="h-2.5 w-2.5 rounded-sm bg-[#203C67]" /><span className="text-[10px] sm:text-[11px] text-gray-500">This week</span></div>
+          <div className="flex gap-4 mt-3">
+            <div className="flex items-center gap-1.5">
+              <div className="h-2.5 w-2.5 rounded-sm bg-[#C8D9EE]" />
+              <span className="text-[10px] sm:text-[11px] text-gray-500">Last week</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="h-2.5 w-2.5 rounded-sm bg-[#203C67]" />
+              <span className="text-[10px] sm:text-[11px] text-gray-500">This week</span>
+            </div>
           </div>
         </div>
 
         {/* Requests panel */}
-        <div className="w-full lg:w-[340px] lg:min-w-[300px] border border-[#203C67] rounded-xl p-4 sm:p-5 bg-white/40 backdrop-blur-sm flex flex-col max-h-[400px] lg:max-h-none">
-          <div className="flex items-center justify-between mb-3">
+        <div className="w-full lg:w-[340px] lg:min-w-[300px] bg-white rounded-2xl border border-[#e8e4da] shadow-sm p-5 flex flex-col max-h-[400px] lg:max-h-none">
+          <div className="flex items-center justify-between mb-4">
             <div>
-              <h2 className="text-[#203C67] font-semibold text-[15px] sm:text-[16px]">Requests</h2>
-              <span className="text-gray-500 text-[11px] sm:text-[12px]">confirm · decline</span>
+              <h2 className="text-gray-800 font-semibold text-[15px]">Requests</h2>
+              <span className="text-gray-400 text-[11px]">confirm · decline</span>
             </div>
-            <span className="text-[10px] sm:text-[11px] bg-yellow-100 text-yellow-700 border border-yellow-300 rounded-full px-2 py-0.5 font-medium">
+            <span className="text-[10px] bg-[#fef6e4] text-[#92400e] border border-[#fcd89a] rounded-full px-2.5 py-1 font-semibold">
               {requests.filter(r => r.status === "pending").length} pending
             </span>
           </div>
 
           <div className="flex flex-col gap-2 overflow-y-auto custom-scroll flex-1 pr-1">
             {requests.length === 0 ? (
-              <p className="text-[12px] text-gray-400 text-center mt-6">No active requests.</p>
+              <div className="flex flex-col items-center justify-center flex-1 gap-2 py-8">
+                <p className="text-[32px]">📋</p>
+                <p className="text-[12px] text-gray-400 text-center">No active requests</p>
+              </div>
             ) : (
               requests.map(req => {
                 const isPending   = req.status === "pending"
@@ -251,42 +269,42 @@ export default function DashboardTab({
                 return (
                   <div
                     key={req.$id}
-                    className={`border rounded-lg p-3 transition-all ${
+                    className={`rounded-xl border p-3 transition-all ${
                       isCompleted || isCancelled
-                        ? "opacity-50 border-gray-200 bg-gray-50"
-                        : "border-[#203C6740] bg-white/50"
+                        ? "opacity-50 border-[#ede9e0] bg-[#f7f4ef]"
+                        : "border-[#ede9e0] bg-[#f7f4ef] hover:bg-white"
                     }`}
                   >
                     <div className="flex items-center gap-2 mb-2">
-                      <div className="h-8 w-8 rounded-full bg-[#A6BAD7] flex items-center justify-center text-[11px] font-semibold text-[#203C67] flex-shrink-0">
+                      <div className="h-8 w-8 rounded-full bg-[#dde8f5] flex items-center justify-center text-[11px] font-semibold text-[#203C67] flex-shrink-0">
                         {initials(patientName)}
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-[12px] sm:text-[13px] font-medium text-gray-800 truncate">{patientName}</p>
-                        <p className="text-[10px] sm:text-[11px] text-gray-500 truncate">{formatDate(req.schedule)} · {formatTime(req.schedule)}</p>
+                        <p className="text-[10px] sm:text-[11px] text-gray-400 truncate">{formatDate(req.schedule)} · {formatTime(req.schedule)}</p>
                       </div>
-                      {isScheduled && <span className="text-[10px] bg-green-100 text-green-700 border border-green-200 rounded-full px-2 py-0.5 flex-shrink-0">confirmed</span>}
-                      {isCancelled && <span className="text-[10px] bg-red-100 text-red-600 border border-red-200 rounded-full px-2 py-0.5 flex-shrink-0">declined</span>}
-                      {isCompleted && <span className="text-[10px] bg-blue-100 text-blue-700 border border-blue-200 rounded-full px-2 py-0.5 flex-shrink-0">done ✓</span>}
+                      {isScheduled && <span className="text-[9px] bg-[#e6f4ea] text-[#2d6b3f] border border-[#b8d4c0] rounded-full px-2 py-0.5 flex-shrink-0 font-semibold">confirmed</span>}
+                      {isCancelled && <span className="text-[9px] bg-[#fdecea] text-[#991b1b] border border-[#f5c6c2] rounded-full px-2 py-0.5 flex-shrink-0 font-semibold">declined</span>}
+                      {isCompleted && <span className="text-[9px] bg-[#dde8f5] text-[#203C67] border border-[#c8d8ea] rounded-full px-2 py-0.5 flex-shrink-0 font-semibold">done ✓</span>}
                     </div>
 
-                    <p className="text-[11px] text-gray-500 mb-2 pl-10 truncate">{req.reason}</p>
+                    <p className="text-[11px] text-gray-400 mb-2 pl-10 truncate">{req.reason}</p>
 
                     {isPending && (
                       <div className="flex gap-2 pl-10">
                         <button
                           onClick={() => handleRequest(req.$id, "scheduled")}
                           disabled={isLoad}
-                          className="flex-1 text-[11px] py-1.5 rounded-md bg-[#203C67] text-white hover:bg-[#2d5494] transition-colors font-medium disabled:opacity-50"
+                          className="flex-1 text-[11px] py-1.5 rounded-lg bg-[#203C67] text-white hover:bg-[#2d5494] transition-colors font-semibold disabled:opacity-50"
                         >
-                          {isLoad ? "..." : "Confirm"}
+                          {isLoad ? "…" : "Confirm"}
                         </button>
                         <button
                           onClick={() => handleRequest(req.$id, "cancelled")}
                           disabled={isLoad}
-                          className="flex-1 text-[11px] py-1.5 rounded-md border border-[#203C6740] text-gray-500 hover:bg-gray-100 transition-colors disabled:opacity-50"
+                          className="flex-1 text-[11px] py-1.5 rounded-lg border border-[#e8e4da] text-gray-500 hover:bg-[#f7f4ef] transition-colors disabled:opacity-50"
                         >
-                          {isLoad ? "..." : "Decline"}
+                          {isLoad ? "…" : "Decline"}
                         </button>
                       </div>
                     )}
