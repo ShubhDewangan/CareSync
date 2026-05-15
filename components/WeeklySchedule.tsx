@@ -220,7 +220,7 @@ export default function WeeklyScheduleTable({
 
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
-    <div className="flex-1 border border-[#203C67] rounded-xl p-5 bg-white/40 backdrop-blur-sm flex flex-col min-h-0">
+    <div className="flex-1 border border-[#203C67] rounded-xl p-5 bg-white/50/40 backdrop-blur-sm flex flex-col min-h-0">
 
       {/* Header */}
       <div className="flex items-center justify-between mb-3 gap-3 flex-wrap">
@@ -271,7 +271,7 @@ export default function WeeklyScheduleTable({
               {/* Date picker dropdown */}
               {showDatePicker && (
                 <div
-                  className="absolute left-0 top-full mt-1.5 z-30 bg-white border border-[#203C6725] rounded-xl shadow-xl p-3 flex flex-col gap-2"
+                  className="absolute left-0 top-full mt-1.5 z-30 bg-white/50 border border-[#203C6725] rounded-xl shadow-xl p-3 flex flex-col gap-2"
                   style={{ minWidth: 210 }}
                 >
                   <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Jump to week containing</p>
@@ -353,7 +353,7 @@ export default function WeeklyScheduleTable({
           </colgroup>
           <thead>
             <tr className="border-b border-[#203C6720]">
-              <th className="text-left text-gray-400 font-normal pb-3 pr-3 sticky left-0 bg-white/60 backdrop-blur-sm z-10">Time</th>
+              <th className="text-left text-gray-400 font-normal pb-3 pr-3 sticky left-0 bg-white/50/60 backdrop-blur-sm z-10">Time</th>
               {weekDates.map((date, i) => {
                 const isToday     = isCurrentWeek && i === todayIndex
                 const fullDay     = DAY_ORDER[date.getDay()]

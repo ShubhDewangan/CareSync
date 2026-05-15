@@ -82,7 +82,7 @@ export default function DashboardLoading() {
           {/* Stats row */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="bg-white/60 rounded-2xl p-4 border border-[#203C6715] animate-pulse">
+              <div key={i} className="bg-white/50/60 rounded-2xl p-4 border border-[#203C6715] animate-pulse">
                 <div className="h-3 w-20 rounded bg-[#203C6715] mb-3" />
                 <div className="h-7 w-12 rounded bg-[#203C6720]" />
               </div>
@@ -92,7 +92,7 @@ export default function DashboardLoading() {
           {/* Chart + pending row */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
             {/* Chart */}
-            <div className="lg:col-span-2 bg-white/60 rounded-2xl p-4 border border-[#203C6715] animate-pulse h-52">
+            <div className="lg:col-span-2 bg-white/50/60 rounded-2xl p-4 border border-[#203C6715] animate-pulse h-52">
               <div className="h-4 w-32 rounded bg-[#203C6715] mb-4" />
               <div className="flex items-end gap-2 h-32 px-2">
                 {[40, 65, 45, 80, 55, 70, 50].map((h, i) => (
@@ -105,7 +105,7 @@ export default function DashboardLoading() {
             </div>
 
             {/* Pending requests */}
-            <div className="bg-white/60 rounded-2xl p-4 border border-[#203C6715] animate-pulse">
+            <div className="bg-white/50/60 rounded-2xl p-4 border border-[#203C6715] animate-pulse">
               <div className="h-4 w-28 rounded bg-[#203C6715] mb-4" />
               <div className="flex flex-col gap-3">
                 {[1, 2, 3].map((i) => (
@@ -125,7 +125,7 @@ export default function DashboardLoading() {
           {/* Bottom row */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
             {[1, 2].map((i) => (
-              <div key={i} className="bg-white/60 rounded-2xl p-4 border border-[#203C6715] animate-pulse h-40">
+              <div key={i} className="bg-white/50/60 rounded-2xl p-4 border border-[#203C6715] animate-pulse h-40">
                 <div className="h-4 w-24 rounded bg-[#203C6715] mb-4" />
                 <div className="flex flex-col gap-2">
                   {[1, 2, 3].map((j) => (

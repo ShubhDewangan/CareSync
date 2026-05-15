@@ -57,7 +57,7 @@ export default function DoctorProfileMobileSidebar({
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3.5 bg-[#E1D7BC]/70 border-b border-white/60 flex-shrink-0">
           <Link href="/" onClick={() => setOpen(false)} className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-[8px] bg-white/55 border border-white/85 flex items-center justify-center">
+            <div className="w-7 h-7 rounded-[8px] bg-white/50/55 border border-white/85 flex items-center justify-center">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#203C67" strokeWidth="2">
                 <path d="M12 2a5 5 0 1 0 0 10A5 5 0 0 0 12 2z" />
                 <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
@@ -67,7 +67,7 @@ export default function DoctorProfileMobileSidebar({
           </Link>
           <button
             onClick={() => setOpen(false)}
-            className="w-7 h-7 flex items-center justify-center rounded-full bg-white/50 border border-white/85 hover:bg-white/70 transition-colors"
+            className="w-7 h-7 flex items-center justify-center rounded-full bg-white/50 border border-white/85 hover:bg-white/50/70 transition-colors"
             aria-label="Close"
           >
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#203C67" strokeWidth="2.5" strokeLinecap="round">
@@ -79,7 +79,7 @@ export default function DoctorProfileMobileSidebar({
 
         {/* User info */}
         {user ? (
-          <div className="flex items-center gap-3 px-4 py-3.5 border-b border-white/50 bg-white/10 flex-shrink-0">
+          <div className="flex items-center gap-3 px-4 py-3.5 border-b border-white/50 bg-white/50/10 flex-shrink-0">
             <Image
               src={user.profilePic || '/assets/images/user_default.webp'}
               alt="profile" height={38} width={38}
@@ -99,7 +99,7 @@ export default function DoctorProfileMobileSidebar({
               Get Started
             </Link>
             <Link
-              className="flex-1 text-center text-[12px] px-4 py-2 bg-white/50 border border-white/85 text-[#203C67] rounded-full hover:bg-white/70 transition-colors"
+              className="flex-1 text-center text-[12px] px-4 py-2 bg-white/50 border border-white/85 text-[#203C67] rounded-full hover:bg-white/50/70 transition-colors"
               href="/login" onClick={() => setOpen(false)}
             >
               Log in
@@ -117,7 +117,7 @@ export default function DoctorProfileMobileSidebar({
                 <p className="text-[13px] font-semibold text-[#203C67]">Quick Contact</p>
                 <p className="text-[11px] text-[#aaa] mt-0.5">Reach the clinic or assistant</p>
               </div>
-              <div className="w-7 h-7 rounded-[8px] bg-white/70 border border-white/90 flex items-center justify-center flex-shrink-0">
+              <div className="w-7 h-7 rounded-[8px] bg-white/50/70 border border-white/90 flex items-center justify-center flex-shrink-0">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#203C67" strokeWidth="1.8">
                   <path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2 4.2 2 2 0 0 1 4 2h3a2 2 0 0 1 2 1.7c.1 1 .4 2 .7 2.9a2 2 0 0 1-.4 2.1L8.1 9.9a16 16 0 0 0 6 6l1.2-1.2a2 2 0 0 1 2.1-.4c.9.3 1.9.5 2.9.7A2 2 0 0 1 22 16.9z" />
                 </svg>
@@ -125,7 +125,7 @@ export default function DoctorProfileMobileSidebar({
             </div>
 
             <div className="flex flex-col gap-2">
-              <div className="bg-white/55 border border-white/90 rounded-xl px-3.5 py-2.5 flex justify-between items-center">
+              <div className="bg-white/50/55 border border-white/90 rounded-xl px-3.5 py-2.5 flex justify-between items-center">
                 <div>
                   <p className="text-[11px] text-[#aaa] mb-0.5">Clinic Phone</p>
                   <p className="text-[12.5px] text-[#1c1c1c] font-medium">{doctor.phone}</p>
@@ -134,7 +134,7 @@ export default function DoctorProfileMobileSidebar({
                   Call
                 </button>
               </div>
-              <div className="bg-white/55 border border-white/90 rounded-xl px-3.5 py-2.5 flex justify-between items-center">
+              <div className="bg-white/50/55 border border-white/90 rounded-xl px-3.5 py-2.5 flex justify-between items-center">
                 <div>
                   <p className="text-[11px] text-[#aaa] mb-0.5">Email</p>
                   <p className="text-[12.5px] text-[#1c1c1c] font-medium truncate max-w-[170px]">{doctor.email}</p>
@@ -145,7 +145,7 @@ export default function DoctorProfileMobileSidebar({
               </div>
             </div>
 
-            <div className="bg-white/60 border border-white/90 rounded-full flex items-center justify-center">
+            <div className="bg-white/50/60 border border-white/90 rounded-full flex items-center justify-center">
               {selfProfile
                 ? <BookAppointmentModal variant="ghost" text="Book Appointment" DateToday={new Date().toLocaleDateString(undefined, { timeZone: "Asia/Kolkata" })} doctor={doctor as any} userId={userId} fullUser={user as unknown as FullUser} falseButton={true} />
                 : <BookAppointmentModal variant="ghost" text="Book Appointment" DateToday={new Date().toLocaleDateString(undefined, { timeZone: "Asia/Kolkata" })} doctor={doctor as any} userId={userId} fullUser={user as unknown as FullUser} />}
@@ -207,7 +207,7 @@ export default function DoctorProfileMobileSidebar({
       {/* Hamburger — mobile only */}
       <button
         onClick={() => setOpen(true)}
-        className="lg:hidden flex items-center justify-center w-9 h-9 rounded-xl bg-white/50 border border-white/85 hover:bg-white/70 transition-colors"
+        className="lg:hidden flex items-center justify-center w-9 h-9 rounded-xl bg-white/50 border border-white/85 hover:bg-white/50/70 transition-colors"
         aria-label="Open menu"
       >
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#203C67" strokeWidth="2" strokeLinecap="round">

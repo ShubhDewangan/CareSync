@@ -48,7 +48,7 @@ function OtpBoxes({ value, onChange, disabled }: {
           onChange={(e) => handleChange(i, e)} onKeyDown={(e) => handleKey(i, e)}
           onFocus={(e) => e.target.select()}
           className={`w-11 h-13 text-center text-lg font-bold rounded-xl border-2 outline-none
-            transition-all duration-200 bg-white
+            transition-all duration-200 bg-white/50
             ${digit ? "border-[#203C67] text-[#203C67] shadow-sm" : "border-gray-200 text-gray-400"}
             focus:border-[#203C67] focus:shadow-[0_0_0_3px_rgba(32,60,103,0.08)]
             disabled:opacity-50 disabled:cursor-not-allowed`}
@@ -72,6 +72,7 @@ export default function LoginForm() {
   const [otpError, setOtpError] = useState("")
   const [userId, setUserId] = useState("")
   const [resendTimer, setResendTimer] = useState(0)
+  const [generatedOtp, setGeneratedOtp] = useState("")
   const timerRef = useRef<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
@@ -128,32 +129,81 @@ export default function LoginForm() {
   //   setLoading(false)
   // }
   async function handleSendOtp() {
-    if (!validateContact()) return
-    setLoading(true)
-    try {
-      const res = await fetch("/api/auth/send-otp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ contact, method }),
-      })
-      const data = await res.json()
+  if (!validateContact()) return
+  setLoading(true)
+  try {
+    const res = await fetch("/api/auth/send-otp", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ contact, method }),
+    })
+    const data = await res.json()
 
-      if (!res.ok || data.error) {
-        setContactError(data.error ?? "Could not find account. Please sign up first.")
-        setLoading(false)
-        return
-      }
-
-      // ✅ Skip sending — go straight to OTP step
-      setUserId(data.userId)
-      setStep("otp")
-      showToast("info", "Use code 123456 to log in", "top-right")
-
-    } catch {
-      setContactError("Could not send OTP. Please try again.")
+    if (!res.ok || data.error) {
+      setContactError(data.error ?? "Could not send OTP. Please try again.")
+      setLoading(false)
+      return
     }
-    setLoading(false)
+
+    setUserId(data.userId)
+    setGeneratedOtp(data.otp)
+    setStep("otp")
+    setResendTimer(30)
+    showToast("success", `OTP generated! Your otp is ${data.otp}`, "top-right")
+
+  } catch {
+    setContactError("Could not send OTP. Please try again.")
   }
+  setLoading(false)
+}
+
+async function handleVerifyOtp() {
+  setOtpError("")
+  if (otp.length < 6) { setOtpError("Please enter the complete 6-digit OTP."); return }
+  setLoading(true)
+  try {
+    const res = await fetch("/api/auth/verify-otp", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId, otp }),
+    })
+    const data = await res.json()
+
+    if (!res.ok || data.error) {
+      setOtpError(data.error ?? "Invalid or expired OTP. Please try again.")
+      setOtp("")
+      setLoading(false)
+      return
+    }
+
+    showToast("success", "Welcome back! 👋", "top-right")
+    router.push("/")
+
+  } catch {
+    setOtpError("Something went wrong. Please try again.")
+  }
+  setLoading(false)
+}
+
+async function handleResend() {
+  if (resendTimer > 0) return
+  setOtp(""); setOtpError(""); setLoading(true)
+  try {
+    const res = await fetch("/api/auth/send-otp", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ contact, method }),
+    })
+    const data = await res.json()
+    if (res.ok && data.userId) {
+      setUserId(data.userId)
+      setGeneratedOtp(data.otp)
+      setResendTimer(30)
+      showToast("success", `New OTP generated! ${data.otp}`, "top-right")
+    }
+  } catch { showToast("error", "Could not resend OTP.", "top-right") }
+  setLoading(false)
+}
 
   // ─── Verify OTP ──────────────────────────────────────────────────
   // async function handleVerifyOtp() {
@@ -185,43 +235,7 @@ export default function LoginForm() {
   //   }
   //   setLoading(false)
   // }
-  async function handleVerifyOtp() {
-    setOtpError("")
-    if (otp.length < 6) { setOtpError("Please enter the complete 6-digit OTP."); return }
-
-    // ✅ Static OTP check — no need to hit send-otp API
-    if (otp !== "123456") {
-      setOtpError("Invalid code. Use 123456.")
-      setOtp("")
-      return
-    }
-
-    setLoading(true)
-
-    try {
-      const res = await fetch("/api/auth/verify-otp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId, otp: "123456" }),
-      })
-      const data = await res.json()
-
-      if (!res.ok || data.error) {
-        setOtpError(data.error ?? "Invalid or expired OTP. Please try again.")
-        setOtp("")
-        setLoading(false)
-        return
-      }
-
-      // ✅ JWT cookie set by API — redirect to homepage
-      showToast("success", "Welcome back! 👋", "top-right")
-      router.push("/")
-
-    } catch {
-      setOtpError("Something went wrong. Please try again.")
-    }
-    setLoading(false)
-  }
+  
 
   // ─── Resend OTP ──────────────────────────────────────────────────
   // async function handleResend() {
@@ -242,12 +256,7 @@ export default function LoginForm() {
   //   } catch { showToast("error", "Could not resend OTP.", "top-right") }
   //   setLoading(false)
   // }
-  async function handleResend() {
-    if (resendTimer > 0) return
-    setOtp("")
-    setOtpError("")
-    showToast("info", "Use code 123456", "top-right")
-  }
+  
 
   function switchMethod(m: OtpMethod) {
     setMethod(m); setContact(""); setContactError("")
@@ -278,7 +287,7 @@ export default function LoginForm() {
           <button key={m} type="button" onClick={() => switchMethod(m)}
             className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-semibold
               transition-all duration-200 cursor-pointer
-              ${method === m ? "bg-white text-[#203C67] shadow-sm" : "text-gray-400 hover:text-gray-600"}`}
+              ${method === m ? "bg-white/50 text-[#203C67] shadow-sm" : "text-gray-400 hover:text-gray-600"}`}
           >
             {m === "email" ? (
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -310,7 +319,7 @@ export default function LoginForm() {
                 onChange={(e) => { setContact(e.target.value); setContactError("") }}
                 onKeyDown={(e) => e.key === "Enter" && handleSendOtp()}
                 placeholder={method === "email" ? "johndoe@example.com" : "+91 98765 43210"}
-                className={`flex-1 h-11 border-2 rounded-xl px-3 text-sm outline-none transition-all bg-white placeholder:text-gray-300
+                className={`flex-1 h-11 border-2 rounded-xl px-3 text-sm outline-none transition-all bg-white/50 placeholder:text-gray-300
                   ${contactError ? "border-red-300 focus:border-red-400" : "border-gray-200 focus:border-[#203C67] focus:shadow-[0_0_0_3px_rgba(32,60,103,0.08)]"}`}
               />
               <button type="button" onClick={handleSendOtp} disabled={isLoading || !contact.trim()}
@@ -358,6 +367,11 @@ export default function LoginForm() {
               Code sent to{" "}
               <span className="font-semibold text-[#203C67]">{maskContact()}</span>
             </p>
+          </div>
+
+          <div className="flex flex-col items-center gap-1 bg-amber-50 border border-amber-200 rounded-xl py-3 px-4">
+            <p className="text-xs text-amber-700 font-medium">Your OTP is given as notification (demo mode)</p>
+            {/* <p className="text-2xl font-bold tracking-[0.3em] text-amber-800">{generatedOtp}</p> */}
           </div>
 
           <OtpBoxes value={otp} onChange={setOtp} disabled={isLoading} />

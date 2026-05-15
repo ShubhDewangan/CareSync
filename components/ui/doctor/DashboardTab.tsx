@@ -167,7 +167,7 @@ export default function DashboardTab({
         {STAT_CARDS.map(stat => (
           <div
             key={stat.tag}
-            className="bg-white rounded-2xl p-4 border border-[#e8e4da] shadow-sm hover:shadow-md transition-shadow"
+            className="bg-white/50 rounded-2xl p-4 border border-[#e8e4da] shadow-sm hover:shadow-md transition-shadow"
           >
             <div className="flex items-center gap-1.5 mb-2">
               <span className={`w-2 h-2 rounded-full ${stat.dot}`} />
@@ -183,7 +183,7 @@ export default function DashboardTab({
       <section className="flex flex-col lg:flex-row gap-3 sm:gap-4 flex-1 min-h-0">
 
         {/* Earnings chart */}
-        <div className="flex-1 bg-white rounded-2xl border border-[#e8e4da] shadow-sm p-5 flex flex-col min-h-[220px]">
+        <div className="flex-1 bg-white/50 rounded-2xl border border-[#e8e4da] shadow-sm p-5 flex flex-col min-h-[220px]">
                   <span className='text-[9px] text-red-600 mb-2 flex items-center justify-center'>This might show wrong data...for now it is only for representation</span>
           <div className="flex items-start justify-between mb-1">
             <div>
@@ -240,7 +240,7 @@ export default function DashboardTab({
         </div>
 
         {/* Requests panel */}
-        <div className="w-full lg:w-[340px] lg:min-w-[300px] bg-white rounded-2xl border border-[#e8e4da] shadow-sm p-5 flex flex-col max-h-[400px] lg:max-h-none">
+        <div className="w-full lg:w-[340px] lg:min-w-[300px] bg-white/50 rounded-2xl border border-[#e8e4da] shadow-sm p-5 flex flex-col max-h-[400px] lg:max-h-none">
           <div className="flex items-center justify-between mb-4">
             <div>
               <h2 className="text-gray-800 font-semibold text-[15px]">Requests</h2>
@@ -272,7 +272,7 @@ export default function DashboardTab({
                     className={`rounded-xl border p-3 transition-all ${
                       isCompleted || isCancelled
                         ? "opacity-50 border-[#ede9e0] bg-[#f7f4ef]"
-                        : "border-[#ede9e0] bg-[#f7f4ef] hover:bg-white"
+                        : "border-[#ede9e0] bg-[#f7f4ef] hover:bg-white/50"
                     }`}
                   >
                     <div className="flex items-center gap-2 mb-2">

@@ -109,7 +109,7 @@ const DoctorCard = ({ doctor, userId, patientId, authUser, fullUser }: {
       </div>
 
       {/* ── Footer ── */}
-      <footer className="flex gap-2 p-4 border-t-[1px] border-[#203C6730] bg-white">
+      <footer className="flex gap-2 p-4 border-t-[1px] border-[#203C6730] bg-white/50">
         {fullUser ? (
           <BookAppointmentModal
             DateToday={new Date().toLocaleDateString("en-IN", { timeZone: "Asia/Kolkata" })}

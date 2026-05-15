@@ -76,7 +76,7 @@ const REPORT_PILL: Record<string, string> = {
 }
 
 const EMPTY_MED: Medication = { name: "", dosage: "", frequency: "", duration: "", instructions: "" }
-const INPUT = "w-full border border-[#d4cfc6] rounded-xl px-3.5 py-2.5 text-[12.5px] text-[#1a2535] bg-[#faf8f4] focus:outline-none focus:border-[#203C67] focus:bg-white transition-colors placeholder:text-[#b0a99e]"
+const INPUT = "w-full border border-[#d4cfc6] rounded-xl px-3.5 py-2.5 text-[12.5px] text-[#1a2535] bg-[#faf8f4] focus:outline-none focus:border-[#203C67] focus:bg-white/50 transition-colors placeholder:text-[#b0a99e]"
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -177,7 +177,7 @@ function DateHeading({ label }: { label: string }) {
 
 function EmptyState({ icon, title, subtitle }: { icon: string; title: string; subtitle: string }) {
   return (
-    <div className="flex flex-col items-center justify-center py-16 text-center bg-white border border-[#e2ddd4] rounded-2xl">
+    <div className="flex flex-col items-center justify-center py-16 text-center bg-white/50 border border-[#e2ddd4] rounded-2xl">
       <p className="text-[40px] mb-3">{icon}</p>
       <p className="text-[14px] font-semibold text-[#1a2535] mb-1">{title}</p>
       <p className="text-[12px] text-[#a0afc0]">{subtitle}</p>
@@ -198,7 +198,7 @@ function DeleteButton({ onConfirm, isActive }: { onConfirm: () => void; isActive
     <button onClick={handleClick} title={confirming ? "Click again to confirm" : "Delete"}
       className={`w-7 h-7 rounded-lg flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all text-[10px] font-semibold ${
         confirming ? "bg-red-500 text-white opacity-100"
-          : isActive ? "hover:bg-white/20 text-white/70 hover:text-white"
+          : isActive ? "hover:bg-white/50/20 text-white/70 hover:text-white"
           : "hover:bg-red-50 text-[#c0b9b0] hover:text-red-400"
       }`}>
       {confirming ? "?" : (
@@ -284,7 +284,7 @@ function PatientSidePanel({ patient }: { patient: PatientInfo }) {
       {(patient.phone || patient.email || patient.address) && (
         <div>
           <p className="text-[9px] font-semibold text-[#a0afc0] uppercase tracking-wide mb-2">Contact</p>
-          <div className="bg-white border border-[#e2ddd4] rounded-xl p-3 flex flex-col gap-2">
+          <div className="bg-white/50 border border-[#e2ddd4] rounded-xl p-3 flex flex-col gap-2">
             {patient.phone   && <InfoPill label="Phone"   value={patient.phone} />}
             {patient.email   && <InfoPill label="Email"   value={patient.email} />}
             {patient.address && <InfoPill label="Address" value={patient.address} />}
@@ -295,7 +295,7 @@ function PatientSidePanel({ patient }: { patient: PatientInfo }) {
       {(patient.currentMedication || patient.pastMedicalHistory || patient.familyMedicalHistory) && (
         <div>
           <p className="text-[9px] font-semibold text-[#a0afc0] uppercase tracking-wide mb-2">History</p>
-          <div className="bg-white border border-[#e2ddd4] rounded-xl p-3 flex flex-col gap-2">
+          <div className="bg-white/50 border border-[#e2ddd4] rounded-xl p-3 flex flex-col gap-2">
             {patient.currentMedication    && <InfoPill label="Current Medication"   value={patient.currentMedication} />}
             {patient.pastMedicalHistory   && <InfoPill label="Past Medical History" value={patient.pastMedicalHistory} />}
             {patient.familyMedicalHistory && <InfoPill label="Family History"       value={patient.familyMedicalHistory} />}
@@ -306,7 +306,7 @@ function PatientSidePanel({ patient }: { patient: PatientInfo }) {
       {(patient.emergencyContactName || patient.insuranceProvider) && (
         <div>
           <p className="text-[9px] font-semibold text-[#a0afc0] uppercase tracking-wide mb-2">Emergency & Insurance</p>
-          <div className="bg-white border border-[#e2ddd4] rounded-xl p-3 flex flex-col gap-2">
+          <div className="bg-white/50 border border-[#e2ddd4] rounded-xl p-3 flex flex-col gap-2">
             {patient.emergencyContactName   && <InfoPill label="Emergency Contact" value={patient.emergencyContactName} />}
             {patient.emergencyContactNumber && <InfoPill label="Emergency Phone"   value={patient.emergencyContactNumber} />}
             {patient.insuranceProvider      && <InfoPill label="Insurance"         value={patient.insuranceProvider} />}
@@ -365,7 +365,7 @@ function PrescriptionDetail({ rx, patientName }: { rx: Prescription; patientName
         <div>
           <p className="text-[10px] font-semibold text-[#a0afc0] uppercase tracking-wide mb-2">Clinical Notes</p>
           <div
-            className="bg-white border border-[#e2ddd4] rounded-xl px-4 py-3 text-[12px] text-[#1a2535] leading-relaxed prose prose-sm max-w-none"
+            className="bg-white/50 border border-[#e2ddd4] rounded-xl px-4 py-3 text-[12px] text-[#1a2535] leading-relaxed prose prose-sm max-w-none"
             style={{ fontFamily: "Georgia, serif" }}
             dangerouslySetInnerHTML={{ __html: rx.content.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "") }}
           />
@@ -401,7 +401,7 @@ function ReportDetail({ report, patientName }: { report: MedicalReport; patientN
         </div>
       </div>
 
-      <div className="bg-white border border-[#e2ddd4] rounded-xl p-4 flex items-center gap-3">
+      <div className="bg-white/50 border border-[#e2ddd4] rounded-xl p-4 flex items-center gap-3">
         <div className="w-10 h-10 rounded-lg bg-[#f7f4ef] flex items-center justify-center flex-shrink-0">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#a0afc0" strokeWidth="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
         </div>
@@ -442,7 +442,7 @@ function SearchBar({ value, onChange, dateValue, onDateChange }: {
         </svg>
         <input value={value} onChange={e => onChange(e.target.value)}
           placeholder="Search by patient name, diagnosis, title…"
-          className="w-full border border-[#d4cfc6] rounded-xl pl-8 pr-3.5 py-2 text-[12px] text-[#1a2535] bg-white focus:outline-none focus:border-[#203C67] transition-colors placeholder:text-[#b0a99e]"
+          className="w-full border border-[#d4cfc6] rounded-xl pl-8 pr-3.5 py-2 text-[12px] text-[#1a2535] bg-white/50 focus:outline-none focus:border-[#203C67] transition-colors placeholder:text-[#b0a99e]"
         />
         {value && (
           <button onClick={() => onChange("")} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#b0a99e] hover:text-[#5a6a7e]">
@@ -452,7 +452,7 @@ function SearchBar({ value, onChange, dateValue, onDateChange }: {
       </div>
       <div className="relative">
         <input type="date" value={dateValue} onChange={e => onDateChange(e.target.value)}
-          className="border border-[#d4cfc6] rounded-xl px-3 py-2 text-[12px] text-[#1a2535] bg-white focus:outline-none focus:border-[#203C67] transition-colors appearance-none cursor-pointer"
+          className="border border-[#d4cfc6] rounded-xl px-3 py-2 text-[12px] text-[#1a2535] bg-white/50 focus:outline-none focus:border-[#203C67] transition-colors appearance-none cursor-pointer"
           style={{ colorScheme: "light" }}
         />
         {dateValue && (
@@ -660,7 +660,7 @@ export default function PatientRecordsClient({
   const panelPatient = panel ? (patientCache[panel.data.patientId] ?? null) : null
 
   return (
-    <div className="min-h-screen bg-[#EFECE3] font-sans flex flex-col overflow-x-hidden">
+    <div className="min-h-screen bg-[#EFECE3] font-sans flex flex-col overflow-hidden">
 
       {/* ── Header ── */}
       <header
@@ -684,14 +684,12 @@ export default function PatientRecordsClient({
       </header>
 
       {/* ── Body ── */}
-      <div className="flex flex-1 min-h-0 flex-col lg:flex-row">
-
-        {/* List column */}
-        <div className={`flex flex-col transition-all duration-300 ${panelOpen ? "w-full lg:w-[400px] lg:min-w-[340px]" : "flex-1"} border-r border-[#d4cfc6] overflow-y-auto`}>
+      <div className="flex flex-1 min-h-0 flex-col lg:flex-row overflow-hidden">
+        <div className="flex flex-col w-full lg:w-1/2 lg:shrink-0 border-r border-[#d4cfc6] overflow-y-auto min-h-0 remove-scrollbar">
           <div className="p-3 sm:p-4 flex flex-col gap-3">
 
             {/* Tabs */}
-            <div className="flex gap-1 bg-white border border-[#e2ddd4] rounded-xl p-1">
+            <div className="flex gap-1 bg-white/50 border border-[#e2ddd4] rounded-xl p-1">
               {(["prescriptions", "reports"] as Tab[]).map(t => (
                 <button key={t} onClick={() => { setTab(t); setPanel(null) }}
                   className={`flex-1 py-2 rounded-lg text-[11px] sm:text-[12px] font-medium transition-all ${tab === t ? "bg-[#203C67] text-white shadow-sm" : "text-[#7a8fa8] hover:text-[#203C67]"}`}>
@@ -728,8 +726,8 @@ export default function PatientRecordsClient({
                       const cachedName = patientCache[rx.patientId]?.name
                       return (
                         <div key={rx.$id} onClick={() => openPanel({ type: "rx", data: rx })}
-                          className={`flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-3 rounded-xl border cursor-pointer transition-all group ${isActive ? "bg-[#203C67] border-[#203C67]" : "bg-white border-[#e2ddd4] hover:border-[#8FABD4] hover:bg-[#f7f9fc]"}`}>
-                          <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-base flex-shrink-0 ${isActive ? "bg-white/20" : "bg-[#dde8f5]"}`}>💊</div>
+                          className={`flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-3 rounded-xl border cursor-pointer transition-all group ${isActive ? "bg-[#203C67] border-[#203C67]" : "bg-white/50 border-[#e2ddd4] hover:border-[#8FABD4] hover:bg-[#f7f9fc]"}`}>
+                          <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-base flex-shrink-0 ${isActive ? "bg-white/50/20" : "bg-[#dde8f5]"}`}>💊</div>
                           <div className="flex-1 min-w-0">
                             <p className={`text-[12px] sm:text-[13px] font-semibold truncate ${isActive ? "text-white" : "text-[#1a2535]"}`}>{rx.diagnosis}</p>
                             <p className={`text-[9px] sm:text-[10px] mt-0.5 truncate ${isActive ? "text-white/60" : "text-[#a0afc0]"}`}>
@@ -762,8 +760,8 @@ export default function PatientRecordsClient({
                       const cachedName = patientCache[report.patientId]?.name
                       return (
                         <div key={report.$id} onClick={() => openPanel({ type: "report", data: report })}
-                          className={`flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-3 rounded-xl border cursor-pointer transition-all group ${isActive ? "bg-[#203C67] border-[#203C67]" : "bg-white border-[#e2ddd4] hover:border-[#8FABD4] hover:bg-[#f7f9fc]"}`}>
-                          <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-base flex-shrink-0 ${isActive ? "bg-white/20" : "bg-[#f7f4ef]"}`}>{rt?.icon ?? "📄"}</div>
+                          className={`flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-3 rounded-xl border cursor-pointer transition-all group ${isActive ? "bg-[#203C67] border-[#203C67]" : "bg-white/50 border-[#e2ddd4] hover:border-[#8FABD4] hover:bg-[#f7f9fc]"}`}>
+                          <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-base flex-shrink-0 ${isActive ? "bg-white/50/20" : "bg-[#f7f4ef]"}`}>{rt?.icon ?? "📄"}</div>
                           <div className="flex-1 min-w-0">
                             <p className={`text-[12px] sm:text-[13px] font-semibold truncate ${isActive ? "text-white" : "text-[#1a2535]"}`}>{report.title}</p>
                             <p className={`text-[9px] sm:text-[10px] mt-0.5 truncate ${isActive ? "text-white/60" : "text-[#a0afc0]"}`}>
@@ -781,28 +779,21 @@ export default function PatientRecordsClient({
           </div>
         </div>
 
-        {/* ── Detail Panel ── */}
-        <div className={`fixed top-0 right-0 h-screen z-50 bg-white border-l border-[#d4cfc6] transition-all duration-300 ease-in-out flex flex-col ${panelOpen ? "translate-x-0 w-full sm:w-[92vw] md:w-[78vw] lg:w-[900px]" : "translate-x-full w-full sm:w-[92vw] md:w-[78vw] lg:w-[900px]"}`}>
+        {panelOpen && panel && (
+          <div className="hidden lg:flex flex-col w-1/2 shrink-0 min-h-0 overflow-hidden bg-white/50 border-l border-[#e2ddd4]">
 
-          {/* Mobile close bar */}
-          <div className="lg:hidden flex justify-center py-2.5 cursor-pointer bg-white border-b border-[#f0ede7] flex-shrink-0" onClick={() => setPanel(null)}>
-            <div className="w-10 h-1 rounded-full bg-[#d4cfc6]" />
-          </div>
-
-          {/* Panel header */}
-          <div className="flex items-center justify-between px-4 sm:px-5 py-4 border-b border-[#e2ddd4] bg-[#EFECE3] shrink-0">
-            <div className="min-w-0 flex-1">
-              <p className="text-[10px] font-semibold text-[#a0afc0] uppercase tracking-wide">
-                {panel?.type === "rx" ? "Prescription" : "Report"}
-                {panelPatient ? ` · ${panelPatient.name}` : patientLoading ? " · Loading…" : ""}
-              </p>
-              <p className="text-[14px] font-semibold text-[#1a2535] mt-0.5 truncate">
-                {panel?.type === "rx" ? panel.data.diagnosis : panel?.data.title}
-              </p>
-            </div>
-            <div className="flex items-center gap-2 flex-shrink-0">
-              {/* ── THE + BUTTON ── reads patientId from open record, fetches patient, opens modal */}
-              {panel && (
+            {/* Panel header */}
+            <div className="flex items-center justify-between px-4 sm:px-5 py-4 border-b border-[#e2ddd4] bg-[#EFECE3] shrink-0">
+              <div className="min-w-0 flex-1">
+                <p className="text-[10px] font-semibold text-[#a0afc0] uppercase tracking-wide">
+                  {panel.type === "rx" ? "Prescription" : "Report"}
+                  {panelPatient ? ` · ${panelPatient.name}` : patientLoading ? " · Loading…" : ""}
+                </p>
+                <p className="text-[14px] font-semibold text-[#1a2535] mt-0.5 truncate">
+                  {panel.type === "rx" ? panel.data.diagnosis : panel.data.title}
+                </p>
+              </div>
+              <div className="flex items-center gap-2 flex-shrink-0">
                 <button
                   onClick={handlePlusFromPanel}
                   disabled={patientLoading}
@@ -814,40 +805,38 @@ export default function PatientRecordsClient({
                   }
                   <span className="hidden sm:inline">{panel.type === "rx" ? "New Rx" : "Upload Report"}</span>
                 </button>
-              )}
-              <button onClick={() => setPanel(null)} className="w-9 h-9 rounded-full hover:bg-white flex items-center justify-center text-[#7a8fa8] hover:text-[#1a2535] transition-colors">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-              </button>
+                <button onClick={() => setPanel(null)} className="w-9 h-9 rounded-full hover:bg-white/50 flex items-center justify-center text-[#7a8fa8] hover:text-[#1a2535] transition-colors">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+              </div>
+            </div>
+
+            {/* Panel content */}
+            <div className="flex-1 min-h-0 flex flex-col lg:flex-row overflow-hidden">
+              {/* Patient sidebar */}
+              <div className="w-full lg:w-[240px] lg:min-w-[240px] border-b lg:border-b-0 lg:border-r border-[#e2ddd4] bg-[#f7f4ef] overflow-y-auto p-4">
+                {patientLoading && (
+                  <div className="flex items-center justify-center py-12">
+                    <div className="w-6 h-6 rounded-full border-2 border-[#203C67] border-t-transparent animate-spin" />
+                  </div>
+                )}
+                {!patientLoading && panelPatient && <PatientSidePanel patient={panelPatient} />}
+                {!patientLoading && !panelPatient && (
+                  <p className="text-[11px] text-[#a0afc0] text-center pt-10">Patient info unavailable</p>
+                )}
+              </div>
+              {/* Detail */}
+              <div className="flex-1 overflow-y-auto p-4 sm:p-6 bg-white/50">
+                {panel.type === "rx"     && <PrescriptionDetail rx={panel.data} patientName={panelPatient?.name} />}
+                {panel.type === "report" && <ReportDetail report={panel.data} patientName={panelPatient?.name} />}
+              </div>
             </div>
           </div>
+        )}
 
-          {/* Panel content */}
-          <div className="flex-1 min-h-0 flex flex-col lg:flex-row overflow-hidden">
-            {/* Patient sidebar */}
-            <div className="w-full lg:w-[240px] lg:min-w-[240px] border-b lg:border-b-0 lg:border-r border-[#e2ddd4] bg-[#f7f4ef] overflow-y-auto p-4">
-              {patientLoading && (
-                <div className="flex items-center justify-center py-12">
-                  <div className="w-6 h-6 rounded-full border-2 border-[#203C67] border-t-transparent animate-spin" />
-                </div>
-              )}
-              {!patientLoading && panelPatient && <PatientSidePanel patient={panelPatient} />}
-              {!patientLoading && !panelPatient && panel && (
-                <p className="text-[11px] text-[#a0afc0] text-center pt-10">Patient info unavailable</p>
-              )}
-            </div>
-            {/* Detail */}
-            <div className="flex-1 overflow-y-auto p-4 sm:p-6 bg-white">
-              {panel?.type === "rx"     && <PrescriptionDetail rx={panel.data} patientName={panelPatient?.name} />}
-              {panel?.type === "report" && <ReportDetail report={panel.data} patientName={panelPatient?.name} />}
-            </div>
-          </div>
-        </div>
-
-        {/* Backdrop */}
-        {panelOpen && <div onClick={() => setPanel(null)} className="fixed inset-0 bg-black/30 backdrop-blur-[2px] z-40" />}
-
+        {/* ── Desktop: Hint when nothing selected ── */}
         {!panelOpen && prescriptions.length + reports.length > 0 && (
-          <div className="hidden lg:flex flex-1 items-center justify-center text-center p-8 bg-[#faf8f4]">
+          <div className="hidden lg:flex w-1/2 shrink-0 items-center justify-center text-center p-8 bg-[#faf8f4]">
             <div>
               <p className="text-[36px] mb-3">👈</p>
               <p className="text-[14px] font-semibold text-[#1a2535]">Select a record</p>
@@ -855,12 +844,218 @@ export default function PatientRecordsClient({
             </div>
           </div>
         )}
+
+        {/* ── Mobile: Full page slide-in ── */}
+        {panelOpen && panel && (
+          <>
+            <div onClick={() => setPanel(null)} className="lg:hidden overflow-hidden bg-black/40 backdrop-blur-[3px] z-40" />
+            <div className="lg:hidden fixed inset-0 z-50 flex flex-col bg-[#EFECE3] slide-in-right">
+
+              {/* ── Top bar ── */}
+              <div className="flex items-center justify-between px-4 py-4 shrink-0">
+                <button onClick={() => setPanel(null)} className="w-9 h-9 rounded-full bg-white border border-[#e2ddd4] flex items-center justify-center text-[#7a8fa8]">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M19 12H5M5 12l7 7M5 12l7-7"/></svg>
+                </button>
+                <button
+                  onClick={handlePlusFromPanel}
+                  disabled={patientLoading}
+                  className="flex items-center gap-1.5 text-[12px] font-semibold px-4 py-2 rounded-xl bg-[#203C67] text-white hover:bg-[#162d50] transition-colors disabled:opacity-50"
+                >
+                  {patientLoading
+                    ? <span className="w-3 h-3 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                    : <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  }
+                  {panel.type === "rx" ? "New Rx" : "Upload Report"}
+                </button>
+              </div>
+
+              {/* ── Patient hero ── */}
+              <div className="px-4 pb-4 shrink-0 overflow-y-auto">
+                {patientLoading ? (
+                  <div className="flex items-center gap-3 bg-white rounded-2xl border border-[#e2ddd4] p-4">
+                    <div className="w-12 h-12 rounded-2xl bg-[#e2ddd4] animate-pulse shrink-0" />
+                    <div className="flex flex-col gap-2 flex-1">
+                      <div className="h-3.5 w-32 bg-[#e2ddd4] rounded animate-pulse" />
+                      <div className="h-2.5 w-20 bg-[#e2ddd4] rounded animate-pulse" />
+                    </div>
+                  </div>
+                ) : panelPatient ? (
+                  <div className="bg-white rounded-2xl border border-[#e2ddd4] p-4 flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-2xl bg-[#dde8f5] flex items-center justify-center text-[15px] font-bold text-[#203C67] shrink-0">
+                      {getInitials(panelPatient.name)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[15px] font-semibold text-[#1a2535] truncate">{panelPatient.name}</p>
+                      <p className="text-[11px] text-[#a0afc0] mt-0.5">
+                        {[calcAge(panelPatient.birthDate) ? `${calcAge(panelPatient.birthDate)} yrs` : null, panelPatient.gender].filter(Boolean).join(" · ")}
+                      </p>
+                    </div>
+                    <div className="flex flex-col items-end gap-1 shrink-0">
+                      {panelPatient.bloodGroup && (
+                        <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-[#fdecea] text-[#991b1b] border border-[#f5c6c2]">{panelPatient.bloodGroup}</span>
+                      )}
+                      {panelPatient.allergies && (
+                        <span className="text-[10px] font-semibold px-2.5 py-0.5 rounded-full bg-[#fef6e4] text-[#92400e] border border-[#fcd89a]">⚠ Allergy</span>
+                      )}
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+
+              {/* ── Record type label ── */}
+              <div className="px-4 pb-2 shrink-0">
+                <p className="text-[10px] font-semibold text-[#a0afc0] uppercase tracking-widest">
+                  {panel.type === "rx" ? "Prescription" : "Report"}
+                </p>
+                <p className="text-[20px] font-semibold text-[#1a2535] mt-0.5">
+                  {panel.type === "rx" ? panel.data.diagnosis : panel.data.title}
+                </p>
+              </div>
+
+              {/* ── Scrollable body ── */}
+              <div className="flex-1 overflow-y-auto px-4 pb-10 flex flex-col gap-3 remove-scrollbar">
+
+                {/* Main record */}
+                <div className="bg-white rounded-2xl border border-[#e2ddd4] p-5">
+                  {panel.type === "rx"     && <PrescriptionDetail rx={panel.data} patientName={undefined} />}
+                  {panel.type === "report" && <ReportDetail report={panel.data} patientName={undefined} />}
+                </div>
+
+                {/* Patient health sections */}
+                {panelPatient && !patientLoading && (() => {
+                  const allergyList = panelPatient.allergies?.split(",").map(s => s.trim()).filter(Boolean) ?? []
+                  const bmi         = calcBMI(panelPatient.height, panelPatient.weight)
+                  const hasVitals   = panelPatient.height || panelPatient.weight
+                  const hasHistory  = panelPatient.currentMedication || panelPatient.pastMedicalHistory || panelPatient.familyMedicalHistory
+                  const hasContact  = panelPatient.phone || panelPatient.email || panelPatient.address
+                  const hasEmergency = panelPatient.emergencyContactName || panelPatient.insuranceProvider
+
+                  return (
+                    <>
+                      {hasVitals && (
+                        <div className="bg-white rounded-2xl border border-[#e2ddd4] p-4">
+                          <p className="text-[10px] font-semibold text-[#a0afc0] uppercase tracking-widest mb-3">Vitals</p>
+                          <div className="grid grid-cols-3 gap-2">
+                            {panelPatient.height && (
+                              <div className="bg-[#f7f4ef] rounded-xl p-3 text-center">
+                                <p className="text-[9px] text-[#a0afc0] mb-1">Height</p>
+                                <p className="text-[17px] font-bold text-[#1a2535]">{panelPatient.height}</p>
+                                <p className="text-[9px] text-[#a0afc0]">cm</p>
+                              </div>
+                            )}
+                            {panelPatient.weight && (
+                              <div className="bg-[#f7f4ef] rounded-xl p-3 text-center">
+                                <p className="text-[9px] text-[#a0afc0] mb-1">Weight</p>
+                                <p className="text-[17px] font-bold text-[#1a2535]">{panelPatient.weight}</p>
+                                <p className="text-[9px] text-[#a0afc0]">kg</p>
+                              </div>
+                            )}
+                            {bmi && (
+                              <div className="bg-[#f7f4ef] rounded-xl p-3 text-center">
+                                <p className="text-[9px] text-[#a0afc0] mb-1">BMI</p>
+                                <p className="text-[17px] font-bold" style={{ color: bmi.color }}>{bmi.val}</p>
+                                <p className="text-[9px] font-medium" style={{ color: bmi.color }}>{bmi.label}</p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {allergyList.length > 0 && (
+                        <div className="bg-[#fef6e4] border border-[#fcd89a] rounded-2xl p-4">
+                          <p className="text-[10px] font-semibold text-[#92400e] uppercase tracking-widest mb-2.5">⚠ Allergies</p>
+                          <div className="flex flex-wrap gap-1.5">
+                            {allergyList.map(a => (
+                              <span key={a} className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-[#fdecea] text-[#991b1b] border border-[#f5c6c2]">{a}</span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {hasHistory && (
+                        <div className="bg-white rounded-2xl border border-[#e2ddd4]">
+                          <p className="text-[10px] font-semibold text-[#a0afc0] uppercase tracking-widest px-4 pt-4 pb-2">History</p>
+                          {panelPatient.currentMedication && (
+                            <div className={`px-4 py-3 ${(panelPatient.pastMedicalHistory || panelPatient.familyMedicalHistory) ? "border-t border-[#f0ece5]" : ""}`}>
+                              <p className="text-[10px] text-[#a0afc0] uppercase tracking-wide mb-0.5">Current Medication</p>
+                              <p className="text-[12px] text-[#1a2535] leading-snug">{panelPatient.currentMedication}</p>
+                            </div>
+                          )}
+                          {panelPatient.pastMedicalHistory && (
+                            <div className={`px-4 py-3 border-t border-[#f0ece5] ${panelPatient.familyMedicalHistory ? "" : ""}`}>
+                              <p className="text-[10px] text-[#a0afc0] uppercase tracking-wide mb-0.5">Past Medical History</p>
+                              <p className="text-[12px] text-[#1a2535] leading-snug">{panelPatient.pastMedicalHistory}</p>
+                            </div>
+                          )}
+                          {panelPatient.familyMedicalHistory && (
+                            <div className="px-4 py-3 border-t border-[#f0ece5]">
+                              <p className="text-[10px] text-[#a0afc0] uppercase tracking-wide mb-0.5">Family History</p>
+                              <p className="text-[12px] text-[#1a2535] leading-snug">{panelPatient.familyMedicalHistory}</p>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {hasContact && (
+                        <div className="bg-white rounded-2xl border border-[#e2ddd4]">
+                          <p className="text-[10px] font-semibold text-[#a0afc0] uppercase tracking-widest px-4 pt-4 pb-2">Contact</p>
+                          {panelPatient.phone && (
+                            <div className={`px-4 py-3 border-t border-[#f0ece5]`}>
+                              <p className="text-[10px] text-[#a0afc0] uppercase tracking-wide mb-0.5">Phone</p>
+                              <p className="text-[12px] text-[#1a2535]">{panelPatient.phone}</p>
+                            </div>
+                          )}
+                          {panelPatient.email && (
+                            <div className="px-4 py-3 border-t border-[#f0ece5]">
+                              <p className="text-[10px] text-[#a0afc0] uppercase tracking-wide mb-0.5">Email</p>
+                              <p className="text-[12px] text-[#1a2535]">{panelPatient.email}</p>
+                            </div>
+                          )}
+                          {panelPatient.address && (
+                            <div className="px-4 py-3 border-t border-[#f0ece5]">
+                              <p className="text-[10px] text-[#a0afc0] uppercase tracking-wide mb-0.5">Address</p>
+                              <p className="text-[12px] text-[#1a2535]">{panelPatient.address}</p>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {hasEmergency && (
+                        <div className="bg-white rounded-2xl border border-[#e2ddd4] ">
+                          <p className="text-[10px] font-semibold text-[#a0afc0] uppercase tracking-widest px-4 pt-4 pb-2">Emergency & Insurance</p>
+                          {panelPatient.emergencyContactName && (
+                            <div className="px-4 py-3 border-t border-[#f0ece5]">
+                              <p className="text-[10px] text-[#a0afc0] uppercase tracking-wide mb-0.5">Emergency Contact</p>
+                              <p className="text-[12px] text-[#1a2535]">{panelPatient.emergencyContactName}</p>
+                            </div>
+                          )}
+                          {panelPatient.emergencyContactNumber && (
+                            <div className="px-4 py-3 border-t border-[#f0ece5]">
+                              <p className="text-[10px] text-[#a0afc0] uppercase tracking-wide mb-0.5">Emergency Phone</p>
+                              <p className="text-[12px] text-[#1a2535]">{panelPatient.emergencyContactNumber}</p>
+                            </div>
+                          )}
+                          {panelPatient.insuranceProvider && (
+                            <div className="px-4 py-3 border-t border-[#f0ece5]">
+                              <p className="text-[10px] text-[#a0afc0] uppercase tracking-wide mb-0.5">Insurance</p>
+                              <p className="text-[12px] text-[#1a2535]">{panelPatient.insuranceProvider}</p>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </>
+                  )
+                })()}
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
       {/* ── Modal ── */}
       {modal && (
         <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/40 backdrop-blur-[3px] p-3 sm:p-5">
-          <div className="w-full max-w-3xl bg-white border border-[#e2ddd4] rounded-[28px] shadow-2xl overflow-hidden max-h-[92vh] flex flex-col animate-in fade-in zoom-in duration-200">
+          <div className="w-full max-w-3xl bg-white/50 border border-[#e2ddd4] rounded-[28px] shadow-2xl overflow-hidden max-h-[92vh] flex flex-col animate-in fade-in zoom-in duration-200">
 
             {/* Modal header */}
             <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-[#ece7de] bg-[#faf8f4]">
@@ -880,7 +1075,7 @@ export default function PatientRecordsClient({
                   <span className="text-[10px] text-[#a0afc0]">· {modal.patientId.slice(0, 8)}…</span>
                 </div>
               </div>
-              <button onClick={closeModal} className="w-10 h-10 rounded-full hover:bg-white border border-transparent hover:border-[#e2ddd4] flex items-center justify-center text-[#7a8fa8] hover:text-[#1a2535] transition-all">
+              <button onClick={closeModal} className="w-10 h-10 rounded-full hover:bg-white/50 border border-transparent hover:border-[#e2ddd4] flex items-center justify-center text-[#7a8fa8] hover:text-[#1a2535] transition-all">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
               </button>
             </div>

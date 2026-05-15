@@ -33,10 +33,10 @@ const categories = [
 ]
 
 const STATS = [
-  { value: '2,400+', label: 'Appointments Booked' },
-  { value: '120+',   label: 'Verified Doctors'    },
-  { value: '18+',    label: 'Specializations'     },
-  { value: '4.8★',   label: 'Average Rating'      },
+  { value: '2,400+', label: 'Fake Appointments Booked' },
+  { value: '120+',   label: 'Verified fake Doctors'    },
+  { value: '18+',    label: 'Specializations (10 se jyada nhi honge btw)'     },
+  { value: '4.8★',   label: 'Average fake Rating'      },
 ]
 
 const HOW_IT_WORKS = [
@@ -235,7 +235,7 @@ function Home() {
           </button>
 
           {/* Search bar */}
-          <div className="flex bg-white/70 border border-[#21262eb0] rounded-full px-3 sm:px-4 py-2 gap-2 items-center flex-1 max-w-[500px]">
+          <div className="flex bg-white/50/70 border border-[#21262eb0] rounded-full px-3 sm:px-4 py-2 gap-2 items-center flex-1 max-w-[500px]">
             <Image src='/assets/icons/search.svg' alt='search' height={16} width={16} className='opacity-50 flex-shrink-0' />
             <Input
               placeholder='Search doctors, specializations…'
@@ -294,7 +294,7 @@ function Home() {
 
           <div className="flex flex-col gap-4 sm:gap-5 max-w-[520px] relative z-10">
             <div className="flex items-center gap-2">
-              <span className="text-[11px] font-semibold bg-white/60 text-[#3d6b3f] border border-[#3d6b3f30] rounded-full px-3 py-1 tracking-wide uppercase">
+              <span className="text-[11px] font-semibold bg-white/50/60 text-[#3d6b3f] border border-[#3d6b3f30] rounded-full px-3 py-1 tracking-wide uppercase">
                 Healthcare · Simplified
               </span>
             </div>
@@ -314,7 +314,7 @@ function Home() {
               </Link>
               <a
                 href="#doctors"
-                className="text-[12px] sm:text-[13px] font-medium text-[#3d6b3f] px-4 sm:px-5 py-2.5 sm:py-3 rounded-xl border border-[#3d6b3f50] hover:bg-white/40 transition-colors"
+                className="text-[12px] sm:text-[13px] font-medium text-[#3d6b3f] px-4 sm:px-5 py-2.5 sm:py-3 rounded-xl border border-[#3d6b3f50] hover:bg-white/50/40 transition-colors"
               >
                 Browse Doctors
               </a>
@@ -323,21 +323,21 @@ function Home() {
 
           {/* Hero visual — hidden on mobile/tablet */}
           <div className="hidden xl:flex flex-col gap-3 relative z-10 flex-shrink-0">
-            <div className="bg-white/80 backdrop-blur rounded-2xl px-5 py-3 shadow-sm flex items-center gap-3 border border-white">
+            <div className="bg-white/50/80 backdrop-blur rounded-2xl px-5 py-3 shadow-sm flex items-center gap-3 border border-white">
               <div className="w-9 h-9 rounded-full bg-green-100 flex items-center justify-center text-lg">✅</div>
               <div>
                 <p className="text-[12px] font-bold text-gray-800">Appointment confirmed</p>
                 <p className="text-[11px] text-gray-400">Dr. Shubh · Today 11:00 AM</p>
               </div>
             </div>
-            <div className="bg-white/80 backdrop-blur rounded-2xl px-5 py-3 shadow-sm flex items-center gap-3 border border-white ml-6">
+            <div className="bg-white/50/80 backdrop-blur rounded-2xl px-5 py-3 shadow-sm flex items-center gap-3 border border-white ml-6">
               <div className="w-9 h-9 rounded-full bg-blue-100 flex items-center justify-center text-lg">💊</div>
               <div>
                 <p className="text-[12px] font-bold text-gray-800">Prescription ready</p>
                 <p className="text-[11px] text-gray-400">Amoxicillin · 500mg · 5 days</p>
               </div>
             </div>
-            <div className="bg-white/80 backdrop-blur rounded-2xl px-5 py-3 shadow-sm flex items-center gap-3 border border-white">
+            <div className="bg-white/50/80 backdrop-blur rounded-2xl px-5 py-3 shadow-sm flex items-center gap-3 border border-white">
               <div className="w-9 h-9 rounded-full bg-amber-100 flex items-center justify-center text-lg">📋</div>
               <div>
                 <p className="text-[12px] font-bold text-gray-800">Lab report uploaded</p>
@@ -353,7 +353,7 @@ function Home() {
           style={{ opacity: mounted ? 1 : 0, transition: "opacity 0.6s ease 0.15s" }}
         >
           {STATS.map((s, i) => (
-            <div key={i} className="bg-white/60 border border-[#203C6715] rounded-xl px-3 sm:px-5 py-3 sm:py-4 text-center">
+            <div key={i} className="bg-white/50/60 border border-[#203C6715] rounded-xl px-3 sm:px-5 py-3 sm:py-4 text-center">
               <p className="text-[18px] sm:text-[22px] font-bold text-[#203C67]">{s.value}</p>
               <p className="text-[10px] sm:text-[11px] text-gray-500 mt-0.5">{s.label}</p>
             </div>
@@ -370,7 +370,7 @@ function Home() {
             {HOW_IT_WORKS.map((h, i) => (
               <div
                 key={i}
-                className="bg-white/60 border border-[#203C6715] rounded-xl p-4 sm:p-5 hover:bg-white/80 transition-colors"
+                className="bg-white/50/60 border border-[#203C6715] rounded-xl p-4 sm:p-5 hover:bg-white/50/80 transition-colors"
                 style={{
                   opacity: mounted ? 1 : 0,
                   transform: mounted ? "translateY(0)" : "translateY(8px)",
@@ -423,7 +423,7 @@ function Home() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 w-full">
               {doctorsLoading ? (
                 Array.from({ length: 6 }).map((_, i) => (
-                  <div key={i} className="w-[160px] sm:w-[220px] h-[240px] sm:h-[280px] rounded-2xl bg-white/40 animate-pulse border border-[#203C6715]" />
+                  <div key={i} className="w-[160px] sm:w-[220px] h-[240px] sm:h-[280px] rounded-2xl bg-white/50/40 animate-pulse border border-[#203C6715]" />
                 ))
               ) : Doctors && Doctors.length > 0 ? (
                 Doctors.slice(0, 6).map((doctor, idx) => (
@@ -446,7 +446,7 @@ function Home() {
               <div className="flex justify-center mt-6">
                 <Link
                   href="/doctors"
-                  className="inline-flex items-center gap-2 px-6 py-2.5 bg-white border-[2px] border-[#203C67] text-[#203C67] text-[13px] font-semibold rounded-xl hover:bg-[#203C67] hover:text-white transition-all duration-200"
+                  className="inline-flex items-center gap-2 px-6 py-2.5 bg-white/50 border-[2px] border-[#203C67] text-[#203C67] text-[13px] font-semibold rounded-xl hover:bg-[#203C67] hover:text-white transition-all duration-200"
                 >
                   See all {Doctors?.length} doctors
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -477,7 +477,7 @@ function Home() {
               <div className="flex gap-3 flex-shrink-0">
                 <Link
                   href="/signin"
-                  className="text-[13px] font-semibold bg-white text-[#2a3320] px-5 sm:px-6 py-3 rounded-xl hover:bg-[#f0f7ec] transition-colors whitespace-nowrap"
+                  className="text-[13px] font-semibold bg-white/50 text-[#2a3320] px-5 sm:px-6 py-3 rounded-xl hover:bg-[#f0f7ec] transition-colors whitespace-nowrap"
                 >
                   Create free account →
                 </Link>

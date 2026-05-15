@@ -59,7 +59,7 @@ export default function DoctorsPageClient({
     <div className="min-h-screen bg-[#EFECE3]">
 
       {/* ── Header ── */}
-      <div className="bg-white border-b-[3px] border-[#203C67] px-4 sm:px-8 py-6 sm:py-8">
+      <div className="bg-white/50 border-b-[3px] border-[#203C67] px-4 sm:px-8 py-6 sm:py-8">
         <div className="max-w-6xl mx-auto">
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-5">
             <div>

@@ -155,11 +155,11 @@ export default async function DoctorProfilePage({ params }: { params: Promise<{ 
                 <h1 className="text-[16px] font-semibold text-[#1c1c1c] mb-1.5">Dr. {doctor.name}</h1>
                 <div className="flex flex-wrap gap-1.5">
                   {specs.map((s: string) => (
-                    <span key={s} className="text-[11px] bg-white/70 border border-white/90 text-[#3a5a8a] px-2.5 py-1 rounded-full font-medium">
+                    <span key={s} className="text-[11px] bg-white/50/70 border border-white/90 text-[#3a5a8a] px-2.5 py-1 rounded-full font-medium">
                       {s}
                     </span>
                   ))}
-                  <span className="text-[11px] bg-white/70 border border-white/90 text-[#999] px-2.5 py-1 rounded-full capitalize">
+                  <span className="text-[11px] bg-white/50/70 border border-white/90 text-[#999] px-2.5 py-1 rounded-full capitalize">
                     {doctor.gender}
                   </span>
                 </div>
@@ -179,16 +179,16 @@ export default async function DoctorProfilePage({ params }: { params: Promise<{ 
             {/* Meta chips */}
             <div className="flex flex-wrap gap-1.5 mb-4">
               {doctor.rating && (
-                <div className="flex items-center gap-1.5 bg-white/60 border border-white/85 rounded-full px-3 py-1.5 text-[12px] text-[#444]">
+                <div className="flex items-center gap-1.5 bg-white/50/60 border border-white/85 rounded-full px-3 py-1.5 text-[12px] text-[#444]">
                   <StarRating rating={doctor.rating} />
                   <span>{doctor.rating}</span>
                 </div>
               )}
-              <div className="flex items-center gap-1.5 bg-white/60 border border-white/85 rounded-full px-3 py-1.5 text-[12px] text-[#444]">
+              <div className="flex items-center gap-1.5 bg-white/50/60 border border-white/85 rounded-full px-3 py-1.5 text-[12px] text-[#444]">
                 <span className="text-[#bbb] text-[11px]">Patients</span>
                 <span>{doctor.totalusers || '0'}</span>
               </div>
-              <div className="flex items-center gap-1.5 bg-white/60 border border-white/85 rounded-full px-3 py-1.5 text-[12px] text-[#444]">
+              <div className="flex items-center gap-1.5 bg-white/50/60 border border-white/85 rounded-full px-3 py-1.5 text-[12px] text-[#444]">
                 <span className="text-[#bbb] text-[11px]">Exp.</span>
                 <span>{doctor.experience}</span>
               </div>
@@ -196,7 +196,7 @@ export default async function DoctorProfilePage({ params }: { params: Promise<{ 
                 ₹{doctor.consultationFee}
                 <span className="font-normal text-white/45 text-[11px]">/ visit</span>
               </div>
-              <div className="flex items-center bg-white/60 border border-white/85 rounded-full px-3 py-1.5 text-[12px] text-[#888]">
+              <div className="flex items-center bg-white/50/60 border border-white/85 rounded-full px-3 py-1.5 text-[12px] text-[#888]">
                 {doctor.appointmentSpan} slot
               </div>
             </div>
@@ -215,7 +215,7 @@ export default async function DoctorProfilePage({ params }: { params: Promise<{ 
             {/* Personal */}
             <div className="bg-white/50 border border-white/85 rounded-2xl p-5">
               <div className="flex items-center gap-2 mb-3">
-                <div className="h-[26px] w-[26px] rounded-[8px] bg-white/70 border border-white/90 flex items-center justify-center text-[12px]">👤</div>
+                <div className="h-[26px] w-[26px] rounded-[8px] bg-white/50/70 border border-white/90 flex items-center justify-center text-[12px]">👤</div>
                 <h2 className="text-[12.5px] font-semibold text-[#203C67]">Personal</h2>
               </div>
               <div className="flex flex-col divide-y divide-black/[0.04]">
@@ -231,7 +231,7 @@ export default async function DoctorProfilePage({ params }: { params: Promise<{ 
                   <span className="text-[11.5px] text-[#aaa] mt-1">Languages</span>
                   <div className="flex flex-wrap gap-1 justify-end">
                     {doctor.languages?.map((l: string) => (
-                      <span key={l} className="text-[10.5px] bg-white/70 border border-white/90 text-[#3a5a8a] px-2.5 py-1 rounded-full font-medium">{l}</span>
+                      <span key={l} className="text-[10.5px] bg-white/50/70 border border-white/90 text-[#3a5a8a] px-2.5 py-1 rounded-full font-medium">{l}</span>
                     ))}
                   </div>
                 </div>
@@ -241,7 +241,7 @@ export default async function DoctorProfilePage({ params }: { params: Promise<{ 
             {/* Professional */}
             <div className="bg-white/50 border border-white/85 rounded-2xl p-5">
               <div className="flex items-center gap-2 mb-3">
-                <div className="h-[26px] w-[26px] rounded-[8px] bg-white/70 border border-white/90 flex items-center justify-center text-[12px]">🏥</div>
+                <div className="h-[26px] w-[26px] rounded-[8px] bg-white/50/70 border border-white/90 flex items-center justify-center text-[12px]">🏥</div>
                 <h2 className="text-[12.5px] font-semibold text-[#203C67]">Professional</h2>
               </div>
               <div className="flex flex-col divide-y divide-black/[0.04]">
@@ -254,7 +254,7 @@ export default async function DoctorProfilePage({ params }: { params: Promise<{ 
                     <span className="text-[11.5px] text-[#aaa] mt-1">Qualifications</span>
                     <div className="flex flex-wrap gap-1 justify-end">
                       {quals.map((q: string) => (
-                        <span key={q} className="text-[10.5px] bg-white/70 border border-white/90 text-[#3a5a8a] px-2.5 py-1 rounded-full font-medium">{q}</span>
+                        <span key={q} className="text-[10.5px] bg-white/50/70 border border-white/90 text-[#3a5a8a] px-2.5 py-1 rounded-full font-medium">{q}</span>
                       ))}
                     </div>
                   </div>
@@ -273,7 +273,7 @@ export default async function DoctorProfilePage({ params }: { params: Promise<{ 
           {/* Availability */}
           <div className="bg-white/50 border border-white/85 rounded-2xl p-5">
             <div className="flex items-center gap-2 mb-3">
-              <div className="h-[26px] w-[26px] rounded-[8px] bg-white/70 border border-white/90 flex items-center justify-center text-[12px]">📅</div>
+              <div className="h-[26px] w-[26px] rounded-[8px] bg-white/50/70 border border-white/90 flex items-center justify-center text-[12px]">📅</div>
               <h2 className="text-[12.5px] font-semibold text-[#203C67]">Availability</h2>
               <span className="ml-auto text-[11px] text-[#bbb] font-mono">{doctor.consultationHours} IST</span>
             </div>
@@ -286,7 +286,7 @@ export default async function DoctorProfilePage({ params }: { params: Promise<{ 
                     className={`px-3 py-1.5 rounded-full text-[11.5px] font-medium transition-colors ${
                       on
                         ? 'bg-[#203C67] text-[#EFECE3]'
-                        : 'bg-white/40 border border-white/70 text-[#ccc]'
+                        : 'bg-white/50/40 border border-white/70 text-[#ccc]'
                     }`}
                   >
                     {day.slice(0, 3)}
@@ -316,20 +316,20 @@ export default async function DoctorProfilePage({ params }: { params: Promise<{ 
                 <h3 className="text-[13.5px] font-semibold text-[#203C67]">Quick Contact</h3>
                 <p className="text-[11px] text-[#aaa] mt-0.5">Reach the clinic or assistant</p>
               </div>
-              <div className="h-8 w-8 rounded-xl bg-white/70 border border-white/90 flex items-center justify-center">
+              <div className="h-8 w-8 rounded-xl bg-white/50/70 border border-white/90 flex items-center justify-center">
                 <Image src="/assets/icons/phone.svg" alt="call" height={15} width={15} />
               </div>
             </div>
 
             <div className="flex flex-col gap-2">
-              <div className="bg-white/55 border border-white/90 rounded-xl px-4 py-3 flex justify-between items-center">
+              <div className="bg-white/50/55 border border-white/90 rounded-xl px-4 py-3 flex justify-between items-center">
                 <div>
                   <p className="text-[11px] text-[#aaa] mb-0.5">Clinic Phone</p>
                   <p className="text-[12.5px] text-[#1c1c1c] font-medium">{doctor.phone}</p>
                 </div>
                 <button className="bg-[#203C67] text-white text-[11.5px] font-medium px-4 py-1.5 rounded-full hover:opacity-90 transition-opacity">Call</button>
               </div>
-              <div className="bg-white/55 border border-white/90 rounded-xl px-4 py-3 flex justify-between items-center">
+              <div className="bg-white/50/55 border border-white/90 rounded-xl px-4 py-3 flex justify-between items-center">
                 <div>
                   <p className="text-[11px] text-[#aaa] mb-0.5">Email</p>
                   <p className="text-[12.5px] text-[#1c1c1c] font-medium truncate max-w-[170px]">{doctor.email}</p>
@@ -338,7 +338,7 @@ export default async function DoctorProfilePage({ params }: { params: Promise<{ 
               </div>
             </div>
 
-            <div className="bg-white/60 border border-white/90 rounded-full flex items-center justify-center">
+            <div className="bg-white/50/60 border border-white/90 rounded-full flex items-center justify-center">
               {selfProfile
                 ? <BookAppointmentModal variant="ghost" text="Book Appointment" DateToday={new Date().toLocaleDateString(undefined, { timeZone: "Asia/Kolkata" })} doctor={doctor} userId={userId as string} fullUser={user as unknown as FullUser} falseButton={true} />
                 : <BookAppointmentModal variant="ghost" text="Book Appointment" DateToday={new Date().toLocaleDateString(undefined, { timeZone: "Asia/Kolkata" })} doctor={doctor} userId={userId as string} fullUser={user as unknown as FullUser} />}

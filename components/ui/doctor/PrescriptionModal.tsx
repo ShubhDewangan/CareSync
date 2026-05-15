@@ -125,7 +125,7 @@ function formatBytes(bytes: number) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
-const INPUT = "w-full border border-[#d4cfc6] rounded-xl px-3 py-2 text-[12px] text-[#1a2535] bg-[#faf8f4] focus:outline-none focus:border-[#203C67] focus:bg-white transition-colors placeholder:text-[#b0a99e] font-[inherit]"
+const INPUT = "w-full border border-[#d4cfc6] rounded-xl px-3 py-2 text-[12px] text-[#1a2535] bg-[#faf8f4] focus:outline-none focus:border-[#203C67] focus:bg-white/50 transition-colors placeholder:text-[#b0a99e] font-[inherit]"
 
 function SL({ children }: { children: React.ReactNode }) {
   return <p className="text-[9px] font-semibold text-[#8a9ab0] uppercase tracking-[0.08em] mb-1.5">{children}</p>
@@ -374,7 +374,7 @@ export default function PrescriptionModal(props: Props) {
               onClick={() => setTab(t.key)}
               className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-[12px] font-semibold border-b-2 transition-all ${
                 tab === t.key
-                  ? "border-[#203C67] text-[#203C67] bg-white"
+                  ? "border-[#203C67] text-[#203C67] bg-white/50"
                   : "border-transparent text-[#a0afc0] hover:text-[#5a6a7e] hover:bg-[#ede9e1]"
               }`}
             >
@@ -408,7 +408,7 @@ export default function PrescriptionModal(props: Props) {
                 </div>
 
                 {/* Patient card */}
-                <div className="bg-white border border-[#e2ddd4] rounded-2xl p-3">
+                <div className="bg-white/50 border border-[#e2ddd4] rounded-2xl p-3">
                   <div className="flex flex-col items-center gap-1.5 pb-3 border-b border-[#ede9e1]">
                     <div className="w-10 h-10 rounded-xl bg-[#dde8f5] flex items-center justify-center text-[13px] font-bold text-[#203C67]">
                       {patientName.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase()}
@@ -441,7 +441,7 @@ export default function PrescriptionModal(props: Props) {
 
                 {/* Vitals */}
                 {(patientHeight || patientWeight) && (
-                  <div className="bg-white border border-[#e2ddd4] rounded-2xl p-3">
+                  <div className="bg-white/50 border border-[#e2ddd4] rounded-2xl p-3">
                     <SL>Vitals</SL>
                     <div className="grid grid-cols-2 gap-1.5">
                       {patientHeight && (
@@ -502,19 +502,19 @@ export default function PrescriptionModal(props: Props) {
                 ) : (<>
 
                   <div className="grid grid-cols-[1fr_170px] gap-3">
-                    <div className="bg-white border border-[#e2ddd4] rounded-2xl p-3">
+                    <div className="bg-white/50 border border-[#e2ddd4] rounded-2xl p-3">
                       <SL>Diagnosis / Chief Complaint</SL>
                       <input value={diagnosis} onChange={e => setDiagnosis(e.target.value)} disabled={isLocked}
                         placeholder="e.g. Acute pharyngitis, Type 2 Diabetes…" className={INPUT} />
                     </div>
-                    <div className="bg-white border border-[#e2ddd4] rounded-2xl p-3">
+                    <div className="bg-white/50 border border-[#e2ddd4] rounded-2xl p-3">
                       <SL>Follow-up Date</SL>
                       <input type="date" value={followUpDate} onChange={e => setFollowUpDate(e.target.value)} disabled={isLocked} className={INPUT} />
                     </div>
                   </div>
 
                   {/* Medications table */}
-                  <div className="bg-white border border-[#e2ddd4] rounded-2xl p-3">
+                  <div className="bg-white/50 border border-[#e2ddd4] rounded-2xl p-3">
                     <div className="flex items-center justify-between mb-2">
                       <SL>Medications</SL>
                       {!isLocked && (
@@ -541,7 +541,7 @@ export default function PrescriptionModal(props: Props) {
                                   <input value={row[field]} disabled={isLocked}
                                     onChange={e => setMeds(m => m.map(r => r.id === row.id ? { ...r, [field]: e.target.value } : r))}
                                     placeholder={field === "name" ? "Amoxicillin" : field === "dosage" ? "500mg" : field === "frequency" ? "TDS" : field === "duration" ? "5 days" : "After meals"}
-                                    className="w-full text-[11px] px-2 py-1.5 rounded-lg border border-transparent bg-transparent focus:border-[#8FABD4] focus:bg-white focus:outline-none transition-all placeholder:text-[#c0b9b0] text-[#1a2535]"
+                                    className="w-full text-[11px] px-2 py-1.5 rounded-lg border border-transparent bg-transparent focus:border-[#8FABD4] focus:bg-white/50 focus:outline-none transition-all placeholder:text-[#c0b9b0] text-[#1a2535]"
                                   />
                                 </td>
                               ))}
@@ -569,7 +569,7 @@ export default function PrescriptionModal(props: Props) {
                   )}
 
                   {mode === "typed" && (
-                    <div className="bg-white border border-[#e2ddd4] rounded-2xl overflow-hidden">
+                    <div className="bg-white/50 border border-[#e2ddd4] rounded-2xl overflow-hidden">
                       {!isLocked && (
                         <div className="flex items-center gap-1 px-3 py-2 border-b border-[#ede9e1] bg-[#f7f4ef]">
                           {TOOLBAR.map(t => (
@@ -590,7 +590,7 @@ export default function PrescriptionModal(props: Props) {
                   )}
 
                   {mode === "image" && (
-                    <div className="bg-white border border-[#e2ddd4] rounded-2xl flex flex-col items-center justify-center p-8 gap-3 min-h-[160px]">
+                    <div className="bg-white/50 border border-[#e2ddd4] rounded-2xl flex flex-col items-center justify-center p-8 gap-3 min-h-[160px]">
                       {imagePreview ? (
                         <div className="flex flex-col items-center gap-2 w-full">
                           <Image src={imagePreview} alt="Prescription" height={1000} width={1000}
@@ -614,7 +614,7 @@ export default function PrescriptionModal(props: Props) {
                     </div>
                   )}
 
-                  <div className="bg-white border border-[#e2ddd4] rounded-2xl p-3">
+                  <div className="bg-white/50 border border-[#e2ddd4] rounded-2xl p-3">
                     <SL>Private Notes <span className="font-normal normal-case tracking-normal text-[#c0b9b0]">(not visible to patient)</span></SL>
                     <textarea value={notes} onChange={e => setNotes(e.target.value)} disabled={isLocked} rows={2}
                       placeholder="Internal observations, reminders, differential diagnoses…"
@@ -630,7 +630,7 @@ export default function PrescriptionModal(props: Props) {
             <div className="p-5 flex flex-col gap-4">
 
               {/* Upload form */}
-              <div className="bg-white border border-[#e2ddd4] rounded-2xl p-4 flex flex-col gap-3">
+              <div className="bg-white/50 border border-[#e2ddd4] rounded-2xl p-4 flex flex-col gap-3">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-[13px] font-semibold text-[#1a2535]">Upload Medical Record</p>
@@ -783,7 +783,7 @@ export default function PrescriptionModal(props: Props) {
                   {uploadedRecords.map(rec => {
                     const rt = REPORT_TYPES.find(r => r.value === rec.reportType)
                     return (
-                      <div key={rec.id} className="flex items-center gap-3 bg-white border border-[#e2ddd4] rounded-xl px-3 py-2.5">
+                      <div key={rec.id} className="flex items-center gap-3 bg-white/50 border border-[#e2ddd4] rounded-xl px-3 py-2.5">
                         <span className="text-lg flex-shrink-0">{rt?.icon ?? "📄"}</span>
                         <div className="flex-1 min-w-0">
                           <p className="text-[12px] font-semibold text-[#1a2535] truncate">{rec.title}</p>

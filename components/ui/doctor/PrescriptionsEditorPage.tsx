@@ -96,7 +96,7 @@ const newRow = (): MedRow => ({
 })
 
 // ─── Shared input style ───────────────────────────────────────────────────────
-const INPUT = "w-full border border-[#d4cfc6] rounded-xl px-3.5 py-2.5 text-[12.5px] text-[#1a2535] bg-[#faf8f4] focus:outline-none focus:border-[#203C67] focus:bg-white transition-colors font-[inherit] placeholder:text-[#b0a99e]"
+const INPUT = "w-full border border-[#d4cfc6] rounded-xl px-3.5 py-2.5 text-[12.5px] text-[#1a2535] bg-[#faf8f4] focus:outline-none focus:border-[#203C67] focus:bg-white/50 transition-colors font-[inherit] placeholder:text-[#b0a99e]"
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
@@ -278,7 +278,7 @@ export default function PrescriptionEditorPage(props: PrescriptionPageProps) {
           )}
           <Link
             href={`/doctors/${doctorId}/records`}
-            className="flex items-center gap-1.5 text-[12px] font-medium px-3 py-1.5 rounded-xl border border-[#d4cfc6] text-[#5a6a7e] hover:border-[#8FABD4] hover:text-[#203C67] bg-white transition-colors"
+            className="flex items-center gap-1.5 text-[12px] font-medium px-3 py-1.5 rounded-xl border border-[#d4cfc6] text-[#5a6a7e] hover:border-[#8FABD4] hover:text-[#203C67] bg-white/50 transition-colors"
           >
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
@@ -293,7 +293,7 @@ export default function PrescriptionEditorPage(props: PrescriptionPageProps) {
 
         <div className="flex items-center gap-3">
           {/* Tab switcher */}
-          <div className="flex bg-white border border-[#d4cfc6] rounded-xl p-1 gap-1">
+          <div className="flex bg-white/50 border border-[#d4cfc6] rounded-xl p-1 gap-1">
             {TAB_ITEMS.map(t => (
               <button
                 key={t.key}
@@ -331,7 +331,7 @@ export default function PrescriptionEditorPage(props: PrescriptionPageProps) {
         <aside className="w-[220px] flex-shrink-0 flex flex-col gap-3">
 
           {/* Patient card */}
-          <div className="bg-white border border-[#e2ddd4] rounded-2xl p-4">
+          <div className="bg-white/50 border border-[#e2ddd4] rounded-2xl p-4">
             {/* Avatar */}
             <div className="flex flex-col items-center gap-2 pb-4 border-b border-[#ede9e1]">
               <div className="w-14 h-14 rounded-2xl bg-[#dde8f5] flex items-center justify-center text-[18px] font-bold text-[#203C67]">
@@ -379,7 +379,7 @@ export default function PrescriptionEditorPage(props: PrescriptionPageProps) {
 
           {/* Vitals */}
           {(patientHeight || patientWeight) && (
-            <div className="bg-white border border-[#e2ddd4] rounded-2xl p-4">
+            <div className="bg-white/50 border border-[#e2ddd4] rounded-2xl p-4">
               <SectionLabel>Vitals</SectionLabel>
               <div className="grid grid-cols-2 gap-2">
                 {patientHeight && (
@@ -454,7 +454,7 @@ export default function PrescriptionEditorPage(props: PrescriptionPageProps) {
 
             {/* Diagnosis + Follow-up */}
             <div className="grid grid-cols-[1fr_200px] gap-3">
-              <div className="bg-white border border-[#e2ddd4] rounded-2xl p-4">
+              <div className="bg-white/50 border border-[#e2ddd4] rounded-2xl p-4">
                 <SectionLabel>Diagnosis / Chief Complaint</SectionLabel>
                 <input
                   value={diagnosis}
@@ -464,7 +464,7 @@ export default function PrescriptionEditorPage(props: PrescriptionPageProps) {
                   className={INPUT}
                 />
               </div>
-              <div className="bg-white border border-[#e2ddd4] rounded-2xl p-4">
+              <div className="bg-white/50 border border-[#e2ddd4] rounded-2xl p-4">
                 <SectionLabel>Follow-up Date</SectionLabel>
                 <input
                   type="date"
@@ -477,7 +477,7 @@ export default function PrescriptionEditorPage(props: PrescriptionPageProps) {
             </div>
 
             {/* Medications */}
-            <div className="bg-white border border-[#e2ddd4] rounded-2xl p-4">
+            <div className="bg-white/50 border border-[#e2ddd4] rounded-2xl p-4">
               <div className="flex items-center justify-between mb-3">
                 <SectionLabel>Medications</SectionLabel>
                 {!isLocked && (
@@ -516,7 +516,7 @@ export default function PrescriptionEditorPage(props: PrescriptionPageProps) {
                                 : field === "duration" ? "5 days"
                                 : "After meals"
                               }
-                              className="w-full text-[12px] px-2.5 py-1.5 rounded-lg border border-transparent bg-transparent focus:border-[#8FABD4] focus:bg-white focus:outline-none transition-all placeholder:text-[#c0b9b0] text-[#1a2535]"
+                              className="w-full text-[12px] px-2.5 py-1.5 rounded-lg border border-transparent bg-transparent focus:border-[#8FABD4] focus:bg-white/50 focus:outline-none transition-all placeholder:text-[#c0b9b0] text-[#1a2535]"
                             />
                           </td>
                         ))}
@@ -534,7 +534,7 @@ export default function PrescriptionEditorPage(props: PrescriptionPageProps) {
 
             {/* Mode toggle */}
             {!existingId && (
-              <div className="flex bg-white border border-[#e2ddd4] rounded-xl p-1 gap-1 w-fit">
+              <div className="flex bg-white/50 border border-[#e2ddd4] rounded-xl p-1 gap-1 w-fit">
                 {(["typed", "image"] as EditorMode[]).map(m => (
                   <button
                     key={m}
@@ -553,7 +553,7 @@ export default function PrescriptionEditorPage(props: PrescriptionPageProps) {
 
             {/* Typed editor */}
             {mode === "typed" && (
-              <div className="bg-white border border-[#e2ddd4] rounded-2xl overflow-hidden">
+              <div className="bg-white/50 border border-[#e2ddd4] rounded-2xl overflow-hidden">
                 {!isLocked && (
                   <div className="flex items-center gap-1 px-4 py-2.5 border-b border-[#ede9e1] bg-[#f7f4ef]">
                     {TOOLBAR.map(t => (
@@ -592,7 +592,7 @@ export default function PrescriptionEditorPage(props: PrescriptionPageProps) {
 
             {/* Image upload */}
             {mode === "image" && (
-              <div className="bg-white border border-[#e2ddd4] rounded-2xl flex flex-col items-center justify-center p-10 gap-4 min-h-[200px]">
+              <div className="bg-white/50 border border-[#e2ddd4] rounded-2xl flex flex-col items-center justify-center p-10 gap-4 min-h-[200px]">
                 {imagePreview ? (
                   <div className="flex flex-col items-center gap-3 w-full">
                     <Image src={imagePreview} alt="Prescription" height={1000} width={1000}
@@ -624,7 +624,7 @@ export default function PrescriptionEditorPage(props: PrescriptionPageProps) {
             )}
 
             {/* Private notes */}
-            <div className="bg-white border border-[#e2ddd4] rounded-2xl p-4">
+            <div className="bg-white/50 border border-[#e2ddd4] rounded-2xl p-4">
               <SectionLabel>Doctor&apos;s Private Notes <span className="font-normal text-[#c0b9b0] normal-case tracking-normal">(not visible to patient)</span></SectionLabel>
               <textarea
                 value={notes}
@@ -655,7 +655,7 @@ export default function PrescriptionEditorPage(props: PrescriptionPageProps) {
               )}
 
               <div className="grid grid-cols-2 gap-3">
-                <div className="bg-white border border-[#e2ddd4] rounded-2xl p-4">
+                <div className="bg-white/50 border border-[#e2ddd4] rounded-2xl p-4">
                   <SectionLabel>Personal Information</SectionLabel>
                   <div className="flex flex-col gap-3">
                     <InfoPair label="Full Name"   value={patientName} />
@@ -670,7 +670,7 @@ export default function PrescriptionEditorPage(props: PrescriptionPageProps) {
                 </div>
 
                 <div className="flex flex-col gap-3">
-                  <div className="bg-white border border-[#e2ddd4] rounded-2xl p-4">
+                  <div className="bg-white/50 border border-[#e2ddd4] rounded-2xl p-4">
                     <SectionLabel>Insurance</SectionLabel>
                     {patientInsuranceProvider ? (
                       <div className="flex flex-col gap-3">
@@ -681,7 +681,7 @@ export default function PrescriptionEditorPage(props: PrescriptionPageProps) {
                       <p className="text-[12px] text-[#c0b9b0]">No insurance on file</p>
                     )}
                   </div>
-                  <div className="bg-white border border-[#e2ddd4] rounded-2xl p-4">
+                  <div className="bg-white/50 border border-[#e2ddd4] rounded-2xl p-4">
                     <SectionLabel>Emergency Contact</SectionLabel>
                     {patientEmergencyContactName ? (
                       <div className="flex flex-col gap-3">
@@ -693,7 +693,7 @@ export default function PrescriptionEditorPage(props: PrescriptionPageProps) {
                     )}
                   </div>
                   {(patientHeight || patientWeight) && (
-                    <div className="bg-white border border-[#e2ddd4] rounded-2xl p-4">
+                    <div className="bg-white/50 border border-[#e2ddd4] rounded-2xl p-4">
                       <SectionLabel>Body Metrics</SectionLabel>
                       <div className="grid grid-cols-3 gap-2">
                         {patientHeight && (
@@ -724,7 +724,7 @@ export default function PrescriptionEditorPage(props: PrescriptionPageProps) {
               </div>
 
               {patientCurrentMedication && (
-                <div className="bg-white border border-[#e2ddd4] rounded-2xl p-4">
+                <div className="bg-white/50 border border-[#e2ddd4] rounded-2xl p-4">
                   <SectionLabel>Current Medications on File</SectionLabel>
                   <p className="text-[12px] text-[#1a2535] leading-relaxed">{patientCurrentMedication}</p>
                 </div>
@@ -745,7 +745,7 @@ export default function PrescriptionEditorPage(props: PrescriptionPageProps) {
           {activeTab === "history" && (
             <div className="flex flex-col gap-3">
               {allergyList.length > 0 && (
-                <div className="bg-white border border-[#e2ddd4] rounded-2xl p-4">
+                <div className="bg-white/50 border border-[#e2ddd4] rounded-2xl p-4">
                   <SectionLabel>Allergies</SectionLabel>
                   <div className="flex gap-2 flex-wrap">
                     {allergyList.map(a => (
@@ -756,14 +756,14 @@ export default function PrescriptionEditorPage(props: PrescriptionPageProps) {
               )}
 
               <div className="grid grid-cols-2 gap-3">
-                <div className={`rounded-2xl p-4 border ${patientPastMedicalHistory ? "bg-white border-[#e2ddd4]" : "bg-[#f7f4ef] border-[#ede9e1]"}`}>
+                <div className={`rounded-2xl p-4 border ${patientPastMedicalHistory ? "bg-white/50 border-[#e2ddd4]" : "bg-[#f7f4ef] border-[#ede9e1]"}`}>
                   <SectionLabel>Past Medical History</SectionLabel>
                   {patientPastMedicalHistory
                     ? <p className="text-[12px] text-[#1a2535] leading-relaxed whitespace-pre-wrap">{patientPastMedicalHistory}</p>
                     : <p className="text-[12px] text-[#c0b9b0]">No past medical history on file</p>
                   }
                 </div>
-                <div className={`rounded-2xl p-4 border ${patientFamilyMedicalHistory ? "bg-white border-[#e2ddd4]" : "bg-[#f7f4ef] border-[#ede9e1]"}`}>
+                <div className={`rounded-2xl p-4 border ${patientFamilyMedicalHistory ? "bg-white/50 border-[#e2ddd4]" : "bg-[#f7f4ef] border-[#ede9e1]"}`}>
                   <SectionLabel>Family Medical History</SectionLabel>
                   {patientFamilyMedicalHistory
                     ? <p className="text-[12px] text-[#1a2535] leading-relaxed whitespace-pre-wrap">{patientFamilyMedicalHistory}</p>
@@ -773,14 +773,14 @@ export default function PrescriptionEditorPage(props: PrescriptionPageProps) {
               </div>
 
               {patientCurrentMedication && (
-                <div className="bg-white border border-[#e2ddd4] rounded-2xl p-4">
+                <div className="bg-white/50 border border-[#e2ddd4] rounded-2xl p-4">
                   <SectionLabel>Current Medications</SectionLabel>
                   <p className="text-[12px] text-[#1a2535] leading-relaxed">{patientCurrentMedication}</p>
                 </div>
               )}
 
               {!patientPastMedicalHistory && !patientFamilyMedicalHistory && !patientCurrentMedication && !allergyList.length && (
-                <div className="bg-white border border-[#e2ddd4] rounded-2xl p-16 text-center">
+                <div className="bg-white/50 border border-[#e2ddd4] rounded-2xl p-16 text-center">
                   <p className="text-3xl mb-3">📂</p>
                   <p className="text-[13px] text-[#c0b9b0]">No medical history on file</p>
                 </div>

@@ -186,7 +186,7 @@ const EditProfileModal = ({ patientId, user, patient }: Props) => {
                 <DialogContent className="max-w-[90vw] w-fit max-h-[90vh] overflow-y-auto p-0 gap-0 rounded-2xl">
 
                     {/* Modal Header */}
-                    <DialogHeader className="px-6 pt-6 pb-4 border-b border-gray-100 sticky top-0 bg-white z-10 rounded-t-2xl">
+                    <DialogHeader className="px-6 pt-6 pb-4 border-b border-gray-100 sticky top-0 bg-white/50 z-10 rounded-t-2xl">
                         <div className="flex items-center gap-3">
                             <div className="h-9 w-9 rounded-full bg-green-50 flex items-center justify-center">
                                 <Image

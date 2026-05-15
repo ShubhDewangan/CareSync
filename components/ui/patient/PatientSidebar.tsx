@@ -122,11 +122,11 @@ export default function PatientSidebar({
       <div className="px-4 py-4 border-b border-[#203C6715]">
         <p className="text-[9px] font-semibold text-[#a0afc0] uppercase tracking-widest mb-3">Quick Stats</p>
         <div className="grid grid-cols-2 gap-2">
-          <div className="bg-white rounded-xl p-3 border border-[#203C6710]">
+          <div className="bg-white/50 rounded-xl p-3 border border-[#203C6710]">
             <p className="text-[18px] font-bold text-[#203C67]">{stats?.upcoming ?? 0}</p>
             <p className="text-[10px] text-[#9a9690] mt-0.5">Upcoming</p>
           </div>
-          <div className="bg-white rounded-xl p-3 border border-[#203C6710]">
+          <div className="bg-white/50 rounded-xl p-3 border border-[#203C6710]">
             <p className="text-[18px] font-bold text-[#3d6b3f]">{prescriptions.length}</p>
             <p className="text-[10px] text-[#9a9690] mt-0.5">Active Rx</p>
           </div>

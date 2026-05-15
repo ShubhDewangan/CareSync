@@ -148,7 +148,7 @@ function SearchBar({ value, onChange, dateValue, onDateChange }: {
           value={value}
           onChange={e => onChange(e.target.value)}
           placeholder="Search diagnosis, title…"
-          className="w-full border border-[#d4cfc6] rounded-xl pl-8 pr-8 py-2 text-[12px] text-[#1a2535] bg-white/60 focus:outline-none focus:border-[#203C67] focus:bg-white transition-colors placeholder:text-[#b0a99e]"
+          className="w-full border border-[#d4cfc6] rounded-xl pl-8 pr-8 py-2 text-[12px] text-[#1a2535] bg-white/50/60 focus:outline-none focus:border-[#203C67] focus:bg-white/50 transition-colors placeholder:text-[#b0a99e]"
         />
         {value && (
           <button onClick={() => onChange("")} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#b0a99e] hover:text-[#5a6a7e]">
@@ -161,7 +161,7 @@ function SearchBar({ value, onChange, dateValue, onDateChange }: {
           type="date"
           value={dateValue}
           onChange={e => onDateChange(e.target.value)}
-          className="border border-[#d4cfc6] rounded-xl px-3 py-2 text-[12px] text-[#1a2535] bg-white/60 focus:outline-none focus:border-[#203C67] transition-colors appearance-none cursor-pointer"
+          className="border border-[#d4cfc6] rounded-xl px-3 py-2 text-[12px] text-[#1a2535] bg-white/50/60 focus:outline-none focus:border-[#203C67] transition-colors appearance-none cursor-pointer"
           style={{ colorScheme: "light" }}
         />
         {dateValue && (
@@ -260,7 +260,7 @@ function PatientHealthSummary({ patient }: { patient: any }) {
         </div>
       )}
       {hasHistory && (
-        <div className="bg-white border border-[#e2ddd4] rounded-xl overflow-hidden">
+        <div className="bg-white/50 border border-[#e2ddd4] rounded-xl overflow-hidden">
           {patient.currentMedication && (
             <div className={`px-3 py-2 ${(patient.pastMedicalHistory || patient.familyMedicalHistory) ? "border-b border-[#f0ece5]" : ""}`}>
               <p className="text-[9px] text-[#a0afc0] uppercase tracking-wide mb-0.5">Current Medication</p>
@@ -282,7 +282,7 @@ function PatientHealthSummary({ patient }: { patient: any }) {
         </div>
       )}
       {hasContact && (
-        <div className="bg-white border border-[#e2ddd4] rounded-xl overflow-hidden">
+        <div className="bg-white/50 border border-[#e2ddd4] rounded-xl overflow-hidden">
           {patient.emergencyContactName && (
             <div className={`px-3 py-2 ${patient.insuranceProvider ? "border-b border-[#f0ece5]" : ""}`}>
               <p className="text-[9px] text-[#a0afc0] uppercase tracking-wide mb-0.5">Emergency Contact</p>
@@ -355,7 +355,7 @@ function PrescriptionDetail({
         <div>
           <p className="text-[10px] font-semibold text-[#a0afc0] uppercase tracking-wide mb-2">Clinical Notes</p>
           <div
-            className="bg-white border border-[#e2ddd4] rounded-xl px-4 py-3 text-[12px] text-[#1a2535] leading-relaxed prose prose-sm max-w-none"
+            className="bg-white/50 border border-[#e2ddd4] rounded-xl px-4 py-3 text-[12px] text-[#1a2535] leading-relaxed prose prose-sm max-w-none"
             style={{ fontFamily: "Georgia, serif" }}
             dangerouslySetInnerHTML={{ __html: rx.content.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "") }}
           />
@@ -395,7 +395,7 @@ function ReportDetail({
           </span>
         </div>
       </div>
-      <div className="bg-white border border-[#e2ddd4] rounded-xl p-4 flex items-center gap-3">
+      <div className="bg-white/50 border border-[#e2ddd4] rounded-xl p-4 flex items-center gap-3">
         <div className="w-10 h-10 rounded-lg bg-[#f7f4ef] flex items-center justify-center shrink-0">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#a0afc0" strokeWidth="1.5">
             <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
@@ -454,7 +454,7 @@ function DetailPanelContent({
         </div>
         <button
           onClick={onClose}
-          className="w-9 h-9 rounded-full hover:bg-white flex items-center justify-center text-[#7a8fa8] hover:text-[#1a2535] transition-colors shrink-0 ml-3"
+          className="w-9 h-9 rounded-full hover:bg-white/50 flex items-center justify-center text-[#7a8fa8] hover:text-[#1a2535] transition-colors shrink-0 ml-3"
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
             <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
@@ -568,7 +568,7 @@ export default function PatientRecordsView({
   const RxList = () => (
     <div className="flex flex-col gap-1">
       {filteredRx.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 text-center bg-white/60 border border-[#e2ddd4] rounded-2xl">
+        <div className="flex flex-col items-center justify-center py-16 text-center bg-white/50/60 border border-[#e2ddd4] rounded-2xl">
           <p className="text-[36px] mb-3">💊</p>
           <p className="text-[14px] font-semibold text-[#1a2535] mb-1">
             {search || dateFilter ? "No results found" : "No prescriptions yet"}
@@ -590,10 +590,10 @@ export default function PatientRecordsView({
                 className={`flex items-center gap-3 px-4 py-3 rounded-xl border cursor-pointer transition-all ${
                   isActive
                     ? "bg-[#203C67] border-[#203C67]"
-                    : "bg-white border-[#e2ddd4] hover:border-[#8FABD4] hover:bg-[#f7f9fc]"
+                    : "bg-white/50 border-[#e2ddd4] hover:border-[#8FABD4] hover:bg-[#f7f9fc]"
                 }`}
               >
-                <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-base shrink-0 ${isActive ? "bg-white/20" : "bg-[#dde8f5]"}`}>💊</div>
+                <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-base shrink-0 ${isActive ? "bg-white/50/20" : "bg-[#dde8f5]"}`}>💊</div>
                 <div className="flex-1 min-w-0">
                   <p className={`text-[13px] font-semibold truncate ${isActive ? "text-white" : "text-[#1a2535]"}`}>
                     {rx.diagnosis || "General Prescription"}
@@ -604,7 +604,7 @@ export default function PatientRecordsView({
                 </div>
                 <span className={`text-[9px] px-2 py-0.5 rounded-full font-semibold shrink-0 border ${
                   isActive
-                    ? "bg-white/20 text-white border-white/30"
+                    ? "bg-white/50/20 text-white border-white/30"
                     : rx.type === "image"
                       ? "bg-[#f3e8ff] text-[#7e22ce] border-[#d8b4fe]"
                       : "bg-[#dde8f5] text-[#203C67] border-[#c8d8ea]"
@@ -622,7 +622,7 @@ export default function PatientRecordsView({
   const ReportList = () => (
     <div className="flex flex-col gap-1">
       {filteredReports.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 text-center bg-white border border-[#e2ddd4] rounded-2xl">
+        <div className="flex flex-col items-center justify-center py-16 text-center bg-white/50 border border-[#e2ddd4] rounded-2xl">
           <p className="text-[36px] mb-3">📄</p>
           <p className="text-[14px] font-semibold text-[#1a2535] mb-1">
             {search || dateFilter ? "No results found" : "No reports yet"}
@@ -644,10 +644,10 @@ export default function PatientRecordsView({
                 className={`flex items-center gap-3 px-4 py-3 rounded-xl border cursor-pointer transition-all ${
                   isActive
                     ? "bg-[#203C67] border-[#203C67]"
-                    : "bg-white border-[#e2ddd4] hover:border-[#8FABD4] hover:bg-[#f7f9fc]"
+                    : "bg-white/50 border-[#e2ddd4] hover:border-[#8FABD4] hover:bg-[#f7f9fc]"
                 }`}
               >
-                <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-base shrink-0 ${isActive ? "bg-white/20" : "bg-[#f7f4ef]"}`}>
+                <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-base shrink-0 ${isActive ? "bg-white/50/20" : "bg-[#f7f4ef]"}`}>
                   {rt?.icon ?? "📄"}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -658,7 +658,7 @@ export default function PatientRecordsView({
                 </div>
                 <span className={`text-[9px] px-2 py-0.5 rounded-full font-semibold shrink-0 border ${
                   isActive
-                    ? "bg-white/20 text-white border-white/30"
+                    ? "bg-white/50/20 text-white border-white/30"
                     : REPORT_PILL[report.reportType] ?? REPORT_PILL.other
                 }`}>
                   {rt?.label?.split(" ")[0] ?? "Doc"}
@@ -729,7 +729,7 @@ export default function PatientRecordsView({
           <div className="p-4 sm:p-5 flex flex-col gap-3">
 
             {/* Tabs */}
-            <div className="flex gap-1 bg-white/60 border border-[#e2ddd4] rounded-xl p-1">
+            <div className="flex gap-1 bg-white/50/60 border border-[#e2ddd4] rounded-xl p-1">
               {(["prescriptions", "reports"] as Tab[]).map(t => (
                 <button
                   key={t}
@@ -767,7 +767,7 @@ export default function PatientRecordsView({
 
         {/* ── Desktop: Inline detail panel ── */}
         {panelOpen && panel && (
-          <div className="hidden lg:flex flex-col w-1/2 shrink-0 min-h-0 overflow-hidden bg-white border-l border-[#e2ddd4]">
+          <div className="hidden lg:flex flex-col w-1/2 shrink-0 min-h-0 overflow-hidden bg-white/50 border-l border-[#e2ddd4]">
             <DetailPanelContent
               panel={panel}
               panelDoctor={panelDoctor}
@@ -797,7 +797,7 @@ export default function PatientRecordsView({
               onClick={() => setPanel(null)}
               className="lg:hidden fixed inset-0 bg-black/20 backdrop-blur-[2px] z-40"
             />
-            <div className="lg:hidden fixed top-0 right-0 h-screen z-50 w-full sm:w-[92vw] md:w-[70vw] bg-white border-l border-[#d4cfc6] flex flex-col">
+            <div className="lg:hidden fixed top-0 right-0 h-screen z-50 w-full sm:w-[92vw] md:w-[70vw] bg-white/50 border-l border-[#d4cfc6] flex flex-col">
               <DetailPanelContent
                 panel={panel}
                 panelDoctor={panelDoctor}

@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/purity */
 // components/forms/SignUpForm.tsx
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client"
@@ -64,7 +65,7 @@ function OtpBoxes({ value, onChange, disabled }: {
           onChange={(e) => handleChange(i, e)} onKeyDown={(e) => handleKey(i, e)}
           onFocus={(e) => e.target.select()}
           className={`w-11 h-13 text-center text-lg font-bold rounded-xl border-2 outline-none
-            transition-all duration-200 bg-white
+            transition-all duration-200 bg-white/50
             ${digit ? "border-[#203C67] text-[#203C67] shadow-sm" : "border-gray-200 text-gray-400"}
             focus:border-[#203C67] focus:shadow-[0_0_0_3px_rgba(32,60,103,0.08)]
             disabled:opacity-50 disabled:cursor-not-allowed`}
@@ -76,8 +77,14 @@ function OtpBoxes({ value, onChange, disabled }: {
 
 type Step = "details" | "otp"
 
+type PendingUser = {
+  name: string
+  email: string
+  phone: string
+  userType: "patient" | "doctor"
+}
+
 // ─── SignUpForm ───────────────────────────────────────────────────────────────
-// No more modal props — uses router.push() for navigation
 export function SignUpForm() {
   const router = useRouter()
 
@@ -86,9 +93,10 @@ export function SignUpForm() {
   const [userType, setUserType] = useState<"patient" | "doctor">("patient")
   const [otp, setOtp] = useState("")
   const [otpError, setOtpError] = useState("")
-  const [userId, setUserId] = useState("")
   const [submittedEmail, setSubmittedEmail] = useState("")
   const [resendTimer, setResendTimer] = useState(0)
+  const [generatedOtp, setGeneratedOtp] = useState("")
+  const [pendingUser, setPendingUser] = useState<PendingUser | null>(null)
   const timerRef = useRef<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
@@ -104,71 +112,30 @@ export function SignUpForm() {
     defaultValues: { name: "", email: "", phone: "" },
   })
 
-  // ─── Step 1: create user + send OTP ─────────────────────────────
-  // async function onSubmitDetails({ name, email, phone }: RegisterFormValues) {
-  //   setLoading(true)
-  //   try {
-  //     const user = await createUser({ name, email, phone, userType })
-
-  //     if (user === false) {
-  //       showToast("info", "Account already exists. Please log in.", "top-right")
-  //       router.push("/login")
-  //       return
-  //     }
-
-  //     if (!user || typeof user !== "object") {
-  //       showToast("error", "Something went wrong. Please try again.", "top-right")
-  //       setLoading(false)
-  //       return
-  //     }
-
-  //     const res = await fetch("/api/auth/send-otp", {
-  //       method: "POST",
-  //       headers: { "Content-Type": "application/json" },
-  //       body: JSON.stringify({ contact: email, method: "email" }),
-  //     })
-  //     const data = await res.json()
-
-  //     if (!res.ok || !data.userId) {
-  //       showToast("error", "Account created but could not send OTP. Try logging in.", "top-right")
-  //       setLoading(false)
-  //       return
-  //     }
-
-  //     setUserId(data.userId)
-  //     setSubmittedEmail(email)
-  //     setStep("otp")
-  //     setResendTimer(30)
-  //     showToast("success", `OTP sent to ${email}`, "top-right")
-
-  //   } catch (error) {
-  //     console.log(error)
-  //     showToast("error", "Something went wrong. Please try again.", "top-right")
-  //   }
-  //   setLoading(false)
-  // }
+  // ─── Step 1: send OTP (don't create user yet) ────────────────────
   async function onSubmitDetails({ name, email, phone }: RegisterFormValues) {
     setLoading(true)
     try {
-      const user = await createUser({ name, email, phone, userType })
+      const res = await fetch("/api/auth/send-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ contact: email, method: "email", mode: "signup" }),
+      })
+      const data = await res.json()
 
-      if (user === false) {
-        showToast("info", "Account already exists. Please log in.", "top-right")
-        router.push("/login")
-        return
-      }
-
-      if (!user || typeof user !== "object") {
-        showToast("error", "Something went wrong. Please try again.", "top-right")
+      if (!res.ok || data.error) {
+        showToast("error", data.error ?? "Could not send OTP. Please try again.", "top-right")
         setLoading(false)
         return
       }
 
-      // ✅ Skip OTP send — go straight to OTP step with static code
-      setUserId(user.$id)
+      // Lock in all form values including userType at submit time
+      setPendingUser({ name, email, phone, userType })
+      setGeneratedOtp(data.otp)
       setSubmittedEmail(email)
       setStep("otp")
-      showToast("info", "Use code 123456 to verify", "top-right")
+      setResendTimer(30)
+      showToast("success", `Your OTP is: ${data.otp}`, "top-right")
 
     } catch (error) {
       console.log(error)
@@ -177,25 +144,39 @@ export function SignUpForm() {
     setLoading(false)
   }
 
-  // ─── Step 2: verify OTP ──────────────────────────────────────────
+  // ─── Step 2: create user + verify OTP ───────────────────────────
   async function handleVerifyOtp() {
     setOtpError("")
     if (otp.length < 6) { setOtpError("Please enter the complete 6-digit OTP."); return }
-
-    // ✅ Static OTP check — no need to hit send-otp API
-    if (otp !== "123456") {
-      setOtpError("Invalid code. Use 123456.")
-      setOtp("")
-      return
-    }
+    if (!pendingUser) { setOtpError("Session expired. Please go back and try again."); return }
 
     setLoading(true)
-
     try {
+      // Create user only after OTP is entered
+      const user = await createUser({
+        name: pendingUser.name,
+        email: pendingUser.email,
+        phone: pendingUser.phone,
+        userType: pendingUser.userType,
+      })
+
+      if (user === false) {
+        showToast("info", "Account already exists. Please log in.", "top-right")
+        router.push("/login")
+        return
+      }
+
+      if (!user || typeof user !== "object") {
+        setOtpError("Could not create account. Please try again.")
+        setLoading(false)
+        return
+      }
+
+      // Verify OTP against DB
       const res = await fetch("/api/auth/verify-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId, otp: "123456" }),
+        body: JSON.stringify({ userId: user.$id, otp }),
       })
       const data = await res.json()
 
@@ -206,7 +187,6 @@ export function SignUpForm() {
         return
       }
 
-      // ✅ JWT cookie set by API — redirect to homepage
       showToast("success", "Account verified! Welcome 🎉", "top-right")
       router.push("/")
 
@@ -217,29 +197,23 @@ export function SignUpForm() {
   }
 
   // ─── Resend OTP ──────────────────────────────────────────────────
-  // async function handleResend() {
-  //   if (resendTimer > 0) return
-  //   setOtp(""); setOtpError(""); setLoading(true)
-  //   try {
-  //     const res = await fetch("/api/auth/send-otp", {
-  //       method: "POST",
-  //       headers: { "Content-Type": "application/json" },
-  //       body: JSON.stringify({ contact: submittedEmail, method: "email" }),
-  //     })
-  //     const data = await res.json()
-  //     if (data.userId) {
-  //       setUserId(data.userId)
-  //       setResendTimer(30)
-  //       showToast("success", "New OTP sent!", "top-right")
-  //     }
-  //   } catch { showToast("error", "Could not resend OTP.", "top-right") }
-  //   setLoading(false)
-  // }
   async function handleResend() {
     if (resendTimer > 0) return
-    setOtp("")
-    setOtpError("")
-    showToast("info", "Use code 123456", "top-right")
+    setOtp(""); setOtpError(""); setLoading(true)
+    try {
+      const res = await fetch("/api/auth/send-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ contact: submittedEmail, method: "email", mode: "signup" }),
+      })
+      const data = await res.json()
+      if (res.ok && data.otp) {
+        setGeneratedOtp(data.otp)
+        setResendTimer(30)
+        showToast("success", `New OTP: ${data.otp}`, "top-right")
+      }
+    } catch { showToast("error", "Could not resend OTP.", "top-right") }
+    setLoading(false)
   }
 
   function maskEmail(email: string) {
@@ -266,7 +240,7 @@ export function SignUpForm() {
               {(["patient", "doctor"] as const).map((type) => (
                 <button key={type} type="button" onClick={() => setUserType(type)}
                   className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-all duration-200 capitalize cursor-pointer
-                    ${userType === type ? "bg-white text-[#203C67] shadow-sm" : "text-gray-400 hover:text-gray-600"}`}
+                    ${userType === type ? "bg-white/50 text-[#203C67] shadow-sm" : "text-gray-400 hover:text-gray-600"}`}
                 >
                   {type === "patient" ? "Patient" : "Doctor"}
                 </button>
@@ -297,12 +271,11 @@ export function SignUpForm() {
                   <svg className="animate-spin" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                     <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
                   </svg>
-                  Creating account...
+                  Sending OTP...
                 </>
               ) : "Create Account & Get OTP"}
             </button>
 
-            {/* Link to login page */}
             <p className="text-center text-sm text-[#6B7280]">
               Already have an account?{" "}
               <button type="button" onClick={() => router.push("/login")}
@@ -331,6 +304,15 @@ export function SignUpForm() {
               Code sent to{" "}
               <span className="font-semibold text-[#203C67]">{maskEmail(submittedEmail)}</span>
             </p>
+            <p className="text-xs text-gray-400 mt-1">
+              Signing up as{" "}
+              <span className="font-semibold text-[#203C67] capitalize">{pendingUser?.userType}</span>
+            </p>
+          </div>
+
+          <div className="flex flex-col items-center gap-1 bg-amber-50 border border-amber-200 rounded-xl py-3 px-4">
+            <p className="text-xs text-amber-700 font-medium">Your OTP (demo mode)</p>
+            <p className="text-2xl font-bold tracking-[0.3em] text-amber-800">{generatedOtp}</p>
           </div>
 
           <OtpBoxes value={otp} onChange={setOtp} disabled={isLoading} />
@@ -366,7 +348,7 @@ export function SignUpForm() {
             )}
           </p>
 
-          <button type="button" onClick={() => { setStep("details"); setOtp(""); setOtpError("") }}
+          <button type="button" onClick={() => { setStep("details"); setOtp(""); setOtpError(""); setPendingUser(null) }}
             className="text-xs text-gray-400 hover:text-gray-600 text-center underline underline-offset-2 cursor-pointer">
             ← Wrong email? Go back
           </button>

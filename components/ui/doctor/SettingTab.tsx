@@ -93,7 +93,7 @@ export default function SettingsTab({ doctor, doctorId }: { doctor: Doctor; doct
       onClick={onToggle}
       className={`relative h-5 w-9 rounded-full transition-colors duration-200 flex-shrink-0 ${on ? "bg-[#203C67]" : "bg-gray-200"}`}
     >
-      <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-transform duration-200 ${on ? "translate-x-[18px]" : "translate-x-0.5"}`} />
+      <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white/50 shadow-sm transition-transform duration-200 ${on ? "translate-x-[18px]" : "translate-x-0.5"}`} />
     </button>
   )
 
@@ -104,7 +104,7 @@ export default function SettingsTab({ doctor, doctorId }: { doctor: Doctor; doct
       <div className="flex-1 flex flex-col gap-4 max-w-2xl">
 
         {/* Consultation hours */}
-        <div className="bg-white rounded-2xl border border-[#e8e4da] shadow-sm p-4 sm:p-5">
+        <div className="bg-white/50 rounded-2xl border border-[#e8e4da] shadow-sm p-4 sm:p-5">
           <h2 className="text-gray-800 font-semibold text-[14px] sm:text-[15px] mb-4 flex items-center gap-2">
             <span className="w-7 h-7 rounded-lg bg-[#dde8f5] flex items-center justify-center shrink-0">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#203C67" strokeWidth="2">
@@ -120,7 +120,7 @@ export default function SettingsTab({ doctor, doctorId }: { doctor: Doctor; doct
                 type="time"
                 value={settings.startTime}
                 onChange={e => setSettings(p => ({ ...p, startTime: e.target.value }))}
-                className="border border-[#e8e4da] rounded-xl px-3 py-2 text-[13px] bg-[#f7f4ef] focus:outline-none focus:border-[#203C67] focus:bg-white text-gray-800 transition-colors"
+                className="border border-[#e8e4da] rounded-xl px-3 py-2 text-[13px] bg-[#f7f4ef] focus:outline-none focus:border-[#203C67] focus:bg-white/50 text-gray-800 transition-colors"
               />
             </div>
             <div className="flex flex-col gap-1.5">
@@ -129,14 +129,14 @@ export default function SettingsTab({ doctor, doctorId }: { doctor: Doctor; doct
                 type="time"
                 value={settings.endTime}
                 onChange={e => setSettings(p => ({ ...p, endTime: e.target.value }))}
-                className="border border-[#e8e4da] rounded-xl px-3 py-2 text-[13px] bg-[#f7f4ef] focus:outline-none focus:border-[#203C67] focus:bg-white text-gray-800 transition-colors"
+                className="border border-[#e8e4da] rounded-xl px-3 py-2 text-[13px] bg-[#f7f4ef] focus:outline-none focus:border-[#203C67] focus:bg-white/50 text-gray-800 transition-colors"
               />
             </div>
           </div>
         </div>
 
         {/* Available days */}
-        <div className="bg-white rounded-2xl border border-[#e8e4da] shadow-sm p-4 sm:p-5">
+        <div className="bg-white/50 rounded-2xl border border-[#e8e4da] shadow-sm p-4 sm:p-5">
           <h2 className="text-gray-800 font-semibold text-[14px] sm:text-[15px] mb-4 flex items-center gap-2">
             <span className="w-7 h-7 rounded-lg bg-[#dde8f5] flex items-center justify-center shrink-0">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#203C67" strokeWidth="2">
@@ -156,7 +156,7 @@ export default function SettingsTab({ doctor, doctorId }: { doctor: Doctor; doct
                   className={`px-3 sm:px-4 py-2 rounded-xl text-[11px] sm:text-[12px] font-semibold border transition-all ${
                     active
                       ? "bg-[#203C67] text-white border-[#203C67] shadow-sm"
-                      : "bg-[#f7f4ef] text-gray-500 border-[#e8e4da] hover:border-[#203C6740] hover:bg-white"
+                      : "bg-[#f7f4ef] text-gray-500 border-[#e8e4da] hover:border-[#203C6740] hover:bg-white/50"
                   }`}
                 >
                   {day}
@@ -170,7 +170,7 @@ export default function SettingsTab({ doctor, doctorId }: { doctor: Doctor; doct
         </div>
 
         {/* Fee & span */}
-        <div className="bg-white rounded-2xl border border-[#e8e4da] shadow-sm p-4 sm:p-5">
+        <div className="bg-white/50 rounded-2xl border border-[#e8e4da] shadow-sm p-4 sm:p-5">
           <h2 className="text-gray-800 font-semibold text-[14px] sm:text-[15px] mb-4 flex items-center gap-2">
             <span className="w-7 h-7 rounded-lg bg-[#dde8f5] flex items-center justify-center shrink-0">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#203C67" strokeWidth="2">
@@ -187,7 +187,7 @@ export default function SettingsTab({ doctor, doctorId }: { doctor: Doctor; doct
                 type="number"
                 value={settings.fee}
                 onChange={e => setSettings(p => ({ ...p, fee: e.target.value }))}
-                className="border border-[#e8e4da] rounded-xl px-3 py-2 text-[13px] bg-[#f7f4ef] focus:outline-none focus:border-[#203C67] focus:bg-white text-gray-800 transition-colors"
+                className="border border-[#e8e4da] rounded-xl px-3 py-2 text-[13px] bg-[#f7f4ef] focus:outline-none focus:border-[#203C67] focus:bg-white/50 text-gray-800 transition-colors"
               />
             </div>
             <div className="flex flex-col gap-1.5">
@@ -196,7 +196,7 @@ export default function SettingsTab({ doctor, doctorId }: { doctor: Doctor; doct
                 type="number"
                 value={settings.appointmentSpan}
                 onChange={e => setSettings(p => ({ ...p, appointmentSpan: e.target.value }))}
-                className="border border-[#e8e4da] rounded-xl px-3 py-2 text-[13px] bg-[#f7f4ef] focus:outline-none focus:border-[#203C67] focus:bg-white text-gray-800 transition-colors"
+                className="border border-[#e8e4da] rounded-xl px-3 py-2 text-[13px] bg-[#f7f4ef] focus:outline-none focus:border-[#203C67] focus:bg-white/50 text-gray-800 transition-colors"
               />
             </div>
           </div>
@@ -206,7 +206,7 @@ export default function SettingsTab({ doctor, doctorId }: { doctor: Doctor; doct
         </div>
 
         {/* Notifications */}
-        <div className="bg-white rounded-2xl border border-[#e8e4da] shadow-sm p-4 sm:p-5">
+        <div className="bg-white/50 rounded-2xl border border-[#e8e4da] shadow-sm p-4 sm:p-5">
           <h2 className="text-gray-800 font-semibold text-[14px] sm:text-[15px] mb-4 flex items-center gap-2">
             <span className="w-7 h-7 rounded-lg bg-[#dde8f5] flex items-center justify-center shrink-0">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#203C67" strokeWidth="2">
@@ -258,7 +258,7 @@ export default function SettingsTab({ doctor, doctorId }: { doctor: Doctor; doct
       <div className="w-full lg:w-[240px] lg:min-w-[220px] flex flex-col gap-4 lg:self-start">
 
         {/* Summary */}
-        <div className="bg-white rounded-2xl border border-[#e8e4da] shadow-sm p-4">
+        <div className="bg-white/50 rounded-2xl border border-[#e8e4da] shadow-sm p-4">
           <p className="text-[12px] font-semibold text-gray-800 mb-3">Settings summary</p>
           <div className="flex flex-col gap-0 divide-y divide-[#f7f4ef]">
             {[

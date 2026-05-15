@@ -63,7 +63,7 @@ export function DataTable<TData, TValue>({ columns, data }: DataTableProps<TData
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
-                  className="border-b border-white/10 hover:bg-white/5 transition-colors"
+                  className="border-b border-white/10 hover:bg-white/50/5 transition-colors"
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell
@@ -100,7 +100,7 @@ export function DataTable<TData, TValue>({ columns, data }: DataTableProps<TData
             size="sm"
             onClick={() => table.previousPage()}
             disabled={!table.getCanPreviousPage()}
-            className="bg-white/10 border-white/20 text-white hover:bg-white/20 disabled:opacity-30 h-8 w-8 p-0"
+            className="bg-white/50/10 border-white/20 text-white hover:bg-white/50/20 disabled:opacity-30 h-8 w-8 p-0"
           >
             <Image src="/assets/icons/arrow.svg" width={16} height={16} alt="prev" />
           </Button>
@@ -109,7 +109,7 @@ export function DataTable<TData, TValue>({ columns, data }: DataTableProps<TData
             size="sm"
             onClick={() => table.nextPage()}
             disabled={!table.getCanNextPage()}
-            className="bg-white/10 border-white/20 text-white hover:bg-white/20 disabled:opacity-30 h-8 w-8 p-0"
+            className="bg-white/50/10 border-white/20 text-white hover:bg-white/50/20 disabled:opacity-30 h-8 w-8 p-0"
           >
             <Image src="/assets/icons/arrow.svg" width={16} height={16} alt="next" className="rotate-180" />
           </Button>

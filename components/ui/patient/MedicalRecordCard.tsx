@@ -45,7 +45,7 @@ export default function MedicalRecordCard({
   const [expanded, setExpanded] = useState(false)
 
   return (
-    <div className="border border-[#203C6730] rounded-xl bg-white/60 backdrop-blur-sm hover:bg-white/80 transition-all overflow-hidden">
+    <div className="border border-[#203C6730] rounded-xl bg-white/50/60 backdrop-blur-sm hover:bg-white/50/80 transition-all overflow-hidden">
 
       {/* ── Card header ── */}
       <div className="flex items-start gap-3 p-4">

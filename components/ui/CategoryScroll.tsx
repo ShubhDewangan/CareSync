@@ -3,6 +3,7 @@
 'use client';
 
 import Image, { StaticImageData } from 'next/image';
+import { useRouter } from 'next/navigation';
 import { useRef, useEffect, useCallback } from 'react';
 
 type Category = {
@@ -19,6 +20,7 @@ export default function CategoryScroll({ categories }: { categories: Category[] 
   const pausedRef = useRef(false);
   const rafRef    = useRef<number>(0);
   const SPEED     = 0.5;
+  const router = useRouter()
 
   const getTrackWidth = useCallback(() => {
     const track = trackRef.current;
@@ -48,6 +50,7 @@ export default function CategoryScroll({ categories }: { categories: Category[] 
     const wrapper = wrapperRef.current;
     if (!wrapper) return;
     const onPointerDown = (e: PointerEvent) => {
+      e.preventDefault() // ✅ fix 1
       dragRef.current = { active: true, startX: e.clientX, startPos: posRef.current };
       pausedRef.current = true;
       wrapper.setPointerCapture(e.pointerId);
@@ -55,6 +58,7 @@ export default function CategoryScroll({ categories }: { categories: Category[] 
     };
     const onPointerMove = (e: PointerEvent) => {
       if (!dragRef.current.active) return;
+      e.preventDefault() // ✅ fix 1
       setPos(dragRef.current.startPos + (e.clientX - dragRef.current.startX));
     };
     const onPointerUp = () => {
@@ -65,8 +69,8 @@ export default function CategoryScroll({ categories }: { categories: Category[] 
     const onMouseEnter = () => { pausedRef.current = true; };
     const onMouseLeave = () => { if (!dragRef.current.active) pausedRef.current = false; };
 
-    wrapper.addEventListener('pointerdown',   onPointerDown);
-    wrapper.addEventListener('pointermove',   onPointerMove);
+    wrapper.addEventListener('pointerdown',   onPointerDown,  { passive: false }); // ✅ fix 1
+    wrapper.addEventListener('pointermove',   onPointerMove,  { passive: false }); // ✅ fix 1
     wrapper.addEventListener('pointerup',     onPointerUp);
     wrapper.addEventListener('pointercancel', onPointerUp);
     wrapper.addEventListener('mouseenter',    onMouseEnter);
@@ -80,6 +84,17 @@ export default function CategoryScroll({ categories }: { categories: Category[] 
       wrapper.removeEventListener('mouseleave',    onMouseLeave);
     };
   }, [setPos]);
+
+  // ✅ fix 2 — block touchmove from stealing the gesture
+  useEffect(() => {
+    const wrapper = wrapperRef.current;
+    if (!wrapper) return;
+    const blockTouch = (e: TouchEvent) => {
+      if (dragRef.current.active) e.preventDefault();
+    };
+    wrapper.addEventListener('touchmove', blockTouch, { passive: false });
+    return () => wrapper.removeEventListener('touchmove', blockTouch);
+  }, []);
 
   const doubled = [...categories, ...categories];
 
@@ -96,7 +111,8 @@ export default function CategoryScroll({ categories }: { categories: Category[] 
           style={{ background: 'linear-gradient(to left, #EFECE3, transparent)' }}
         />
 
-        <div ref={wrapperRef} className="w-full overflow-hidden py-3" style={{ cursor: 'grab' }}>
+        {/* ✅ fix 3 — touch-pan-y */}
+        <div ref={wrapperRef} className="w-full overflow-hidden py-3 touch-pan-y" style={{ cursor: 'grab' }}>
           <div ref={trackRef} className="flex gap-3 w-max" style={{ willChange: 'transform' }}>
             {doubled.map((category, idx) => {
 
@@ -120,7 +136,8 @@ export default function CategoryScroll({ categories }: { categories: Category[] 
               return (
                 <div
                   key={idx}
-                  className="group relative flex items-center gap-3 bg-white border border-[#e2ddd4] rounded-2xl px-4 py-3 transition-all duration-200 hover:border-[#8FABD4] hover:shadow-sm"
+                  onClick={() => router.push(`/doctors?q=${category.tag}`)}
+                  className="group relative flex items-center gap-3 bg-white/50 border border-[#e2ddd4] rounded-2xl px-4 py-3 transition-all duration-200 hover:border-[#8FABD4] hover:shadow-sm"
                   style={{ width: '210px', flexShrink: 0, cursor: 'grab' }}
                   draggable={false}
                 >
@@ -128,16 +145,16 @@ export default function CategoryScroll({ categories }: { categories: Category[] 
                   <div
                     className="flex-shrink-0 flex items-center justify-center rounded-xl transition-colors duration-200 group-hover:bg-[#dde8f5]"
                     style={{
-                      width: 56,   // was 48
-                      height: 56,  // was 48
+                      width: 56,
+                      height: 56,
                       background: '#eef3fa',
                     }}
                   >
                     <Image
                       src={category.image!}
                       alt={category.tag}
-                      width={42}    // was 28
-                      height={42}   // was 28
+                      width={42}
+                      height={42}
                       className="object-contain opacity-80 group-hover:opacity-100 transition-opacity"
                       draggable={false}
                     />
@@ -145,9 +162,7 @@ export default function CategoryScroll({ categories }: { categories: Category[] 
 
                   {/* Label */}
                   <div className="flex flex-col min-w-0">
-                    <span
-                      className="text-[13px] font-semibold leading-tight text-[#1a2535] truncate"
-                    >
+                    <span className="text-[13px] font-semibold leading-tight text-[#1a2535] truncate">
                       {category.tag}
                     </span>
                     <span className="text-[10px] text-[#a0afc0] mt-0.5">Specialist</span>
@@ -155,7 +170,8 @@ export default function CategoryScroll({ categories }: { categories: Category[] 
 
                   {/* Arrow indicator */}
                   <div
-                    className="absolute right-3 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity text-[#8FABD4] text-[14px]"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity text-[#8FABD4] text-[14px] cursor-pointer"
+                    onClick={() => router.push(`/doctors?q=${encodeURIComponent(category.tag)}`)}
                   >
                     →
                   </div>

@@ -101,7 +101,7 @@ function PatientAppointmentCard({ appt, userId, onCompleted, onOpenPrescription 
     <div className={`rounded-xl border p-3 transition-all ${
       isCompleted ? "border-[#b8d4c0] bg-[#f0faf2]"
       : isCancelled ? "border-[#ede9e0] bg-[#f7f4ef] opacity-50"
-      : "border-[#ede9e0] bg-[#f7f4ef] hover:bg-white"
+      : "border-[#ede9e0] bg-[#f7f4ef] hover:bg-white/50"
     }`}>
       <div className="flex items-center gap-2 mb-2">
         <div className={`h-8 w-8 rounded-full flex items-center justify-center text-[10px] font-semibold flex-shrink-0 ${
@@ -279,7 +279,7 @@ export default function ScheduleTab({ doctorId, user, doctor, appointments }: Do
     <div className="flex flex-col lg:flex-row gap-3 sm:gap-4 flex-1 min-h-0 overflow-y-auto lg:overflow-hidden">
 
       {/* ── Weekly Calendar ── */}
-      <div className="flex-1 min-w-0 overflow-x-auto bg-white rounded-2xl border border-[#e8e4da] shadow-sm p-4">
+      <div className="flex-1 min-w-0 overflow-x-auto bg-white/50 rounded-2xl border border-[#e8e4da] shadow-sm p-4">
         <WeeklyScheduleTable
           slotsAvailable={doctor.slotsAvailable}
           availableDays={doctor.availableDays}
@@ -300,7 +300,7 @@ export default function ScheduleTab({ doctorId, user, doctor, appointments }: Do
         {/* Mobile toggle button */}
         <button
           onClick={() => setShowAppointments(v => !v)}
-          className="lg:hidden flex items-center justify-between w-full px-4 py-3 bg-white border border-[#e8e4da] rounded-2xl text-[13px] font-semibold text-[#203C67] shadow-sm"
+          className="lg:hidden flex items-center justify-between w-full px-4 py-3 bg-white/50 border border-[#e8e4da] rounded-2xl text-[13px] font-semibold text-[#203C67] shadow-sm"
         >
           <span>
             {isSelectedToday ? "Today's Appointments" : `Appointments · ${selectedDate.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`}
@@ -310,7 +310,7 @@ export default function ScheduleTab({ doctorId, user, doctor, appointments }: Do
         </button>
 
         {/* Appointments panel */}
-        <div className={`${showAppointments ? "flex" : "hidden"} lg:flex bg-white rounded-2xl border border-[#e8e4da] shadow-sm p-4 flex-col flex-1 min-h-0`}>
+        <div className={`${showAppointments ? "flex" : "hidden"} lg:flex bg-white/50 rounded-2xl border border-[#e8e4da] shadow-sm p-4 flex-col flex-1 min-h-0`}>
           <div className="flex items-center justify-between mb-3">
             <div>
               <div className="flex items-center gap-2">
@@ -384,7 +384,7 @@ export default function ScheduleTab({ doctorId, user, doctor, appointments }: Do
         </div>
 
         {/* Slot info + Edit Profile */}
-        <div className="bg-white rounded-2xl border border-[#e8e4da] shadow-sm p-4 flex flex-col gap-3">
+        <div className="bg-white/50 rounded-2xl border border-[#e8e4da] shadow-sm p-4 flex flex-col gap-3">
           <div>
             <h3 className="text-[12px] font-semibold text-gray-800 mb-1.5 flex items-center gap-1.5">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#203C67" strokeWidth="2">

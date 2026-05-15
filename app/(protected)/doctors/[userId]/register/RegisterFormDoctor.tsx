@@ -386,7 +386,7 @@ const formatTo12Hour = (time: string) => {
                             className={`px-3 py-1.5 rounded-full text-[13px] border transition-colors ${
                               isSelected
                                 ? "bg-[#203C67] text-white border-[#203C67]"
-                                : "bg-white text-gray-600 border-gray-300 hover:border-[#203C67]"
+                                : "bg-white/50 text-gray-600 border-gray-300 hover:border-[#203C67]"
                             }`}
                           >
                             {lang}
@@ -427,7 +427,7 @@ const formatTo12Hour = (time: string) => {
                             className={`px-3 py-1.5 rounded-full text-[13px] border transition-colors ${
                               isSelected
                                 ? "bg-[#8FABD4] text-[#203C67] border-[#203C67] font-semibold"
-                                : "bg-white text-gray-600 border-gray-300 hover:border-[#8FABD4]"
+                                : "bg-white/50 text-gray-600 border-gray-300 hover:border-[#8FABD4]"
                             }`}
                           >
                             {day.slice(0, 3)}
@@ -457,7 +457,7 @@ const formatTo12Hour = (time: string) => {
                             `${formatTo12Hour(e.target.value)} - ${formatTo12Hour(end)}`
                           )
                         }}
-                        className="border border-[#203C6740] rounded-lg px-3 py-2 text-[13px] bg-white/60 focus:outline-none focus:border-[#203C67] text-gray-800"
+                        className="border border-[#203C6740] rounded-lg px-3 py-2 text-[13px] bg-white/50/60 focus:outline-none focus:border-[#203C67] text-gray-800"
                       />
                     </div>
                     <div className="flex flex-col gap-1.5">
@@ -472,7 +472,7 @@ const formatTo12Hour = (time: string) => {
                             `${formatTo12Hour(start)} - ${formatTo12Hour(e.target.value)}`
                           )
                         }}
-                        className="border border-[#203C6740] rounded-lg px-3 py-2 text-[13px] bg-white/60 focus:outline-none focus:border-[#203C67] text-gray-800"
+                        className="border border-[#203C6740] rounded-lg px-3 py-2 text-[13px] bg-white/50/60 focus:outline-none focus:border-[#203C67] text-gray-800"
                       />
                     </div>
                   </div>

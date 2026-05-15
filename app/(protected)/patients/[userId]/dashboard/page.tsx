@@ -202,7 +202,7 @@ export default async function PatientDashboardPage({
               { dot: "bg-[#3B8C4B]", label: "SCHEDULED", value: stats.scheduledCount, sub: "confirmed",     color: "text-[#2d6b3f]" },
               { dot: "bg-gray-400",  label: "TOTAL",      value: stats.total,          sub: "all time",      color: "text-gray-700"  },
             ].map((card) => (
-              <div key={card.label} className="bg-white rounded-2xl p-4 border border-[#e8e4da] shadow-sm">
+              <div key={card.label} className="bg-white/50 rounded-2xl p-4 border border-[#e8e4da] shadow-sm">
                 <div className="flex items-center gap-1.5 mb-2">
                   <span className={`w-2 h-2 rounded-full ${card.dot} inline-block`} />
                   <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">{card.label}</p>
@@ -217,7 +217,7 @@ export default async function PatientDashboardPage({
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 sm:gap-5">
 
             {/* All Appointments */}
-            <div className="lg:col-span-3 bg-white rounded-2xl border border-[#e8e4da] shadow-sm p-5">
+            <div className="lg:col-span-3 bg-white/50 rounded-2xl border border-[#e8e4da] shadow-sm p-5">
               <div className="flex justify-between items-center mb-4">
                 <div>
                   <h3 className="font-semibold text-[15px] text-gray-800">All Appointments</h3>
@@ -261,7 +261,7 @@ export default async function PatientDashboardPage({
             </div>
 
             {/* My Doctors */}
-            <div className="lg:col-span-2 bg-white rounded-2xl border border-[#e8e4da] shadow-sm p-5 flex flex-col">
+            <div className="lg:col-span-2 bg-white/50 rounded-2xl border border-[#e8e4da] shadow-sm p-5 flex flex-col">
               <div className="flex items-center justify-between mb-1">
                 <h3 className="font-semibold text-[15px] text-gray-800">My Doctors</h3>
                 <span className="text-[10px] bg-[#fef6e4] text-[#92400e] border border-[#fcd89a] px-2.5 py-1 rounded-full font-semibold">
@@ -317,7 +317,7 @@ export default async function PatientDashboardPage({
           </div>
 
           {/* ── Recent Records ── */}
-          <div className="bg-white rounded-2xl border border-[#e8e4da] shadow-sm overflow-hidden">
+          <div className="bg-white/50 rounded-2xl border border-[#e8e4da] shadow-sm overflow-hidden">
             <div className="flex items-center justify-between px-5 pt-5 pb-0">
               <div>
                 <h3 className="font-semibold text-[15px] text-gray-800">Recent Records</h3>
@@ -390,7 +390,7 @@ export default async function PatientDashboardPage({
 
           {/* ── Health Vitals + Primary Doctor ── */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5">
-            <div className="bg-white rounded-2xl border border-[#e8e4da] shadow-sm p-5">
+            <div className="bg-white/50 rounded-2xl border border-[#e8e4da] shadow-sm p-5">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="font-semibold text-[15px] text-gray-800">Health Vitals</h3>
                 <span className="text-[11px] text-gray-400">From registration</span>
@@ -416,7 +416,7 @@ export default async function PatientDashboardPage({
             </div>
 
             {patient.primaryDoctor ? (
-              <div className="bg-white rounded-2xl border border-[#e8e4da] shadow-sm p-5 flex flex-col justify-between">
+              <div className="bg-white/50 rounded-2xl border border-[#e8e4da] shadow-sm p-5 flex flex-col justify-between">
                 <h3 className="font-semibold text-[15px] text-gray-800 mb-4">Primary Doctor</h3>
                 <div className="flex items-center gap-3 flex-wrap">
                   <div className="w-12 h-12 rounded-full bg-[#dde8f5] flex items-center justify-center text-[14px] font-semibold text-[#203C67] shrink-0">
@@ -438,7 +438,7 @@ export default async function PatientDashboardPage({
                 </div>
               </div>
             ) : (
-              <div className="bg-white rounded-2xl border border-[#e8e4da] shadow-sm p-5 flex flex-col items-center justify-center gap-3 py-8">
+              <div className="bg-white/50 rounded-2xl border border-[#e8e4da] shadow-sm p-5 flex flex-col items-center justify-center gap-3 py-8">
                 <p className="text-[13px] text-gray-400">No primary doctor set</p>
                 <Link href="/alldoctors" className="text-[12px] text-[#185FA5] hover:underline">Find a doctor →</Link>
               </div>
@@ -452,7 +452,7 @@ export default async function PatientDashboardPage({
               { label: "Settings", href: `/patients/${userId}/settings` },
               { label: "Help",     href: "/help" },
             ].map((item) => (
-              <Link key={item.label} href={item.href} className="text-[12px] text-[#185FA5] bg-white border border-[#e8e4da] px-3 py-1.5 rounded-full hover:bg-[#f0f4fa] transition-colors">
+              <Link key={item.label} href={item.href} className="text-[12px] text-[#185FA5] bg-white/50 border border-[#e8e4da] px-3 py-1.5 rounded-full hover:bg-[#f0f4fa] transition-colors">
                 {item.label}
               </Link>
             ))}

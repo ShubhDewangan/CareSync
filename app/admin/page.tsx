@@ -65,12 +65,12 @@ export default async function AdminDashboardPage() {
 
           {/* Admin badge */}
             <div className="flex w-full gap-2 justify-center p-4">
-                <div className="w-10 h-10 admin-tag rounded-full bg-white/20 border border-white/30 flex items-center justify-center">
+                <div className="w-10 h-10 admin-tag rounded-full bg-white/50/20 border border-white/30 flex items-center justify-center">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="white" opacity="0.7">
                     <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/>
                 </svg>
                 </div>
-                <div className="bg-white/20 rounded-full admin-tag px-7 py-1.5 text-white text-[15px] font-semibold tracking-wide flex items-center justify-center">
+                <div className="bg-white/50/20 rounded-full admin-tag px-7 py-1.5 text-white text-[15px] font-semibold tracking-wide flex items-center justify-center">
                     Admin
                 </div>
             </div>
@@ -89,7 +89,7 @@ export default async function AdminDashboardPage() {
                 className={`w-full py-2 px-2 rounded-xl text-[12px] font-medium transition-all
                   ${item.active
                     ? "bg-[#4d5472] text-white"
-                    : "bg-white/15 text-white/80 hover:bg-white/25"
+                    : "bg-white/50/15 text-white/80 hover:bg-white/50/25"
                   }`}
               >
                 {item.label}
@@ -98,7 +98,7 @@ export default async function AdminDashboardPage() {
           </div>
 
           {/* Bottom note */}
-          <div className=" bg-white/10 rounded-xl p-3 text-[10px] text-white/60 leading-relaxed">
+          <div className=" bg-white/50/10 rounded-xl p-3 text-[10px] text-white/60 leading-relaxed">
             Should be handled carefully and edited more carefully, please record the query of patients and doctor while consulting them!
           </div>
         </div>
@@ -177,7 +177,7 @@ export default async function AdminDashboardPage() {
               <p className="text-white/50 text-[11px] uppercase tracking-widest mb-2">Top Performing Doctors</p>
               <div className="flex gap-3 overflow-x-auto remove-scrollbar pb-2">
                 {Array.from({ length: 8 }).map((_, i) => (
-                  <div key={i} className="bg-white/10 border border-white/20 rounded-xl p-3 flex flex-col items-center gap-2 min-w-[100px] flex-shrink-0">
+                  <div key={i} className="bg-white/50/10 border border-white/20 rounded-xl p-3 flex flex-col items-center gap-2 min-w-[100px] flex-shrink-0">
                     <div className="w-12 h-12 rounded-full bg-[#8FABD4]/40 border border-white/30 flex items-center justify-center">
                       <svg width="28" height="28" viewBox="0 0 24 24" fill="#8FABD4">
                         <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/>
