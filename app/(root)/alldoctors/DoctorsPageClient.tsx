@@ -45,13 +45,13 @@ export default function DoctorsPageClient({
     e.preventDefault()
     const trimmed = inputVal.trim()
     setQuery(trimmed)
-    router.replace(trimmed ? `/doctors?q=${encodeURIComponent(trimmed)}` : "/doctors")
+    router.replace(trimmed ? `/alldoctors?q=${encodeURIComponent(trimmed)}` : "/alldoctors")
   }
 
   function handleClear() {
     setInputVal("")
     setQuery("")
-    router.replace("/doctors")
+    router.replace("/alldoctors")
     inputRef.current?.focus()
   }
 

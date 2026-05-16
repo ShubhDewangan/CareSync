@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/rules-of-hooks */
 // components/ui/CategoryScroll.tsx
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
@@ -21,6 +22,8 @@ export default function CategoryScroll({ categories }: { categories: Category[] 
   const rafRef    = useRef<number>(0);
   const SPEED     = 0.5;
   const router = useRouter()
+  const dragMovedRef = useRef(false)
+  const pointerDownTargetRef = useRef<HTMLElement | null>(null)
 
   const getTrackWidth = useCallback(() => {
     const track = trackRef.current;
@@ -49,23 +52,43 @@ export default function CategoryScroll({ categories }: { categories: Category[] 
   useEffect(() => {
     const wrapper = wrapperRef.current;
     if (!wrapper) return;
+    // Add a drag distance tracker
+
+    // In onPointerDown, reset it:
     const onPointerDown = (e: PointerEvent) => {
-      e.preventDefault() // ✅ fix 1
-      dragRef.current = { active: true, startX: e.clientX, startPos: posRef.current };
-      pausedRef.current = true;
-      wrapper.setPointerCapture(e.pointerId);
-      wrapper.style.cursor = 'grabbing';
-    };
+      dragRef.current = { active: true, startX: e.clientX, startPos: posRef.current }
+      dragMovedRef.current = false
+      pausedRef.current = true
+      pointerDownTargetRef.current = e.target as HTMLElement  // ← save target here
+      wrapper.setPointerCapture(e.pointerId)
+      wrapper.style.cursor = 'grabbing'
+    }
+
     const onPointerMove = (e: PointerEvent) => {
-      if (!dragRef.current.active) return;
-      e.preventDefault() // ✅ fix 1
-      setPos(dragRef.current.startPos + (e.clientX - dragRef.current.startX));
-    };
+      if (!dragRef.current.active) return
+      e.preventDefault()  // ← only prevent here, when actually dragging
+      const delta = Math.abs(e.clientX - dragRef.current.startX)
+      if (delta > 10) {
+        console.log("drag detected")
+        dragMovedRef.current = true
+      }
+      setPos(dragRef.current.startPos + (e.clientX - dragRef.current.startX))
+    }
+    
     const onPointerUp = () => {
-      dragRef.current.active = false;
-      pausedRef.current = false;
-      wrapper.style.cursor = 'grab';
-    };
+      dragRef.current.active = false
+      pausedRef.current = false
+      wrapper.style.cursor = 'grab'
+
+      if (!dragMovedRef.current && pointerDownTargetRef.current) {
+        const card = pointerDownTargetRef.current.closest("[data-tag]")
+        if (card) {
+          const tag = card.getAttribute("data-tag")
+          if (tag) router.push(`/alldoctors?q=${tag}`)
+        }
+      }
+      pointerDownTargetRef.current = null
+    }
     const onMouseEnter = () => { pausedRef.current = true; };
     const onMouseLeave = () => { if (!dragRef.current.active) pausedRef.current = false; };
 
@@ -136,7 +159,7 @@ export default function CategoryScroll({ categories }: { categories: Category[] 
               return (
                 <div
                   key={idx}
-                  onClick={() => router.push(`/alldoctors?q=${category.tag}`)}
+                  data-tag={category.tag}
                   className="group relative flex items-center gap-3 bg-white/50 border border-[#e2ddd4] rounded-2xl px-4 py-3 transition-all duration-200 hover:border-[#8FABD4] hover:shadow-sm"
                   style={{ width: '210px', flexShrink: 0, cursor: 'grab' }}
                   draggable={false}
@@ -171,7 +194,7 @@ export default function CategoryScroll({ categories }: { categories: Category[] 
                   {/* Arrow indicator */}
                   <div
                     className="absolute right-3 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity text-[#8FABD4] text-[14px] cursor-pointer"
-                    onClick={() => router.push(`/doctors?q=${encodeURIComponent(category.tag)}`)}
+                    onClick={() => router.push(`/alldoctors?q=${category.tag}`)}
                   >
                     →
                   </div>
