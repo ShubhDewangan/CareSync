@@ -61,6 +61,15 @@ export const createUser = async (user: {
   }
 }
 
+export const deleteUser = async (userId: string) => {
+  try {
+    const adminUsers = new Users(getAdminClient())
+    await adminUsers.delete(userId)
+  } catch (error: any) {
+    console.log('deleteUser error:', error?.code, error?.message)
+  }
+}
+
 export const getLoggedInUser = async () => {
   try {
     const cookieStore = await cookies()

@@ -136,7 +136,7 @@ export default function CategoryScroll({ categories }: { categories: Category[] 
               return (
                 <div
                   key={idx}
-                  onClick={() => router.push(`/doctors?q=${category.tag}`)}
+                  onClick={() => router.push(`/alldoctors?q=${category.tag}`)}
                   className="group relative flex items-center gap-3 bg-white/50 border border-[#e2ddd4] rounded-2xl px-4 py-3 transition-all duration-200 hover:border-[#8FABD4] hover:shadow-sm"
                   style={{ width: '210px', flexShrink: 0, cursor: 'grab' }}
                   draggable={false}

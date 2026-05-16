@@ -13,7 +13,7 @@ import userImage from "@/public/assets/icons/user.svg"
 import emailImage from "@/public/assets/icons/email.svg"
 import { RegisterFormValidation, RegisterFormValues } from "@/lib/validation"
 import { useRouter } from "next/navigation"
-import { createUser } from "@/lib/actions/auth.actions"
+import { createUser, deleteUser } from "@/lib/actions/auth.actions"
 import { showToast } from "@/components/ui/toaster"
 
 export enum FormFieldType {
@@ -82,6 +82,7 @@ type PendingUser = {
   email: string
   phone: string
   userType: "patient" | "doctor"
+  userId: string  // ← add this
 }
 
 // ─── SignUpForm ───────────────────────────────────────────────────────────────
@@ -114,87 +115,81 @@ export function SignUpForm() {
 
   // ─── Step 1: send OTP (don't create user yet) ────────────────────
   async function onSubmitDetails({ name, email, phone }: RegisterFormValues) {
-    setLoading(true)
-    try {
-      const res = await fetch("/api/auth/send-otp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ contact: email, method: "email", mode: "signup" }),
-      })
-      const data = await res.json()
+  setLoading(true)
+  try {
+    // 1. Create user
+    const user = await createUser({ name, email, phone, userType })
 
-      if (!res.ok || data.error) {
-        showToast("error", data.error ?? "Could not send OTP. Please try again.", "top-right")
-        setLoading(false)
-        return
-      }
-
-      // Lock in all form values including userType at submit time
-      setPendingUser({ name, email, phone, userType })
-      setGeneratedOtp(data.otp)
-      setSubmittedEmail(email)
-      setStep("otp")
-      setResendTimer(30)
-      showToast("success", `Your OTP is: ${data.otp}`, "top-right")
-
-    } catch (error) {
-      console.log(error)
-      showToast("error", "Something went wrong. Please try again.", "top-right")
+    if (user === false) {
+      showToast("info", "Account already exists. Please log in.", "top-right")
+      router.push("/login")
+      return
     }
-    setLoading(false)
+    if (!user?.$id) {
+      showToast("error", "Could not create account. Please try again.", "top-right")
+      return
+    }
+
+    // 2. Send OTP — user exists now
+    const res = await fetch("/api/auth/send-otp", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ contact: email, method: "email" }),
+    })
+    const data = await res.json()
+
+    if (!res.ok || data.error) {
+      await deleteUser(user.$id)  // ← cleanup if OTP send fails
+      showToast("error", data.error ?? "Could not send OTP.", "top-right")
+      return
+    }
+
+    setPendingUser({ name, email, phone, userType, userId: user.$id })
+    setGeneratedOtp(data.otp)
+    setSubmittedEmail(email)
+    setStep("otp")
+    setResendTimer(30)
+    showToast("success", `Your OTP is: ${data.otp}`, "top-right")
+
+  } catch {
+    showToast("error", "Something went wrong.", "top-right")
   }
+  setLoading(false)
+}
 
   // ─── Step 2: create user + verify OTP ───────────────────────────
   async function handleVerifyOtp() {
-    setOtpError("")
-    if (otp.length < 6) { setOtpError("Please enter the complete 6-digit OTP."); return }
-    if (!pendingUser) { setOtpError("Session expired. Please go back and try again."); return }
+  setOtpError("")
+  if (otp.length < 6) { setOtpError("Please enter the complete 6-digit OTP."); return }
+  if (!pendingUser) { setOtpError("Session expired. Please go back."); return }
 
-    setLoading(true)
-    try {
-      // Create user only after OTP is entered
-      const user = await createUser({
-        name: pendingUser.name,
-        email: pendingUser.email,
-        phone: pendingUser.phone,
-        userType: pendingUser.userType,
-      })
+  setLoading(true)
+  try {
+    const res = await fetch("/api/auth/verify-otp", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId: pendingUser.userId, otp }),
+    })
+    const data = await res.json()
 
-      if (user === false) {
-        showToast("info", "Account already exists. Please log in.", "top-right")
-        router.push("/login")
-        return
-      }
-
-      if (!user || typeof user !== "object") {
-        setOtpError("Could not create account. Please try again.")
-        setLoading(false)
-        return
-      }
-
-      // Verify OTP against DB
-      const res = await fetch("/api/auth/verify-otp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: user.$id, otp }),
-      })
-      const data = await res.json()
-
-      if (!res.ok || data.error) {
-        setOtpError(data.error ?? "Invalid or expired OTP.")
-        setOtp("")
-        setLoading(false)
-        return
-      }
-
-      showToast("success", "Account verified! Welcome 🎉", "top-right")
-      router.push("/")
-
-    } catch {
-      setOtpError("Something went wrong. Please try again.")
+    if (!res.ok || data.error) {
+      await deleteUser(pendingUser.userId)  // ← cleanup on OTP fail
+      setOtpError(data.error ?? "Invalid or expired OTP.")
+      setOtp("")
+      setPendingUser(null)
+      setStep("details")  // ← send back to start
+      setLoading(false)
+      return
     }
-    setLoading(false)
+
+    showToast("success", "Account verified! Welcome 🎉", "top-right")
+    router.push("/")
+
+  } catch {
+    setOtpError("Something went wrong.")
   }
+  setLoading(false)
+}
 
   // ─── Resend OTP ──────────────────────────────────────────────────
   async function handleResend() {
