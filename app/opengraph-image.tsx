@@ -1,8 +1,14 @@
+import Image from "next/image";
 import { ImageResponse } from "next/og";
 
 export const runtime = "edge";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
+// at the top, outside the function
+const logoUrl = "https://caresync.vercel.app/android-chrome-512x512.png";
+
+// then replace the ✚ div with:
+
 
 export default function OGImage() {
   return new ImageResponse(
@@ -20,21 +26,13 @@ export default function OGImage() {
       >
         {/* top: logo */}
         <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
-          <div
-            style={{
-              width: 72,
-              height: 72,
-              borderRadius: "50%",
-              background: "#efece3",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: 40,
-              color: "#203C67",
-            }}
-          >
-            ✚
-          </div>
+          <Image
+            src={logoUrl}
+            alt="logo"
+            width={72}
+            height={72}
+            style={{ borderRadius: "50%" }}
+            />
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             <span style={{ fontSize: 42, fontWeight: 700, color: "#203C67", lineHeight: "1" }}>
               CareSync
