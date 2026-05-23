@@ -35,16 +35,16 @@ export const metadata: Metadata = {
     title: "CareSync — Smart Health Management",
     description:
       "Track vitals, manage appointments, and stay connected with your care team — all in one place. A project by Shubh.",
-    url: "https://caresync.vercel.app", // your actual URL
+    url: "https://caresync.vercel.app",
     siteName: "CareSync",
-    images: [
-      {
-        url: "/og-image.png", // 1200×630px image
-        width: 1200,
-        height: 630,
-        alt: "CareSync — Smart Health Management",
-      },
-    ],
+    // images: [
+    //   {
+    //     url: "https://caresync.vercel.app/og-image.png",
+    //     width: 1200,
+    //     height: 630,
+    //     alt: "CareSync — Smart Health Management",
+    //   },
+    // ],
     type: "website",
   },
   twitter: {
@@ -52,7 +52,7 @@ export const metadata: Metadata = {
     title: "CareSync — Smart Health Management",
     description:
       "Track vitals, manage appointments, and stay connected with your care team — all in one place. A project by Shubh.",
-    images: ["/og-image.png"],
+    // images: ["https://caresync.vercel.app/og-image.png"], // ✅ fixed
   },
 };
 
