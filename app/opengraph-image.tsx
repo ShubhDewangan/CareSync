@@ -7,10 +7,13 @@ export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
 export default async function OGImage() {
-  const [ibmPlex, dmSerif] = await Promise.all([
+  const [ibmPlex, dmSerif, logo] = await Promise.all([
     readFile(join(process.cwd(), "public/assets/fonts/IBMPlexMono-Regular.ttf")),
     readFile(join(process.cwd(), "public/assets/fonts/DMSerifDisplay-Regular.ttf")),
+    readFile(join(process.cwd(), "public/logo-EFECE3.jpg")),
   ]);
+
+  const logoSrc = `data:image/jpeg;base64,${logo.toString("base64")}`;
 
   return new ImageResponse(
     (
@@ -28,6 +31,7 @@ export default async function OGImage() {
         <span style={{ fontSize: 42, color: "#203C67", fontFamily: "DMSerifDisplay" }}>
           CareSync
         </span>
+        <img src={logoSrc} width={72} height={72} style={{ borderRadius: "50%" }} />
         <span style={{ fontSize: 100, color: "#203C67", fontFamily: "DMSerifDisplay" }}>
           Your health, in sync.
         </span>
