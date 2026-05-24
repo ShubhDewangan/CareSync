@@ -10,10 +10,10 @@ export default async function OGImage() {
   const [ibmPlex, dmSerif, logo] = await Promise.all([
     readFile(join(process.cwd(), "public/assets/fonts/IBMPlexMono-Regular.ttf")),
     readFile(join(process.cwd(), "public/assets/fonts/DMSerifDisplay-Regular.ttf")),
-    readFile(join(process.cwd(), "public/logo-EFECE3.jpg")),
+    readFile(join(process.cwd(), "public/logo.png")),
   ]);
 
-  const logoSrc = `data:image/jpeg;base64,${logo.toString("base64")}`;
+  const logoSrc = `data:image/png;base64,${logo.toString("base64")}`;
 
   return new ImageResponse(
     (
