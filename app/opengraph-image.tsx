@@ -8,11 +8,9 @@ export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
 export default async function OGImage() {
-  const [dmSerif, ibmPlex, logo] = await Promise.all([
-    readFile(join(process.cwd(), "public/assets/fonts/DMSerifDisplay-Regular.ttf")),
-    readFile(join(process.cwd(), "public/assets/fonts/IBMPlexMono-Regular.ttf")),
-    readFile(join(process.cwd(), "public/logo-EFECE3.jpg")),
-  ]);
+  const dmSerif = await readFile(join(process.cwd(), "public/assets/fonts/DMSerifDisplay-Regular.ttf"))
+  const ibmPlex = await readFile(join(process.cwd(), "public/assets/fonts/IBMPlexMono-Regular.ttf"))
+  const logo = await readFile(join(process.cwd(), "public/logo-EFECE3.jpg"))
 
   const logoSrc = `data:image/jpeg;base64,${logo.toString("base64")}`;
 
