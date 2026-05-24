@@ -586,7 +586,7 @@ const BookAppointmentModal = ({
             {/* Step 3 — Success */}
             {step === 3 && (
               <div className="flex flex-col items-center justify-center p-6 sm:p-8 text-center flex-1">
-                <span className="text-[18px] sm:text-[20px] font-heading1">Success</span>
+                <span className="text-[18px] sm:text-[20px] font-IbmPlexMono">Success</span>
                 <Image src="/assets/gifs/success.gif" alt="success" height={1000} width={1000} className="w-[220px] sm:w-[320px] h-auto" />
                 <p className="text-[12px] sm:text-[13px] text-center leading-relaxed max-w-[320px]">
                   <i>Be active — we&apos;ll send you the status of your booking shortly.</i>

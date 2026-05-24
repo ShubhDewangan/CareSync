@@ -87,12 +87,12 @@ const RenderField = ({ field, props }: { field: any; props: CustomProps }) => {
             <Input
               placeholder={placeholder}
               {...field}
-              className="shad-input text-gray-600 border-0 font-label"
+              className="shad-input text-gray-600 border-0 font-ubuntuMono"
               disabled={disabled}
             />
           </FormControl>
           {units && (
-            <p className="px-3 font-label font-medium">{units}</p>
+            <p className="px-3 font-ubuntuMono font-medium">{units}</p>
           )}
         </div>
       );

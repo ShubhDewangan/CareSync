@@ -145,12 +145,12 @@ export const RegisterForm = ({ user, patient, doctors }: {
 
               {/* Title */}
               <section className="text-center flex flex-col items-center gap-2 -translate-y-5">
-                <h1 className="text-[20px] font-medium font-heading1">Register Yourself</h1>
+                <h1 className="text-[20px] font-medium font-IbmPlexMono">Register Yourself</h1>
                 <p className="text-[12px] text-dark-500"><i>Let us know more for better connection!</i></p>
               </section>
 
               {/* ── Personal Info ─────────────────────────────────── */}
-              <h2 className="text-black text-[20px] font-heading2 border-b border-gray-400 pb-2">
+              <h2 className="text-black text-[20px] font-IbmPlexMono_italic border-b border-gray-400 pb-2">
                 Personal Information
               </h2>
 
@@ -280,7 +280,7 @@ export const RegisterForm = ({ user, patient, doctors }: {
                 />
               </div>
 
-              <h2 className="text-black text-[20px] font-heading2 border-b border-gray-400 pb-2 mt-2">
+              <h2 className="text-black text-[20px] font-IbmPlexMono_italic border-b border-gray-400 pb-2 mt-2">
                 Vitals
               </h2>
 
@@ -307,7 +307,7 @@ export const RegisterForm = ({ user, patient, doctors }: {
               </div>
 
               {/* ── Medical Info ──────────────────────────────────── */}
-              <h2 className="text-black text-[20px] font-heading2 border-b border-gray-400 pb-2 mt-2">
+              <h2 className="text-black text-[20px] font-IbmPlexMono_italic border-b border-gray-400 pb-2 mt-2">
                 Medical Information
               </h2>
 
@@ -386,7 +386,7 @@ export const RegisterForm = ({ user, patient, doctors }: {
               </div>
 
               {/* ── Identification ────────────────────────────────── */}
-              <h2 className="text-black text-[20px] font-heading2 border-b border-gray-400 pb-2 mt-2">
+              <h2 className="text-black text-[20px] font-IbmPlexMono_italic border-b border-gray-400 pb-2 mt-2">
                 Identification and Verification
               </h2>
 
@@ -418,7 +418,7 @@ export const RegisterForm = ({ user, patient, doctors }: {
               />
 
               {/* ── Consent ───────────────────────────────────────── */}
-              <h2 className="text-black text-[20px] font-heading2 border-b border-gray-400 pb-2 mt-2">
+              <h2 className="text-black text-[20px] font-IbmPlexMono_italic border-b border-gray-400 pb-2 mt-2">
                 Consent and Privacy
               </h2>
 

@@ -62,7 +62,7 @@ const ID_TYPES = ["Medical Council Registration", "Aadhaar Card", "PAN Card", "P
 // ── Section Header ─────────────────────────────────────────────────────────
 const SectionHeader = ({ title, subtitle }: { title: string; subtitle?: string }) => (
   <div className="flex flex-col gap-1 border-b border-gray-300 pb-3 mt-4">
-    <h2 className="text-[18px] font-semibold text-[#203C67] font-heading2">{title}</h2>
+    <h2 className="text-[18px] font-semibold text-[#203C67] font-IbmPlexMono_italic">{title}</h2>
     {subtitle && <p className="text-[12px] text-gray-400">{subtitle}</p>}
   </div>
 )
@@ -208,7 +208,7 @@ const formatTo12Hour = (time: string) => {
 
               {/* Title */}
               <section className="text-center flex flex-col items-center gap-1">
-                <h1 className="text-[22px] font-semibold font-heading1">Doctor Registration</h1>
+                <h1 className="text-[22px] font-semibold font-IbmPlexMono">Doctor Registration</h1>
                 <p className="text-[12px] text-gray-500"><i>Complete your profile to start accepting appointments</i></p>
               </section>
 

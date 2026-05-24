@@ -81,9 +81,10 @@ const config = {
       },
       fontFamily: {
         sans: ["var(--font-sans)", ...defaultTheme.fontFamily.sans],
-        heading1: ['IBM plex mono', 'monospaced'],
-        label: ['Ubuntu Mono', 'monospaced'],
-        heading2: ['IBM plex mono italic', 'monospaced'],
+        IbmPlexMono: ['IBM plex mono', 'monospaced'],
+        ubuntuMono: ['Ubuntu Mono', 'monospaced'],
+        IbmPlexMono_italic: ['IBM plex mono italic', 'monospaced'],
+        DMSerifDisplay: ['DM Serif Display','serif'],
       },
       backgroundImage: {
         appointments: "url('/assets/images/appointments-bg.png')",
