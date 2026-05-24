@@ -53,14 +53,15 @@ export default async function OGImage() {
 
         {/* top: logo + wordmark */}
         <div style={{ display: "flex", alignItems: "center", gap: 20, zIndex: 1 }}>
-          <div style={{backgroundColor: '#EFECE3', border: '1px solid #203C67', borderRadius: '50%', overflow: 'hidden'
-          }}>
-            <img
-            src={logoSrc}
-            width={80}
-            height={80}
-          />
-          </div>
+          <div style={{
+            backgroundColor: '#EFECE3',
+            border: '1px solid #203C67',
+            borderRadius: '50%',
+            overflow: 'hidden',
+            display: "flex",  // ✅ add this
+            }}>
+            <img src={logoSrc} width={80} height={80} />
+            </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             <span style={{ fontSize: 44, fontWeight: 400, color: "#203C67", lineHeight: "1", fontFamily: "DMSerifDisplay" }}>
               CareSync
