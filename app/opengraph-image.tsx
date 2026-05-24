@@ -1,4 +1,5 @@
-import Image from "next/image";
+/* eslint-disable jsx-a11y/alt-text */
+/* eslint-disable @next/next/no-img-element */
 import { ImageResponse } from "next/og";
 
 export const runtime = "edge";
@@ -18,23 +19,20 @@ export default function OGImage() {
           justifyContent: "space-between",
           padding: "72px 80px",
         }}
-        className="border border-[#203C67]"
       >
         {/* top: logo */}
         <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
-          <Image
+          <img
             src="https://caresync.vercel.app/logo-EFECE3.jpg"
-            alt="logo"
             width={72}
             height={72}
-            className="rounded-full border border-[#203C67]"
+            style={{ borderRadius: "50%", border: "1.5px solid #c8dac0" }}
           />
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            <span style={{ fontSize: 42, fontWeight: 700, color: "#203C67", lineHeight: "1" }} className="font-DMSerifDisplay">
+            <span style={{ fontSize: 42, fontWeight: 700, color: "#203C67", lineHeight: "1", font: 'DMSerifDisplay' }}>
               CareSync
             </span>
-            <span style={{ fontSize: 15, color: "#4a6b4a", letterSpacing: "0.12em" }}
-            className="font-IbmPlexMono">
+            <span style={{ fontSize: 15, color: "#4a6b4a", letterSpacing: "0.12em", font: 'IbmPlexMono' }}>
               HEALTH MANAGEMENT
             </span>
           </div>
@@ -42,16 +40,13 @@ export default function OGImage() {
 
         {/* middle: tagline */}
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          <span style={{ fontSize: 100, fontWeight: 700, color: "#203C67", lineHeight: "1.05", letterSpacing: "-3px" }}
-          className="font-DMSerifDisplay"
-          >
+          <span style={{ fontSize: 100, fontWeight: 700, color: "#203C67", lineHeight: "1.05", letterSpacing: "-3px", font: 'DMSerifDisplay' }}>
             Your health,
           </span>
-          <span style={{ fontSize: 100, fontWeight: 700, color: "#4a7a3a", lineHeight: "1.05", letterSpacing: "-3px" }}
-          className="font-DMSerifDisplay">
+          <span style={{ fontSize: 100, fontWeight: 700, color: "#4a7a3a", lineHeight: "1.05", letterSpacing: "-3px", font: 'DMSerifDisplay' }}>
             in sync.
           </span>
-          <span style={{ fontSize: 28, color: "#203C67", opacity: 0.45, marginTop: 16 }}className="font-IbmPlexMono">
+          <span style={{ fontSize: 28, color: "#203C67", opacity: 0.45, marginTop: 16, font: 'IbmPlexMono' }}>
             Book your appointment — unbothered and quick.
           </span>
         </div>
