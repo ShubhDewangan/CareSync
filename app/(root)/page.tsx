@@ -324,21 +324,18 @@ function Home() {
           {/* Hero visual — hidden on mobile/tablet */}
           <div className="hidden xl:flex flex-col gap-3 relative z-10 flex-shrink-0">
             <div className="bg-white/50/80 backdrop-blur rounded-2xl px-5 py-3 shadow-sm flex items-center gap-3 border border-white">
-              <div className="w-9 h-9 rounded-full bg-green-100 flex items-center justify-center text-lg">✅</div>
               <div>
                 <p className="text-[12px] font-bold text-gray-800">Appointment confirmed</p>
                 <p className="text-[11px] text-gray-400">Dr. Shubh · Today 11:00 AM</p>
               </div>
             </div>
             <div className="bg-white/50/80 backdrop-blur rounded-2xl px-5 py-3 shadow-sm flex items-center gap-3 border border-white ml-6">
-              <div className="w-9 h-9 rounded-full bg-blue-100 flex items-center justify-center text-lg">💊</div>
               <div>
                 <p className="text-[12px] font-bold text-gray-800">Prescription ready</p>
                 <p className="text-[11px] text-gray-400">Amoxicillin · 500mg · 5 days</p>
               </div>
             </div>
             <div className="bg-white/50/80 backdrop-blur rounded-2xl px-5 py-3 shadow-sm flex items-center gap-3 border border-white">
-              <div className="w-9 h-9 rounded-full bg-amber-100 flex items-center justify-center text-lg">📋</div>
               <div>
                 <p className="text-[12px] font-bold text-gray-800">Lab report uploaded</p>
                 <p className="text-[11px] text-gray-400">CBC Blood Test · 2 min ago</p>
