@@ -23,7 +23,7 @@ export function showToast(type: ToastType, message: string, position?: ToastPosi
             break
         case 'promise':
             toast.promise(
-                new Promise((resolve) => setTimeout(() => resolve({ name: message }), 2000)),
+                new Promise((resolve) => setTimeout(() => resolve({ name: message }), 10 * 1000)),
                 {
                     loading: 'Loading...',
                     success: message,

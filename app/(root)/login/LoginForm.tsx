@@ -198,7 +198,7 @@ async function handleResend() {
     if (res.ok && data.userId) {
       setUserId(data.userId)
       setGeneratedOtp(data.otp)
-      setResendTimer(30)
+      setResendTimer(5)
       showToast("success", `New OTP generated! ${data.otp}`, "top-right")
     }
   } catch { showToast("error", "Could not resend OTP.", "top-right") }
@@ -371,7 +371,7 @@ async function handleResend() {
 
           <div className="flex flex-col items-center gap-1 bg-amber-50 border border-amber-200 rounded-xl py-3 px-4">
             <p className="text-xs text-amber-700 font-medium">Your OTP is given as notification (demo mode)</p>
-            {/* <p className="text-2xl font-bold tracking-[0.3em] text-amber-800">{generatedOtp}</p> */}
+            <p className="text-2xl font-bold tracking-[0.3em] text-amber-800">{generatedOtp}</p>
           </div>
 
           <OtpBoxes value={otp} onChange={setOtp} disabled={isLoading} />
